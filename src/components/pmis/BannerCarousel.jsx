@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
-import b0 from "@/assets/banner_static.png.asset.json";
-import b1 from "@/assets/banner_1.png.asset.json";
-import b2 from "@/assets/banner_2.png.asset.json";
-import b3 from "@/assets/banner_3.png.asset.json";
+import b0 from "@/assets/banner_static.webp";
+import b1 from "@/assets/banner_1.webp";
+import b2 from "@/assets/banner_2.webp";
+import b3 from "@/assets/banner_3.webp";
 
 const SLIDES = [
-  { src: b1.url, alt: "Find an internship near you" },
-  { src: b2.url, alt: "PM Internship Scheme banner 2" },
-  { src: b3.url, alt: "PM Internship Scheme banner 3" },
+  { src: b1, alt: "Find an internship near you" },
+  { src: b2, alt: "PM Internship Scheme banner 2" },
+  { src: b3, alt: "PM Internship Scheme banner 3" },
 ];
 
 function Controls({ index, setIndex, playing, setPlaying, prev, next }) {
@@ -52,7 +52,7 @@ export default function BannerCarousel() {
   return (
     <section id="main" className="mx-auto max-w-7xl space-y-8 px-4 py-6 sm:py-8" aria-label="Highlights">
       <div className="relative overflow-hidden rounded-3xl shadow-banner ring-1 ring-primary-foreground/40 glass-frame">
-        <img src={b0.url} alt="Learn from the Best — Paid internships in top companies" className="block w-full" />
+        <img src={b0} alt="Learn from the Best — Paid internships in top companies" className="block w-full" />
       </div>
 
       <div>

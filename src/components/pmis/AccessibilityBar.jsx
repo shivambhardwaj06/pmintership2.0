@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Contrast, Volume2 } from "lucide-react";
-import flag from "@/assets/indian_flag.svg.asset.json";
+import flag from "@/assets/indian_flag.svg";
 
 const SIZES = [14, 16, 18, 20];
 
@@ -33,7 +33,7 @@ export default function AccessibilityBar() {
       </a>
       <div className="mx-auto flex h-10 max-w-7xl items-center justify-between gap-3 px-4 text-xs sm:text-sm">
         <div className="flex min-w-0 items-center gap-2">
-          <img src={flag.url} alt="" className="h-4 w-6 shrink-0 rounded-sm" />
+          <img src={flag} alt="" className="h-4 w-6 shrink-0 rounded-sm" />
           <span className="truncate">भारत सरकार <span className="opacity-50">/</span> Government of India</span>
         </div>
         <div className="flex shrink-0 items-center gap-1" role="toolbar" aria-label="Accessibility options">

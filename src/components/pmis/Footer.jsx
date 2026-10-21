@@ -1,6 +1,6 @@
 import { MapPin, Mail, Phone, Play, ExternalLink, Users } from "lucide-react";
-import MCA from "@/assets/MCA.svg.asset.json";
-import pmisLogo from "@/assets/pm_internship_logo_eng.svg.asset.json";
+import MCA from "@/assets/MCA.svg";
+import pmisLogo from "@/assets/pm_internship_logo_eng.svg";
 
 const QUICK_LINKS = [
   { label: "Benefits", href: "#benefits" },
@@ -17,8 +17,8 @@ export default function Footer() {
       {/* Top strip: logos + visitor counter */}
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-6 border-b border-primary-foreground/10 px-4 py-6 sm:px-6">
         <div className="flex items-center gap-4">
-          <img src={MCA.url} alt="Ministry of Corporate Affairs" className="h-14 w-auto rounded bg-primary-foreground p-1.5" />
-          <img src={pmisLogo.url} alt="PM Internship Scheme" className="h-12 w-auto rounded bg-primary-foreground p-1.5" />
+          <img src={MCA} alt="Ministry of Corporate Affairs" className="h-14 w-auto rounded bg-primary-foreground p-1.5" />
+          <img src={pmisLogo} alt="PM Internship Scheme" className="h-12 w-auto rounded bg-primary-foreground p-1.5" />
         </div>
 
         <div className="flex items-center gap-3 rounded-xl border border-primary-foreground/20 bg-primary-foreground/5 px-5 py-3">

@@ -3,9 +3,9 @@ import {
   ChevronDown, Menu, X, UserRound, ArrowUpRight, Home, BookOpen, HelpCircle,
   FileText, PlayCircle, Images, Gift, Library, Smartphone, Headphones,
 } from "lucide-react";
-import mca from "@/assets/MCA.svg.asset.json";
-import pmLogo from "@/assets/pm_internship_logo_eng.svg.asset.json";
-import viksit from "@/assets/viksit.png.asset.json";
+import mca from "@/assets/MCA.svg";
+import pmLogo from "@/assets/pm_internship_logo_eng.svg";
+import viksit from "@/assets/viksit.png";
 import { NAV } from "./navData";
 
 const ICONS = {
@@ -144,16 +144,16 @@ export default function Header() {
       <div className="border-b border-primary-foreground/40 bg-card/75 backdrop-blur-2xl">
         <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 py-3">
           <a href="https://pminternship.mca.gov.in/" className="flex min-w-0 items-center gap-3 sm:gap-5">
-            <img src={mca.url} alt="Ministry of Corporate Affairs" className="h-10 shrink-0 sm:h-12" />
+            <img src={mca} alt="Ministry of Corporate Affairs" className="h-10 shrink-0 sm:h-12" />
             <span className="h-8 w-px shrink-0 bg-border" />
-            <img src={pmLogo.url} alt="PM Internship" className="h-9 shrink-0 sm:h-11" />
+            <img src={pmLogo} alt="PM Internship" className="h-9 shrink-0 sm:h-11" />
           </a>
           <div className="flex items-center gap-3">
             <a href="https://pminternship.mca.gov.in/login/"
               className="hidden items-center gap-2 sheen rounded-full bg-saffron px-5 py-2.5 text-sm font-bold text-saffron-foreground shadow-soft transition hover:brightness-105 sm:flex">
               <UserRound className="h-4 w-4" /> Login / Register
             </a>
-            <img src={viksit.url} alt="Viksit Bharat" className="hidden h-11 md:block" />
+            <img src={viksit} alt="Viksit Bharat" className="hidden h-11 md:block" />
             <button onClick={() => setMobile(true)} aria-label="Open menu"
               className="rounded-xl border bg-card p-2.5 text-primary lg:hidden">
               <Menu className="h-5 w-5" />

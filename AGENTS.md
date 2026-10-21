@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Import website images directly from bundled files in `src/assets`, not asset JSON pointers, so source downloads include their image dependencies.

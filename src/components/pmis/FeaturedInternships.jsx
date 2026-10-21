@@ -2,36 +2,36 @@ import { useMemo, useState } from "react";
 import { Search, MapPin, Star, GitCompareArrows, IndianRupee, Wrench, ArrowRight, BadgeCheck, CalendarClock, Building, X, ChevronDown } from "lucide-react";
 
 // Sample data for demonstration only.
-import adaniLogo from "@/assets/logos/adani.png.asset.json";
-import airtelLogo from "@/assets/logos/airtel.png.asset.json";
-import bajajautoLogo from "@/assets/logos/bajajauto.png.asset.json";
-import flipkartLogo from "@/assets/logos/flipkart.png.asset.json";
-import hcltechLogo from "@/assets/logos/hcltech.png.asset.json";
-import hdfcbankLogo from "@/assets/logos/hdfcbank.png.asset.json";
-import heromotocorpLogo from "@/assets/logos/heromotocorp.png.asset.json";
-import icicibankLogo from "@/assets/logos/icicibank.png.asset.json";
-import infosysLogo from "@/assets/logos/infosys.png.asset.json";
-import ltLogo from "@/assets/logos/lt.png.asset.json";
-import mahindraLogo from "@/assets/logos/mahindra.png.asset.json";
-import marutisuzukiLogo from "@/assets/logos/marutisuzuki.png.asset.json";
-import rilLogo from "@/assets/logos/ril.png.asset.json";
-import sbiLogo from "@/assets/logos/sbi.png.asset.json";
-import sunpharmaLogo from "@/assets/logos/sunpharma.png.asset.json";
-import tataLogo from "@/assets/logos/tata.png.asset.json";
-import tatamotorsLogo from "@/assets/logos/tatamotors.png.asset.json";
-import tcsLogo from "@/assets/logos/tcs.png.asset.json";
-import wiproLogo from "@/assets/logos/wipro.png.asset.json";
-import zomatoLogo from "@/assets/logos/zomato.png.asset.json";
+import adaniLogo from "@/assets/logos/adani.png";
+import airtelLogo from "@/assets/logos/airtel.png";
+import bajajautoLogo from "@/assets/logos/bajajauto.png";
+import flipkartLogo from "@/assets/logos/flipkart.png";
+import hcltechLogo from "@/assets/logos/hcltech.png";
+import hdfcbankLogo from "@/assets/logos/hdfcbank.png";
+import heromotocorpLogo from "@/assets/logos/heromotocorp.png";
+import icicibankLogo from "@/assets/logos/icicibank.png";
+import infosysLogo from "@/assets/logos/infosys.png";
+import ltLogo from "@/assets/logos/lt.png";
+import mahindraLogo from "@/assets/logos/mahindra.png";
+import marutisuzukiLogo from "@/assets/logos/marutisuzuki.png";
+import rilLogo from "@/assets/logos/ril.png";
+import sbiLogo from "@/assets/logos/sbi.png";
+import sunpharmaLogo from "@/assets/logos/sunpharma.png";
+import tataLogo from "@/assets/logos/tata.png";
+import tatamotorsLogo from "@/assets/logos/tatamotors.png";
+import tcsLogo from "@/assets/logos/tcs.png";
+import wiproLogo from "@/assets/logos/wipro.png";
+import zomatoLogo from "@/assets/logos/zomato.png";
 
 const LOGOS = [
-  ["TCS", tcsLogo.url], ["Infosys", infosysLogo.url], ["Wipro", wiproLogo.url],
-  ["HCLTech", hcltechLogo.url], ["Reliance Industries", rilLogo.url], ["Tata Group", tataLogo.url],
-  ["Tata Motors", tatamotorsLogo.url], ["Mahindra & Mahindra", mahindraLogo.url],
-  ["HDFC Bank", hdfcbankLogo.url], ["ICICI Bank", icicibankLogo.url], ["State Bank of India", sbiLogo.url],
-  ["Bharti Airtel", airtelLogo.url], ["Adani Group", adaniLogo.url], ["Larsen & Toubro", ltLogo.url],
-  ["Maruti Suzuki", marutisuzukiLogo.url], ["Hero MotoCorp", heromotocorpLogo.url],
-  ["Bajaj Auto", bajajautoLogo.url], ["Sun Pharma", sunpharmaLogo.url], ["Zomato", zomatoLogo.url],
-  ["Flipkart", flipkartLogo.url],
+  ["TCS", tcsLogo], ["Infosys", infosysLogo], ["Wipro", wiproLogo],
+  ["HCLTech", hcltechLogo], ["Reliance Industries", rilLogo], ["Tata Group", tataLogo],
+  ["Tata Motors", tatamotorsLogo], ["Mahindra & Mahindra", mahindraLogo],
+  ["HDFC Bank", hdfcbankLogo], ["ICICI Bank", icicibankLogo], ["State Bank of India", sbiLogo],
+  ["Bharti Airtel", airtelLogo], ["Adani Group", adaniLogo], ["Larsen & Toubro", ltLogo],
+  ["Maruti Suzuki", marutisuzukiLogo], ["Hero MotoCorp", heromotocorpLogo],
+  ["Bajaj Auto", bajajautoLogo], ["Sun Pharma", sunpharmaLogo], ["Zomato", zomatoLogo],
+  ["Flipkart", flipkartLogo],
 ];
 const COMPANIES = LOGOS.map((l) => l[0]);
 const logoUrl = (n) => LOGOS.find((l) => l[0] === n)?.[1];
