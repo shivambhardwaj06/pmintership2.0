@@ -32,6 +32,8 @@ import {
   Video,
   Play,
   HelpCircle,
+  RefreshCw,
+  Plus,
 } from "lucide-react";
 import CompanyLogo from "./CompanyLogo";
 import rawInternships from "@/data/internships.json";
@@ -458,6 +460,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
   const [selectedTargetJobId, setSelectedTargetJobId] = useState("PMIS-001");
   const [gapLoading, setGapLoading] = useState(false);
   const [gapResult, setGapResult] = useState(null);
+  const [gapNewSkill, setGapNewSkill] = useState("");
 
   // Learn from Past Selection Sub-Tab ("resume" | "interview")
   const [pastSelectionSubTab, setPastSelectionSubTab] = useState("resume");
@@ -477,6 +480,25 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
 
   // Real-time Applications (starts clean, synced with user)
   const [applications, setApplications] = useState([]);
+
+  // URL Hash handling for direct deep-linking (e.g. #gap, #resumes, #applications)
+  useEffect(() => {
+    const handleHash = () => {
+      const hash = window.location.hash;
+      if (hash === "#gap" || hash === "#find-the-gap" || hash === "#skill-gap") {
+        setActiveTab("gap");
+      } else if (hash === "#resumes" || hash === "#resume-analyzer") {
+        setActiveTab("resumes");
+      } else if (hash === "#applications") {
+        setActiveTab("applications");
+      } else if (hash === "#profile") {
+        setActiveTab("profile");
+      }
+    };
+    handleHash();
+    window.addEventListener("hashchange", handleHash);
+    return () => window.removeEventListener("hashchange", handleHash);
+  }, []);
 
   // Sync profile when user changes
   useEffect(() => {
@@ -780,24 +802,69 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           target_internship_id: targetRole.id,
-          user_skills: profile.skills,
-          user_branch: profile.branch,
-          resume_summary: profile.career_goals,
+          user_skills: profile.skills || [],
+          user_branch: profile.branch || "Computer Science",
+          resume_summary: profile.career_goals || "",
         }),
       });
 
       if (res.ok) {
         const data = await res.json();
-        setGapResult(data.gap_analysis);
-        setGapLoading(false);
-        return;
+        const analysisData = data.analysis || data.gap_analysis;
+        if (analysisData && typeof analysisData === "object") {
+          const matchVerdict =
+            analysisData.match_status ||
+            analysisData.match_verdict ||
+            "Assessment Completed";
+
+          setGapResult({
+            target_role:
+              analysisData.target_role || `${targetRole.title} at ${targetRole.company}`,
+            target_company: targetRole.company,
+            target_sector: targetRole.sector,
+            target_location: targetRole.location,
+            target_stipend: targetRole.stipend,
+            match_percentage: analysisData.match_percentage || 75,
+            match_status: matchVerdict,
+            matched_skills:
+              Array.isArray(analysisData.matched_skills) && analysisData.matched_skills.length
+                ? analysisData.matched_skills
+                : (profile.skills || []).slice(0, 3),
+            missing_skills:
+              Array.isArray(analysisData.missing_skills) && analysisData.missing_skills.length
+                ? analysisData.missing_skills
+                : ["Domain Specific Production Frameworks", "Unit Test Coverage (pytest/Junit)"],
+            strengths: Array.isArray(analysisData.strengths)
+              ? analysisData.strengths
+              : ["Core engineering fundamentals", "Demonstrated willingness to learn"],
+            gap_analysis:
+              analysisData.gap_analysis ||
+              `You meet core foundational requirements for ${targetRole.title}. Completing 1 practical project in ${targetRole.sector} will significantly maximize your selection probability.`,
+            actionable_roadmap:
+              Array.isArray(analysisData.actionable_roadmap) && analysisData.actionable_roadmap.length
+                ? analysisData.actionable_roadmap
+                : [
+                    `Review official documentation for tools used at ${targetRole.company}.`,
+                    "Build 1 mini-project demonstrating end-to-end implementation with code repository.",
+                    "Prepare concise answers for the likely interview scenarios."
+                  ],
+            likely_interview_questions: Array.isArray(analysisData.likely_interview_questions)
+              ? analysisData.likely_interview_questions
+              : [
+                  `Why are you keen on interning with ${targetRole.company} under PM Internship Scheme?`,
+                  "Walk us through how you apply your listed technical skills in solving practical challenges."
+                ],
+          });
+          setGapLoading(false);
+          return;
+        }
       }
-    } catch {
-      // client-side fallback
+    } catch (err) {
+      console.warn("API gap analysis failed or offline, falling back:", err);
     }
 
     setTimeout(() => {
-      const targetRequiredSkills = targetRole.skills
+      const targetRequiredSkills = (targetRole.skills || "")
         .split(/[,;•]+/)
         .map((s) => s.trim())
         .filter(Boolean);
@@ -806,7 +873,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
       const missing = [];
 
       targetRequiredSkills.forEach((reqSkill) => {
-        const found = profile.skills.some(
+        const found = (profile.skills || []).some(
           (uSkill) =>
             uSkill.toLowerCase().includes(reqSkill.toLowerCase()) ||
             reqSkill.toLowerCase().includes(uSkill.toLowerCase())
@@ -819,7 +886,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
       });
 
       const totalReq = targetRequiredSkills.length || 1;
-      const matchScore = Math.min(95, Math.max(30, Math.round((matched.length / totalReq) * 100)));
+      const matchScore = Math.min(95, Math.max(35, Math.round((matched.length / totalReq) * 100)));
 
       setGapResult({
         target_role: targetRole.title,
@@ -834,7 +901,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
             : matchScore >= 50
               ? "Moderate Match (Bridging Needed)"
               : "Skill Bridge Required",
-        matched_skills: matched.length ? matched : ["Problem Solving", "Communication"],
+        matched_skills: matched.length ? matched : (profile.skills || []).slice(0, 2),
         missing_skills: missing.length
           ? missing
           : ["Domain Specific Production Frameworks", "Unit Test Coverage (pytest/Junit)"],
@@ -852,7 +919,76 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
         ],
       });
       setGapLoading(false);
-    }, 600);
+    }, 400);
+  };
+
+  const handleAddSkillInGapTab = (skillName) => {
+    const s = (skillName || gapNewSkill).trim();
+    if (!s) return;
+    if (!(profile.skills || []).includes(s)) {
+      const updatedSkills = [...(profile.skills || []), s];
+      const updatedProfile = { ...profile, skills: updatedSkills };
+      setProfile(updatedProfile);
+      setGapNewSkill("");
+      if (user) {
+        const u = { ...user, skills: updatedSkills };
+        localStorage.setItem("pmis_user", JSON.stringify(u));
+        window.dispatchEvent(new Event("pmis_user_updated"));
+      }
+    }
+  };
+
+  const handleApplyToJob = async (job) => {
+    if (!user) {
+      onOpenAuth();
+      return;
+    }
+    const storageKey = `pmis_applied_ids_${user.user_id}`;
+    const appStorageKey = `pmis_applications_${user.user_id}`;
+    const prevIds = JSON.parse(localStorage.getItem(storageKey) || "[]");
+
+    if (!prevIds.includes(job.id)) {
+      const newIds = [...prevIds, job.id];
+      localStorage.setItem(storageKey, JSON.stringify(newIds));
+
+      const newApp = {
+        id: `APP-2026-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+        company: job.company,
+        title: job.title,
+        sector: job.sector,
+        stipend: job.stipend,
+        location: job.location,
+        date: new Date().toLocaleDateString("en-IN", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        }),
+        status: "Application Submitted",
+        badgeColor: "bg-blue-100 text-blue-900 border-blue-300 font-bold",
+      };
+
+      const existingApps = JSON.parse(localStorage.getItem(appStorageKey) || "[]");
+      existingApps.unshift(newApp);
+      localStorage.setItem(appStorageKey, JSON.stringify(existingApps));
+      setApplications(existingApps);
+      window.dispatchEvent(new Event("pmis_application_updated"));
+
+      try {
+        await fetch(`${BACKEND_URL}/api/user/apply?user_id=${user.user_id}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            internship_id: job.id,
+            company: job.company,
+            title: job.title,
+            notes: "Applied via Find the Gap AI Matcher",
+          }),
+        });
+      } catch (err) {
+        console.warn("Backend apply warning:", err);
+      }
+    }
+    setActiveTab("applications");
   };
 
   const selectedTargetRole =
@@ -2135,27 +2271,29 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
           </div>
 
           {/* Job Selection Dropdown */}
-          <div className="rounded-2xl border-2 border-slate-200 dark:border-slate-800 p-5 bg-slate-50 dark:bg-slate-800/40">
-            <label className="block text-xs font-black text-slate-900 dark:text-white mb-2">
-              Select Which Corporate Role You Are Applying For:
-            </label>
-            <select
-              value={selectedTargetJobId}
-              onChange={(e) => {
-                setSelectedTargetJobId(e.target.value);
-                setGapResult(null);
-              }}
-              className="w-full rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2.5 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-primary cursor-pointer"
-            >
-              {rawInternships.map((job) => (
-                <option key={job.id} value={job.id}>
-                  {job.company} — {job.title} ({job.sector} • {job.location})
-                </option>
-              ))}
-            </select>
+          <div className="rounded-2xl border-2 border-slate-200 dark:border-slate-800 p-5 bg-slate-50 dark:bg-slate-800/40 space-y-4">
+            <div>
+              <label className="block text-xs font-black text-slate-900 dark:text-white mb-2">
+                1. Select Which Corporate Role You Are Applying For:
+              </label>
+              <select
+                value={selectedTargetJobId}
+                onChange={(e) => {
+                  setSelectedTargetJobId(e.target.value);
+                  setGapResult(null);
+                }}
+                className="w-full rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2.5 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-primary cursor-pointer"
+              >
+                {rawInternships.map((job) => (
+                  <option key={job.id} value={job.id}>
+                    {job.company} — {job.title} ({job.sector} • {job.location})
+                  </option>
+                ))}
+              </select>
+            </div>
 
             {/* Target Job Quick Snapshot */}
-            <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
               <div className="rounded-xl bg-white dark:bg-slate-900 p-3 border border-slate-200 dark:border-slate-700">
                 <span className="text-[10px] uppercase font-black text-slate-400">Sector</span>
                 <p className="font-extrabold text-slate-900 dark:text-white truncate">
@@ -2181,6 +2319,67 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                 </p>
               </div>
             </div>
+
+            {/* Required Skills for this Role */}
+            {selectedTargetRole.skills && (
+              <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80">
+                <span className="text-[10px] uppercase font-black text-slate-400 block mb-1">
+                  Required Role Skills (From Recruiter JD):
+                </span>
+                <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  {selectedTargetRole.skills}
+                </p>
+              </div>
+            )}
+
+            {/* Candidate Skills Being Evaluated */}
+            <div className="pt-2 border-t border-slate-200 dark:border-slate-700/80">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                <span className="text-[11px] font-black uppercase text-slate-600 dark:text-slate-300">
+                  2. Your Profile Skills Being Evaluated ({profile.skills?.length || 0}):
+                </span>
+                <span className="text-[10px] font-semibold text-slate-400">
+                  Add more skills below to test different combinations
+                </span>
+              </div>
+
+              <div className="flex flex-wrap gap-1.5 items-center">
+                {(profile.skills || []).map((sk) => (
+                  <span
+                    key={sk}
+                    className="rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-2.5 py-1 text-xs font-bold text-slate-800 dark:text-slate-200 shadow-2xs"
+                  >
+                    ✓ {sk}
+                  </span>
+                ))}
+
+                {/* Inline Quick Add Skill Input */}
+                <div className="flex items-center gap-1.5 ml-1">
+                  <input
+                    type="text"
+                    value={gapNewSkill}
+                    onChange={(e) => setGapNewSkill(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddSkillInGapTab();
+                      }
+                    }}
+                    placeholder="+ Add skill..."
+                    className="w-28 rounded-lg border border-dashed border-slate-300 dark:border-slate-700 bg-white/70 dark:bg-slate-900/70 px-2.5 py-1 text-xs font-semibold text-slate-800 dark:text-slate-200 placeholder:text-slate-400 outline-none focus:border-primary"
+                  />
+                  {gapNewSkill.trim() && (
+                    <button
+                      type="button"
+                      onClick={() => handleAddSkillInGapTab()}
+                      className="rounded-lg bg-primary text-primary-foreground px-2 py-1 text-xs font-bold shadow-2xs cursor-pointer"
+                    >
+                      Add
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* AI Gap Result Output */}
@@ -2203,11 +2402,27 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                 <div className="flex items-center gap-3 bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 shadow-sm shrink-0">
                   <div className="text-right">
                     <span className="text-[10px] font-black uppercase text-slate-400">Match Score</span>
-                    <p className="font-display text-3xl font-black text-primary">
+                    <p
+                      className={`font-display text-3xl font-black ${
+                        gapResult.match_percentage >= 75
+                          ? "text-emerald-600 dark:text-emerald-400"
+                          : gapResult.match_percentage >= 50
+                            ? "text-amber-600 dark:text-amber-400"
+                            : "text-red-600 dark:text-red-400"
+                      }`}
+                    >
                       {gapResult.match_percentage}%
                     </p>
                   </div>
-                  <div className="h-10 w-1 rounded-full bg-primary" />
+                  <div
+                    className={`h-10 w-1.5 rounded-full ${
+                      gapResult.match_percentage >= 75
+                        ? "bg-emerald-500"
+                        : gapResult.match_percentage >= 50
+                          ? "bg-amber-500"
+                          : "bg-red-500"
+                    }`}
+                  />
                 </div>
               </div>
 
@@ -2217,13 +2432,13 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                 <div className="rounded-2xl border-2 border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-950/20 p-5 space-y-3">
                   <div className="flex items-center gap-2 text-green-700 dark:text-green-300 font-extrabold text-sm">
                     <CheckCircle2 className="h-4 w-4" />
-                    <span>Skills You Have ({gapResult.matched_skills.length})</span>
+                    <span>Skills You Have ({gapResult.matched_skills?.length || 0})</span>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {gapResult.matched_skills.map((s) => (
+                    {(gapResult.matched_skills || []).map((s) => (
                       <span
                         key={s}
-                        className="rounded-xl bg-white dark:bg-slate-900 border border-green-300 dark:border-green-700 px-3 py-1 text-xs font-bold text-green-900 dark:text-green-200"
+                        className="rounded-xl bg-white dark:bg-slate-900 border border-green-300 dark:border-green-700 px-3 py-1 text-xs font-bold text-green-900 dark:text-green-200 shadow-2xs"
                       >
                         ✓ {s}
                       </span>
@@ -2235,13 +2450,13 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                 <div className="rounded-2xl border-2 border-red-200 dark:border-red-800 bg-red-50/50 dark:bg-red-950/20 p-5 space-y-3">
                   <div className="flex items-center gap-2 text-red-700 dark:text-red-300 font-extrabold text-sm">
                     <AlertTriangle className="h-4 w-4" />
-                    <span>Skills You Need to Bridge ({gapResult.missing_skills.length})</span>
+                    <span>Skills You Need to Bridge ({gapResult.missing_skills?.length || 0})</span>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {gapResult.missing_skills.map((s) => (
+                    {(gapResult.missing_skills || []).map((s) => (
                       <span
                         key={s}
-                        className="rounded-xl bg-white dark:bg-slate-900 border border-red-300 dark:border-red-700 px-3 py-1 text-xs font-bold text-red-900 dark:text-red-200"
+                        className="rounded-xl bg-white dark:bg-slate-900 border border-red-300 dark:border-red-700 px-3 py-1 text-xs font-bold text-red-900 dark:text-red-200 shadow-2xs"
                       >
                         ! {s}
                       </span>
@@ -2257,21 +2472,68 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                   <span>Actionable 14-Day Skill Bridge Roadmap</span>
                 </div>
                 <ul className="space-y-2 text-xs">
-                  {gapResult.actionable_roadmap.map((step, idx) => (
+                  {(gapResult.actionable_roadmap || []).map((step, idx) => (
                     <li key={idx} className="flex items-start gap-2 text-slate-700 dark:text-slate-300">
                       <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-[10px]">
                         {idx + 1}
                       </span>
-                      <span>{step}</span>
+                      <span className="font-medium leading-relaxed">{step}</span>
                     </li>
                   ))}
                 </ul>
               </div>
+
+              {/* Likely Interview Questions */}
+              {gapResult.likely_interview_questions && gapResult.likely_interview_questions.length > 0 && (
+                <div className="rounded-2xl border-2 border-slate-200 dark:border-slate-800 p-5 bg-white dark:bg-slate-900 space-y-3">
+                  <div className="flex items-center gap-2 text-sm font-extrabold text-slate-900 dark:text-white">
+                    <HelpCircle className="h-4 w-4 text-orange-500" />
+                    <span>Likely Recruiter Interview Questions for this Role</span>
+                  </div>
+                  <ul className="space-y-2.5 text-xs">
+                    {gapResult.likely_interview_questions.map((q, idx) => (
+                      <li
+                        key={idx}
+                        className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800"
+                      >
+                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-950 text-orange-700 dark:text-orange-300 font-bold text-[10px]">
+                          Q{idx + 1}
+                        </span>
+                        <span className="font-semibold text-slate-800 dark:text-slate-200 leading-relaxed">{q}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+                <button
+                  onClick={() => handleApplyToJob(selectedTargetRole)}
+                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#F57C00] to-[#E65100] text-white px-6 py-3 text-xs font-black shadow-md hover:brightness-105 active:scale-95 transition cursor-pointer"
+                >
+                  <Briefcase className="h-4 w-4" />
+                  <span>Apply for this Role Now</span>
+                </button>
+
+                <button
+                  onClick={handleRunGapAnalysis}
+                  disabled={gapLoading}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 px-4 py-2.5 text-xs font-bold transition cursor-pointer"
+                >
+                  <RefreshCw className="h-3.5 w-3.5 text-orange-500" />
+                  <span>Re-run AI Match</span>
+                </button>
+              </div>
             </div>
           ) : (
-            <div className="text-center py-8">
-              <p className="text-xs font-semibold text-slate-500">
-                Click <strong>&quot;Run AI Match Now&quot;</strong> to generate your real-time skills comparison and gap analysis for this role.
+            <div className="text-center py-10 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-850/30">
+              <Target className="h-10 w-10 text-orange-500/70 mx-auto mb-2 animate-bounce-slow" />
+              <h4 className="font-display text-base font-black text-slate-900 dark:text-white">
+                Ready to Evaluate Match with {selectedTargetRole.company}
+              </h4>
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1 max-w-md mx-auto">
+                Click <strong>&quot;Run AI Match Now&quot;</strong> above to generate real-time skill overlap, identified missing tools, and your 14-day bridge roadmap.
               </p>
             </div>
           )}

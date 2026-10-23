@@ -327,7 +327,10 @@ export default function Footer({ onSetView }) {
               </li>
               <li>
                 <button
-                  onClick={() => navigateToView("dashboard")}
+                  onClick={() => {
+                    window.location.hash = "#gap";
+                    navigateToView("dashboard");
+                  }}
                   className="group flex items-center gap-2 text-slate-300 hover:text-orange-400 transition-colors cursor-pointer"
                 >
                   <ChevronRight className="h-3.5 w-3.5 text-slate-500 group-hover:text-orange-400 group-hover:translate-x-1 transition-all" />

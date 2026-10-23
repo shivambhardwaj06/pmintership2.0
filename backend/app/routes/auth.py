@@ -557,7 +557,16 @@ def analyze_skill_gap(payload: GapAnalysisRequest):
         user_branch=payload.user_branch or "",
         resume_summary=payload.resume_summary or ""
     )
-    return {"status": "success", "analysis": result}
+    if not isinstance(result, dict):
+        result = {}
+    verdict = result.get("match_verdict") or result.get("match_status") or "Assessment Completed"
+    result["match_status"] = verdict
+    result["match_verdict"] = verdict
+    return {
+        "status": "success",
+        "analysis": result,
+        "gap_analysis": result
+    }
 
 
 # =========================================================================

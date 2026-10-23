@@ -77,7 +77,15 @@ export default function Landing() {
       const hash = window.location.hash;
       if (hash === "#explore" || hash === "#explore-internships") {
         setActiveView("explore");
-      } else if (hash === "#dashboard" || hash === "#student-dashboard") {
+      } else if (
+        hash === "#dashboard" ||
+        hash === "#student-dashboard" ||
+        hash === "#gap" ||
+        hash === "#find-the-gap" ||
+        hash === "#skill-gap" ||
+        hash === "#resumes" ||
+        hash === "#applications"
+      ) {
         setActiveView("dashboard");
       } else if (hash === "#dont-fall-in-trap" || hash === "#dont-fall-on-the-trap") {
         setActiveView("home");
