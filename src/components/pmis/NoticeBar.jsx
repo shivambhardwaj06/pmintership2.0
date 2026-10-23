@@ -8,7 +8,7 @@ export default function NoticeBar() {
   const [paused, setPaused] = useState(false);
   return (
     <div className="mx-auto max-w-7xl px-4 pt-4">
-      <div className="flex items-center gap-3 overflow-hidden rounded-2xl border bg-notice py-2 pl-3 pr-2 text-notice-foreground">
+      <div className="flex items-center gap-3 overflow-hidden rounded-2xl border border-amber-200/80 dark:border-amber-800/60 bg-notice py-2 pl-3 pr-2 text-notice-foreground shadow-2xs">
         <span className="flex shrink-0 items-center gap-1.5 rounded-lg bg-saffron px-2.5 py-1 text-xs font-bold text-saffron-foreground">
           <Megaphone className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Notice</span>
         </span>

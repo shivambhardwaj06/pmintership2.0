@@ -1,12 +1,21 @@
 import { useEffect, useState } from "react";
-import { Contrast, Volume2 } from "lucide-react";
+import { Contrast, Volume2, Sun, Moon } from "lucide-react";
 import flag from "@/assets/indian_flag.svg";
+import { getTheme, toggleTheme } from "@/lib/theme";
 
 const SIZES = [14, 16, 18, 20];
 
 export default function AccessibilityBar() {
   const [size, setSize] = useState(16);
   const [contrast, setContrast] = useState(false);
+  const [theme, setTheme] = useState("light");
+
+  useEffect(() => {
+    setTheme(getTheme());
+    const handler = (e) => setTheme(e.detail || getTheme());
+    window.addEventListener("pmis_theme_changed", handler);
+    return () => window.removeEventListener("pmis_theme_changed", handler);
+  }, []);
 
   useEffect(() => {
     document.documentElement.style.setProperty("--base-size", size + "px");
@@ -21,7 +30,7 @@ export default function AccessibilityBar() {
   };
 
   const btn =
-    "grid h-7 min-w-7 place-items-center rounded-md px-1.5 text-xs font-semibold transition-colors hover:bg-ink-foreground/10";
+    "grid h-7 min-w-7 place-items-center rounded-md px-1.5 text-xs font-semibold transition-colors hover:bg-ink-foreground/10 cursor-pointer";
 
   return (
     <div className="bg-ink text-ink-foreground">
@@ -49,8 +58,22 @@ export default function AccessibilityBar() {
             onClick={() => setContrast((c) => !c)}
             aria-pressed={contrast}
             aria-label="Toggle high contrast"
+            title="High Contrast"
           >
             <Contrast className="h-4 w-4" />
+          </button>
+          <span className="mx-0.5 h-4 w-px bg-ink-foreground/20" />
+          <button
+            className={btn}
+            onClick={toggleTheme}
+            aria-label={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          >
+            {theme === "dark" ? (
+              <Sun className="h-4 w-4 text-amber-400" />
+            ) : (
+              <Moon className="h-4 w-4" />
+            )}
           </button>
         </div>
       </div>

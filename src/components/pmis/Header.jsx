@@ -19,11 +19,14 @@ import {
   LayoutDashboard,
   LogOut,
   Sparkles,
+  Sun,
+  Moon,
 } from "lucide-react";
 import mca from "@/assets/MCA.svg";
 import pmLogo from "@/assets/pm_internship_logo_eng.svg";
 import viksit from "@/assets/viksit.png";
 import { NAV } from "./navData";
+import { getTheme, toggleTheme } from "@/lib/theme";
 
 const ICONS = {
   Guidelines: BookOpen,
@@ -95,7 +98,7 @@ function Dropdown({ item, Icon, open, onToggle }) {
   );
 }
 
-function MobileMenu({ onClose, user, onOpenAuth, onSetView, onLogout }) {
+function MobileMenu({ onClose, user, onOpenAuth, onSetView, onLogout, theme }) {
   const [openIdx, setOpenIdx] = useState(-1);
   return (
     <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Menu">
@@ -108,6 +111,22 @@ function MobileMenu({ onClose, user, onOpenAuth, onSetView, onLogout }) {
           <button onClick={onClose} aria-label="Close menu" className="rounded-lg p-2 hover:bg-slate-100 dark:hover:bg-slate-800">
             <X className="h-5 w-5" />
           </button>
+        </div>
+
+        {/* Theme Toggle row */}
+        <div className="px-3 pt-3">
+          <div className="flex items-center justify-between rounded-xl bg-slate-100 dark:bg-slate-800 px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700">
+            <span className="flex items-center gap-2">
+              {theme === "dark" ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-slate-600" />}
+              <span>{theme === "dark" ? "Dark Mode" : "Light Mode"}</span>
+            </span>
+            <button
+              onClick={toggleTheme}
+              className="rounded-lg bg-white dark:bg-slate-700 px-2.5 py-1 text-[11px] font-black text-slate-800 dark:text-white shadow-2xs cursor-pointer"
+            >
+              Switch to {theme === "dark" ? "Light" : "Dark"}
+            </button>
+          </div>
         </div>
 
         {/* Quick Main Links (Single Home link only) */}
@@ -228,7 +247,15 @@ function MobileMenu({ onClose, user, onOpenAuth, onSetView, onLogout }) {
 export default function Header({ user, onOpenAuth, onSetView, activeView = "home", onLogout }) {
   const [openIdx, setOpenIdx] = useState(-1);
   const [mobile, setMobile] = useState(false);
+  const [theme, setTheme] = useState("light");
   const navRef = useRef(null);
+
+  useEffect(() => {
+    setTheme(getTheme());
+    const handler = (e) => setTheme(e.detail || getTheme());
+    window.addEventListener("pmis_theme_changed", handler);
+    return () => window.removeEventListener("pmis_theme_changed", handler);
+  }, []);
 
   useEffect(() => {
     const close = (e) => {
@@ -265,9 +292,23 @@ export default function Header({ user, onOpenAuth, onSetView, activeView = "home
           </div>
         </button>
 
-        {/* Right Section: Viksit Bharat & Candidate Profile / Auth Button */}
-        <div className="flex items-center gap-3">
+        {/* Right Section: Viksit Bharat, Theme Toggle, Candidate Profile / Auth Button */}
+        <div className="flex items-center gap-2.5 sm:gap-3">
           <img src={viksit} alt="Viksit Bharat" className="hidden lg:block h-10 object-contain hover:scale-105 transition-transform" />
+
+          {/* Theme Toggle Button */}
+          <button
+            onClick={toggleTheme}
+            className="flex h-9 w-9 items-center justify-center rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-amber-400 transition-all cursor-pointer shadow-2xs"
+            aria-label="Toggle dark mode"
+            title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          >
+            {theme === "dark" ? (
+              <Sun className="h-4 w-4 text-amber-400" />
+            ) : (
+              <Moon className="h-4 w-4 text-slate-700" />
+            )}
+          </button>
 
           {user ? (
             <div className="flex items-center gap-2">
@@ -405,6 +446,7 @@ export default function Header({ user, onOpenAuth, onSetView, activeView = "home
           onOpenAuth={onOpenAuth}
           onSetView={onSetView}
           onLogout={onLogout}
+          theme={theme}
         />
       )}
     </header>

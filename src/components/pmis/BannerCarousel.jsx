@@ -13,7 +13,7 @@ const SLIDES = [
 
 function Controls({ index, setIndex, playing, setPlaying, prev, next }) {
   const ctrl =
-    "grid h-9 w-9 place-items-center rounded-full glass-card text-primary transition hover:scale-105";
+    "grid h-9 w-9 place-items-center rounded-full glass-card text-primary dark:text-white transition hover:scale-105 cursor-pointer";
   return (
     <div className="mt-4 flex items-center justify-between gap-4">
       <div className="flex items-center gap-2" role="tablist" aria-label="Choose banner">
@@ -59,7 +59,7 @@ export default function BannerCarousel() {
         <div className="mb-3 flex items-end justify-between">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-saffron">Highlights</p>
-            <h2 className="font-display text-xl font-bold text-primary sm:text-2xl">What's new on PM Internship</h2>
+            <h2 className="font-display text-xl font-bold text-primary dark:text-white sm:text-2xl">What's new on PM Internship</h2>
           </div>
         </div>
         <div

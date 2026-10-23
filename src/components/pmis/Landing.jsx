@@ -9,6 +9,7 @@ import ExploreInternships from "./ExploreInternships";
 import StudentDashboard from "./StudentDashboard";
 import AuthModal from "./AuthModal";
 import Footer from "./Footer";
+import { applyTheme, getTheme } from "@/lib/theme";
 
 const RAW_BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
 const BACKEND_URL = RAW_BACKEND_URL.replace(/\/+$/, "");
@@ -18,6 +19,11 @@ export default function Landing() {
   const [activeView, setActiveView] = useState("home"); // "home" | "explore" | "dashboard"
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authInitialMode, setAuthInitialMode] = useState("login");
+
+  // Initialize theme on client boot
+  useEffect(() => {
+    applyTheme(getTheme());
+  }, []);
 
   // Load existing session on boot & auto-sanitize generic name placeholders
   useEffect(() => {

@@ -142,7 +142,7 @@ export default function TopFeaturedInternships({
               <div className="mt-5 pt-3.5 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3">
                 <button
                   onClick={onExploreAll}
-                  className="text-xs font-bold text-primary hover:underline"
+                  className="text-xs font-bold text-primary dark:text-sky-400 hover:underline cursor-pointer"
                 >
                   View Details
                 </button>
@@ -153,7 +153,7 @@ export default function TopFeaturedInternships({
                   className={`rounded-xl px-4 py-2 text-xs font-bold transition shadow-xs ${
                     isApplied
                       ? "bg-green-100 text-green-800 border border-green-300 cursor-default"
-                      : "bg-gradient-to-r from-[#F57C00] to-[#E65100] text-white hover:brightness-105 active:scale-95"
+                      : "bg-gradient-to-r from-[#F57C00] to-[#E65100] text-white hover:brightness-105 active:scale-95 cursor-pointer"
                   }`}
                 >
                   {isApplied ? "✓ Applied" : "Apply Now"}
@@ -168,7 +168,7 @@ export default function TopFeaturedInternships({
       <div className="mt-12 text-center">
         <button
           onClick={onExploreAll}
-          className="inline-flex items-center gap-2 rounded-full border-2 border-primary/30 bg-primary/5 hover:bg-primary/10 px-8 py-3.5 text-sm font-extrabold text-primary shadow-xs transition hover:scale-105"
+          className="inline-flex items-center gap-2 rounded-full border-2 border-primary/30 dark:border-primary/50 bg-primary/5 hover:bg-primary/10 dark:bg-primary/15 px-8 py-3.5 text-sm font-extrabold text-primary dark:text-sky-300 shadow-xs transition hover:scale-105 cursor-pointer"
         >
           <span>Browse All 120 Opportunities with State & Sector Filters</span>
           <ArrowRight className="h-4 w-4" />

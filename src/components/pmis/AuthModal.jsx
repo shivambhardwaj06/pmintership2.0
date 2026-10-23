@@ -334,17 +334,14 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div
-        className="relative w-full max-w-md overflow-hidden rounded-3xl bg-card border-2 border-slate-200 dark:border-slate-800 shadow-2xl p-6 sm:p-8"
-        style={{
-          background: "linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(240, 245, 255, 0.95))",
-        }}
+        className="relative w-full max-w-md overflow-hidden rounded-3xl bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 shadow-2xl p-6 sm:p-8"
       >
         {/* Top Header with PM Logo & Close */}
         <div className="flex items-center justify-between pb-4 border-b border-border/40">
           <img src={pmLogo} alt="PM Internship Scheme" className="h-10 object-contain" />
           <button
             onClick={onClose}
-            className="rounded-full p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            className="rounded-full p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
             aria-label="Close modal"
           >
             <X className="h-5 w-5" />
@@ -356,14 +353,14 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
           <div
             className={`mt-4 rounded-xl p-3 text-xs flex items-center gap-2 border font-medium ${
               statusMessage.type === "success"
-                ? "bg-green-50 border-green-300 text-green-800"
-                : "bg-red-50 border-red-300 text-red-800"
+                ? "bg-green-50 dark:bg-green-950/40 border-green-300 dark:border-green-800 text-green-800 dark:text-green-300"
+                : "bg-red-50 dark:bg-red-950/40 border-red-300 dark:border-red-800 text-red-800 dark:text-red-300"
             }`}
           >
             {statusMessage.type === "success" ? (
-              <CheckCircle2 className="h-4 w-4 shrink-0 text-green-600" />
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-green-600 dark:text-green-400" />
             ) : (
-              <AlertCircle className="h-4 w-4 shrink-0 text-red-600" />
+              <AlertCircle className="h-4 w-4 shrink-0 text-red-600 dark:text-red-400" />
             )}
             <span>{statusMessage.text}</span>
           </div>
@@ -375,8 +372,8 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
         {mode === "login" && (
           <div className="mt-5 space-y-4">
             <div>
-              <h2 className="font-display text-2xl font-black text-[#003B73]">LOGIN</h2>
-              <p className="text-xs font-semibold text-slate-600 mt-0.5">
+              <h2 className="font-display text-2xl font-black text-[#003B73] dark:text-sky-400">LOGIN</h2>
+              <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 mt-0.5">
                 Login with your registered Mobile Number or User ID
               </p>
             </div>
@@ -391,7 +388,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
                   value={ident}
                   onChange={(e) => setIdent(e.target.value)}
                   placeholder="Enter Username / Mobile / CIN"
-                  className="w-full rounded-2xl border-2 border-slate-200 bg-white pl-10 pr-4 py-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-primary shadow-xs"
+                  className="w-full rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 pl-10 pr-4 py-3 text-sm font-semibold text-slate-900 dark:text-white outline-none transition focus:border-primary shadow-xs"
                   required
                 />
               </div>
@@ -405,13 +402,13 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter Password"
-                  className="w-full rounded-2xl border-2 border-slate-200 bg-white pl-10 pr-10 py-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-primary shadow-xs"
+                  className="w-full rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 pl-10 pr-10 py-3 text-sm font-semibold text-slate-900 dark:text-white outline-none transition focus:border-primary shadow-xs"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-3.5 text-muted-foreground hover:text-foreground"
+                  className="absolute right-3.5 top-3.5 text-muted-foreground hover:text-foreground cursor-pointer"
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -421,7 +418,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full sm:w-36 rounded-xl bg-gradient-to-r from-[#F57C00] to-[#E65100] px-6 py-2.5 text-sm font-bold text-white shadow-md transition hover:brightness-105 active:scale-95 disabled:opacity-50"
+                  className="w-full sm:w-36 rounded-xl bg-gradient-to-r from-[#F57C00] to-[#E65100] px-6 py-2.5 text-sm font-bold text-white shadow-md transition hover:brightness-105 active:scale-95 disabled:opacity-50 cursor-pointer"
                 >
                   {loading ? "Logging in..." : "Login"}
                 </button>
@@ -435,7 +432,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
                   setStatusMessage(null);
                   setMode("reset");
                 }}
-                className="text-slate-600 hover:text-[#003B73] underline underline-offset-2"
+                className="text-slate-600 dark:text-slate-400 hover:text-[#003B73] dark:hover:text-sky-400 underline underline-offset-2 cursor-pointer"
               >
                 Forgot Password?
               </button>
@@ -445,7 +442,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
                   setStatusMessage(null);
                   setMode("register");
                 }}
-                className="text-[#003B73] hover:underline underline-offset-2 font-extrabold"
+                className="text-[#003B73] dark:text-sky-400 hover:underline underline-offset-2 font-extrabold cursor-pointer"
               >
                 New user? Register now
               </button>
@@ -454,10 +451,10 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
             {/* Google OAuth Option */}
             <div className="relative pt-2">
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-slate-200" />
+                <span className="w-full border-t border-slate-200 dark:border-slate-700" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 font-bold text-slate-500">Or continue with</span>
+                <span className="bg-white dark:bg-slate-900 px-2 font-bold text-slate-500 dark:text-slate-400">Or continue with</span>
               </div>
             </div>
 
@@ -467,7 +464,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
                 setStatusMessage(null);
                 setMode("google");
               }}
-              className="flex w-full items-center justify-center gap-2.5 rounded-2xl border-2 border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-800 shadow-xs transition hover:bg-slate-50"
+              className="flex w-full items-center justify-center gap-2.5 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/60 px-4 py-2.5 text-sm font-bold text-slate-800 dark:text-white shadow-xs transition cursor-pointer"
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24">
                 <path
@@ -498,20 +495,20 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
         {mode === "register" && (
           <div className="mt-4 space-y-4">
             <div className="flex flex-col items-center text-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-tr from-purple-200/60 to-orange-200/60 p-3 mb-2 shadow-inner">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-tr from-purple-200/60 to-orange-200/60 dark:from-purple-900/40 dark:to-orange-900/40 p-3 mb-2 shadow-inner">
                 <Users className="h-8 w-8 text-orange-500" />
               </div>
-              <h2 className="font-display text-2xl font-black text-[#A12568] tracking-tight">
+              <h2 className="font-display text-2xl font-black text-[#A12568] dark:text-pink-400 tracking-tight">
                 REGISTER YOUTH
               </h2>
-              <p className="text-xs text-slate-600 mt-0.5">
+              <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
                 Create your candidate account for PM corporate internships
               </p>
             </div>
 
             <form onSubmit={handleRegister} className="space-y-3.5 mt-2">
               <div>
-                <label className="block text-xs font-bold text-slate-800 mb-1">
+                <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">
                   Full Name
                 </label>
                 <div className="relative">
@@ -523,14 +520,14 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="Enter candidate full name"
-                    className="w-full rounded-2xl border-2 border-slate-200 bg-white pl-10 pr-4 py-2.5 text-sm font-semibold text-slate-900 outline-none transition focus:border-primary shadow-xs"
+                    className="w-full rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 pl-10 pr-4 py-2.5 text-sm font-semibold text-slate-900 dark:text-white outline-none transition focus:border-primary shadow-xs"
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-800 mb-1">
+                <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">
                   Mobile Number (10 digits)
                 </label>
                 <div className="relative">
@@ -543,14 +540,14 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
                     value={mobile}
                     onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))}
                     placeholder="Enter 10-digit mobile number"
-                    className="w-full rounded-2xl border-2 border-slate-200 bg-white pl-10 pr-4 py-2.5 text-sm font-semibold text-slate-900 outline-none transition focus:border-primary shadow-xs"
+                    className="w-full rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 pl-10 pr-4 py-2.5 text-sm font-semibold text-slate-900 dark:text-white outline-none transition focus:border-primary shadow-xs"
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-800 mb-1">
+                <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">
                   Choose Password
                 </label>
                 <div className="relative">
@@ -562,20 +559,20 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Create a secure password"
-                    className="w-full rounded-2xl border-2 border-slate-200 bg-white pl-10 pr-10 py-2.5 text-sm font-semibold text-slate-900 outline-none transition focus:border-primary shadow-xs"
+                    className="w-full rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 pl-10 pr-10 py-2.5 text-sm font-semibold text-slate-900 dark:text-white outline-none transition focus:border-primary shadow-xs"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-3 text-muted-foreground hover:text-foreground"
+                    className="absolute right-3.5 top-3 text-muted-foreground hover:text-foreground cursor-pointer"
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
               </div>
 
-              <label className="flex items-start gap-2.5 text-xs text-slate-700 cursor-pointer select-none pt-1 font-medium">
+              <label className="flex items-start gap-2.5 text-xs text-slate-700 dark:text-slate-300 cursor-pointer select-none pt-1 font-medium">
                 <input
                   type="checkbox"
                   checked={isUniqueConfirmed}
@@ -589,7 +586,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full rounded-xl bg-gradient-to-r from-[#F57C00] to-[#E65100] px-6 py-2.5 text-sm font-bold text-white shadow-md transition hover:brightness-105 active:scale-95 disabled:opacity-50"
+                  className="w-full rounded-xl bg-gradient-to-r from-[#F57C00] to-[#E65100] px-6 py-2.5 text-sm font-bold text-white shadow-md transition hover:brightness-105 active:scale-95 disabled:opacity-50 cursor-pointer"
                 >
                   {loading ? "Registering..." : "COMPLETE REGISTRATION"}
                 </button>
@@ -603,7 +600,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
                   setStatusMessage(null);
                   setMode("login");
                 }}
-                className="text-xs font-extrabold text-[#003B73] hover:underline"
+                className="text-xs font-extrabold text-[#003B73] dark:text-sky-400 hover:underline cursor-pointer"
               >
                 Already registered? Go to Login
               </button>
@@ -617,7 +614,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
         {mode === "google" && (
           <div className="mt-4 space-y-4">
             <div className="flex flex-col items-center text-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white border-2 border-slate-200 shadow-md p-3 mb-2">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 shadow-md p-3 mb-2">
                 <svg className="h-10 w-10" viewBox="0 0 24 24">
                   <path
                     fill="#4285F4"
@@ -637,17 +634,17 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
                   />
                 </svg>
               </div>
-              <h2 className="font-display text-xl font-extrabold text-slate-900">
+              <h2 className="font-display text-xl font-extrabold text-slate-900 dark:text-white">
                 Sign in with Google
               </h2>
-              <p className="text-xs text-slate-600 mt-0.5">
+              <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
                 Authenticate with your Google Account for instant access
               </p>
             </div>
 
             <form onSubmit={handleGoogleSubmit} className="space-y-3.5 mt-2">
               <div>
-                <label className="block text-xs font-bold text-slate-800 mb-1">
+                <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">
                   Your Full Name
                 </label>
                 <div className="relative">
@@ -659,14 +656,14 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
                     value={googleName}
                     onChange={(e) => setGoogleName(e.target.value)}
                     placeholder="e.g. Shivam Bhardwaj"
-                    className="w-full rounded-2xl border-2 border-slate-200 bg-white pl-10 pr-4 py-2.5 text-sm font-semibold text-slate-900 outline-none transition focus:border-primary shadow-xs"
+                    className="w-full rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 pl-10 pr-4 py-2.5 text-sm font-semibold text-slate-900 dark:text-white outline-none transition focus:border-primary shadow-xs"
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-800 mb-1">
+                <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">
                   Google Email Address
                 </label>
                 <div className="relative">
@@ -692,7 +689,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
                       }
                     }}
                     placeholder="student@gmail.com"
-                    className="w-full rounded-2xl border-2 border-slate-200 bg-white pl-10 pr-4 py-2.5 text-sm font-semibold text-slate-900 outline-none transition focus:border-primary shadow-xs"
+                    className="w-full rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 pl-10 pr-4 py-2.5 text-sm font-semibold text-slate-900 dark:text-white outline-none transition focus:border-primary shadow-xs"
                     required
                   />
                 </div>
@@ -702,7 +699,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 text-sm shadow-md transition active:scale-95 disabled:opacity-50"
+                  className="w-full rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 text-sm shadow-md transition active:scale-95 disabled:opacity-50 cursor-pointer"
                 >
                   {loading ? "Authenticating with Google..." : "Verify & Continue with Google"}
                 </button>
@@ -713,7 +710,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
               <button
                 type="button"
                 onClick={() => setMode("login")}
-                className="text-xs font-semibold text-slate-600 hover:underline"
+                className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:underline cursor-pointer"
               >
                 ← Back to standard login
               </button>
@@ -727,10 +724,10 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
         {mode === "reset" && (
           <div className="mt-4 space-y-4">
             <div className="flex flex-col items-center text-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-100 text-red-500 mb-2 shadow-inner">
-                <AlertCircle className="h-10 w-10 text-red-500" />
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-100 dark:bg-red-950/50 text-red-500 mb-2 shadow-inner">
+                <AlertCircle className="h-10 w-10 text-red-500 dark:text-red-400" />
               </div>
-              <h2 className="font-display text-2xl font-black text-[#D32F2F]">RESET PASSWORD</h2>
+              <h2 className="font-display text-2xl font-black text-[#D32F2F] dark:text-red-400">RESET PASSWORD</h2>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Recover your user account or reset your password
               </p>
@@ -738,7 +735,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
 
             <form onSubmit={handleResetPassword} className="space-y-4 mt-2">
               <div>
-                <label className="block text-xs font-bold text-foreground/80 mb-1">
+                <label className="block text-xs font-bold text-foreground/80 dark:text-slate-200 mb-1">
                   Enter Registered User ID or Mobile
                 </label>
                 <div className="relative">
@@ -750,7 +747,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
                     value={resetId}
                     onChange={(e) => setResetId(e.target.value)}
                     placeholder="Enter Username / Mobile / CIN"
-                    className="w-full rounded-2xl border-2 border-slate-200 bg-white pl-10 pr-4 py-3 text-sm font-medium outline-none transition focus:border-primary shadow-xs"
+                    className="w-full rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 pl-10 pr-4 py-3 text-sm font-medium text-slate-900 dark:text-white outline-none transition focus:border-primary shadow-xs"
                     required
                   />
                 </div>
@@ -760,7 +757,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full rounded-xl bg-gradient-to-r from-[#F57C00] to-[#E65100] px-6 py-2.5 text-sm font-bold text-white shadow-md transition hover:brightness-105 active:scale-95 disabled:opacity-50"
+                  className="w-full rounded-xl bg-gradient-to-r from-[#F57C00] to-[#E65100] px-6 py-2.5 text-sm font-bold text-white shadow-md transition hover:brightness-105 active:scale-95 disabled:opacity-50 cursor-pointer"
                 >
                   {loading ? "Sending..." : "SEND OTP"}
                 </button>
@@ -771,7 +768,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
               <button
                 type="button"
                 onClick={() => setMode("login")}
-                className="text-xs font-semibold text-[#003B73] hover:underline"
+                className="text-xs font-semibold text-[#003B73] dark:text-sky-400 hover:underline cursor-pointer"
               >
                 Back to Login
               </button>

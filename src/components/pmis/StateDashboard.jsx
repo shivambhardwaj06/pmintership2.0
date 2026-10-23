@@ -53,14 +53,14 @@ export default function StateDashboard() {
     <section id="dashboard" className="mx-auto max-w-7xl px-4 py-16">
       <div className="mb-10 flex items-center justify-center gap-4">
         <span className="h-0.5 w-14 bg-saffron" />
-        <h2 className="font-display text-2xl font-bold text-primary sm:text-3xl">Dashboard</h2>
+        <h2 className="font-display text-2xl font-bold text-primary dark:text-white sm:text-3xl">Dashboard</h2>
         <span className="h-0.5 w-14 bg-saffron" />
       </div>
 
       <div className="grid items-start gap-8 lg:grid-cols-[1.15fr_1fr]">
         <div className="glass-panel rounded-3xl p-4 sm:p-6">
           <div className="mb-3 flex items-center justify-between gap-3">
-            <p className="text-sm font-semibold text-primary">Opportunities by State / UT</p>
+            <p className="text-sm font-semibold text-primary dark:text-white">Opportunities by State / UT</p>
             <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <MousePointerClick className="h-3.5 w-3.5" /> Hover or tap a state
             </p>
@@ -94,12 +94,12 @@ export default function StateDashboard() {
                   <tbody>
                     <tr className="border-b bg-secondary/60">
                       <td className="px-4 py-1.5 font-semibold">Total</td>
-                      <td className="px-4 py-1.5 text-right font-bold text-primary">{fmt(sel.total)}</td>
+                      <td className="px-4 py-1.5 text-right font-bold text-primary dark:text-sky-300">{fmt(sel.total)}</td>
                     </tr>
                     {LEVELS.map((l, i) => (
                       <tr key={l} className="border-b last:border-0">
                         <td className="px-4 py-1.5 text-muted-foreground">{l}</td>
-                        <td className="px-4 py-1.5 text-right font-semibold text-primary">{fmt(sel.levels[i])}</td>
+                        <td className="px-4 py-1.5 text-right font-semibold text-primary dark:text-sky-300">{fmt(sel.levels[i])}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -129,14 +129,14 @@ export default function StateDashboard() {
               <div className="space-y-3">
                 {LEVELS.map((l, i) => (
                   <div key={l}>
-                    <div className="mb-1 flex justify-between text-xs"><span className="text-muted-foreground">{l}</span><span className="font-semibold text-primary">{fmt(sel.levels[i])}</span></div>
+                    <div className="mb-1 flex justify-between text-xs"><span className="text-muted-foreground">{l}</span><span className="font-semibold text-primary dark:text-white">{fmt(sel.levels[i])}</span></div>
                     <div className="h-1.5 rounded-full bg-secondary"><div className="h-full rounded-full bg-saffron" style={{ width: `${(sel.levels[i] / sel.total) * 100}%` }} /></div>
                   </div>
                 ))}
               </div>
               <div className="mt-5 grid grid-cols-2 gap-3 border-t pt-4 text-center">
-                <div><p className="font-display text-xl font-bold text-primary">{sel.districts}</p><p className="text-xs text-muted-foreground">Districts</p></div>
-                <div><p className="font-display text-xl font-bold text-primary">{sel.sectors}</p><p className="text-xs text-muted-foreground">Sectors</p></div>
+                <div><p className="font-display text-xl font-bold text-primary dark:text-white">{sel.districts}</p><p className="text-xs text-muted-foreground">Districts</p></div>
+                <div><p className="font-display text-xl font-bold text-primary dark:text-white">{sel.sectors}</p><p className="text-xs text-muted-foreground">Sectors</p></div>
               </div>
             </div>
           ) : (
@@ -144,7 +144,7 @@ export default function StateDashboard() {
               {stats.map(({ icon: I, value, label }) => (
                 <div key={label} className="glass-panel rounded-3xl p-5">
                   <span className="mb-3 inline-flex rounded-lg bg-accent p-2 text-accent-foreground"><I className="h-4 w-4" /></span>
-                  <p className="font-display text-3xl font-bold text-primary">{value}</p>
+                  <p className="font-display text-3xl font-bold text-primary dark:text-white">{value}</p>
                   <p className="text-sm text-muted-foreground">{label}</p>
                 </div>
               ))}
