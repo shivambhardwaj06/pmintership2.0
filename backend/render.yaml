@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: pm-internship-rag-backend
+    env: python
+    buildCommand: "pip install --upgrade pip && pip install -r requirements.txt"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: NVIDIA_API_KEY
+        sync: false
+      - key: NVIDIA_LLM_MODEL
+        value: nvidia/nemotron-3.5-super-vl-120b-a12b
+      - key: NVIDIA_EMBEDDING_MODEL
+        value: baai/bge-m3
+      - key: QDRANT_COLLECTION_NAME
+        value: iit_internships_knowledge_base
+      - key: CORS_ORIGINS
+        value: "*"
