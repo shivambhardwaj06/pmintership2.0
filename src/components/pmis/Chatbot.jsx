@@ -41,14 +41,14 @@ function getDishaGroundedReply(text) {
     };
   }
 
-  if (t.includes("past selected resume") || t.includes("resume") || t.includes("cv")) {
+  if (t.includes("past selected resume") || t.includes("past selection") || t.includes("resume") || t.includes("interview video") || t.includes("cv")) {
     return {
       answer:
-        "Namaste! You can review real winning resumes in our **Past Selected Resumes** showcase:\n\n" +
-        "• Verified formats for Software (TCS), Finance (HDFC Bank), Automotive (Tata Motors), and Construction (L&T).\n" +
-        "• See exact section layouts, project wording, and recruiter selection tips.\n\n" +
-        "👉 *Navigate to **Student Dashboard -> See Past Selected Resumes** to view and download all templates!*",
-      sources: [{ title: "Student Dashboard • Selected Resumes", url: "#resumes" }],
+        "Namaste! You can review real winning resumes and corporate interview rounds in our **Learn from Past Selection** hub:\n\n" +
+        "• Curated resume blueprints and interview preparation locked directly to your academic branch.\n" +
+        "• Watch domain-specific mock interview videos and learn key interview questions with winning answers.\n\n" +
+        "👉 *Navigate to **Student Dashboard -> Learn from Past Selection** to view your branch's blueprint and interview guide!*",
+      sources: [{ title: "Student Dashboard • Learn from Past Selection", url: "#resumes" }],
     };
   }
 

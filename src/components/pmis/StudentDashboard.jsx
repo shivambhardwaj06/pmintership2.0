@@ -28,13 +28,48 @@ import {
   Wrench,
   Code,
   BookOpen,
+  Lock,
+  Video,
+  Play,
+  HelpCircle,
 } from "lucide-react";
 import CompanyLogo from "./CompanyLogo";
 import rawInternships from "@/data/internships.json";
 import localSelectedResumes from "@/data/selected_resumes.json";
+import { BRANCH_INTERVIEW_GUIDES } from "@/data/branch_interview_prep.js";
 
 const RAW_BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
 const BACKEND_URL = RAW_BACKEND_URL.replace(/\/+$/, "");
+
+export function mapUserBranchToCategory(branch) {
+  if (!branch) return "Computer Science / IT";
+  const b = branch.toLowerCase();
+  if (/mech|auto|thermal|manufacturing|cad|design|aero/i.test(b)) {
+    return "Mechanical & Automobile";
+  }
+  if (/electr|ece|eee|circuit|microcontroller|embedded|power|telecom|instrumentation/i.test(b)) {
+    return "Electrical & Electronics (ECE / EEE)";
+  }
+  if (/civil|struct|construct|infra|survey|concrete|transportation|geotech/i.test(b)) {
+    return "Civil & Infrastructure";
+  }
+  if (/chem|material|petro|process|polymer|refinery/i.test(b)) {
+    return "Chemical & Materials";
+  }
+  if (/comm|finan|account|b\.com|mba|bba|economics|bank|business/i.test(b)) {
+    return "Commerce, Finance & Management";
+  }
+  if (/pharma|biotech|health|b\.pharm|m\.pharm|medic|bio/i.test(b)) {
+    return "Biotechnology & Healthcare";
+  }
+  if (/mining|metal|mineral|geology|blast/i.test(b)) {
+    return "Mining & Metallurgy";
+  }
+  if (/agri|crop|horticulture|soil|farm|forestry/i.test(b)) {
+    return "Agriculture & Life Sciences";
+  }
+  return "Computer Science / IT";
+}
 
 const BRANCH_CATEGORIES = [
   "All Branches",
@@ -424,10 +459,19 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
   const [gapLoading, setGapLoading] = useState(false);
   const [gapResult, setGapResult] = useState(null);
 
-  // Selected Resumes Branch Filter (Default to student branch category)
-  const [selectedBranchFilter, setSelectedBranchFilter] = useState("Computer Science / IT");
+  // Learn from Past Selection Sub-Tab ("resume" | "interview")
+  const [pastSelectionSubTab, setPastSelectionSubTab] = useState("resume");
+
+  // Determine user branch category automatically (locked to candidate branch)
+  const userBranchCategory = mapUserBranchToCategory(profile.branch);
+  const currentBranchGuide =
+    BRANCH_INTERVIEW_GUIDES[userBranchCategory] ||
+    BRANCH_INTERVIEW_GUIDES["Computer Science / IT"];
+
   const [pastResumes, setPastResumes] = useState(() => {
-    return localSelectedResumes.filter((r) => r.branch_category === "Computer Science / IT");
+    return localSelectedResumes.filter(
+      (r) => r.branch_category === "Computer Science / IT"
+    );
   });
   const [resumesLoading, setResumesLoading] = useState(false);
 
@@ -498,24 +542,17 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
     }
   }, [user]);
 
-  // Sync shortlisted resumes filter
+  // Sync shortlisted resumes strictly locked to user's branch
   useEffect(() => {
-    if (selectedBranchFilter === "All Branches") {
-      setPastResumes(localSelectedResumes);
-    } else {
-      const filtered = localSelectedResumes.filter(
-        (r) => r.branch_category === selectedBranchFilter
-      );
-      setPastResumes(filtered.length ? filtered : localSelectedResumes);
-    }
+    const filtered = localSelectedResumes.filter(
+      (r) => r.branch_category === userBranchCategory
+    );
+    setPastResumes(filtered.length ? filtered : localSelectedResumes);
 
     // Background refresh from backend API
     async function refreshResumesFromBackend() {
       try {
-        const queryParam =
-          selectedBranchFilter === "All Branches"
-            ? ""
-            : `?branch=${encodeURIComponent(selectedBranchFilter)}`;
+        const queryParam = `?branch=${encodeURIComponent(userBranchCategory)}`;
         const res = await fetch(`${BACKEND_URL}/api/resumes/selected${queryParam}`);
         if (res.ok) {
           const data = await res.json();
@@ -528,7 +565,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
       }
     }
     refreshResumesFromBackend();
-  }, [selectedBranchFilter]);
+  }, [userBranchCategory]);
 
   // Save profile to backend and local storage in real-time
   const handleSaveProfile = async (e) => {
@@ -904,7 +941,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
               label: `My Applications (${applications.length})`,
               icon: Clock,
             },
-            { id: "resumes", label: "See Past Selected Resumes", icon: Award },
+            { id: "resumes", label: "Learn from Past Selection", icon: GraduationCap },
             { id: "gap", label: "Find the Gap (AI Analyzer)", icon: Target },
           ].map((t) => {
             const Icon = t.icon;
@@ -1222,7 +1259,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                   onClick={() => setActiveTab("resumes")}
                   className="w-full flex items-center justify-center gap-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-extrabold text-xs py-3 transition shadow-xs cursor-pointer"
                 >
-                  <Award className="h-4 w-4 text-orange-500" /> See Shortlisted Resumes for Your Branch
+                  <GraduationCap className="h-4 w-4 text-orange-500" /> Learn from Past Selection ({userBranchCategory})
                 </button>
               </div>
             </div>
@@ -1703,110 +1740,362 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
       )}
 
       {/* ================================================================ */}
-      {/* TAB 3: SEE PAST SELECTED RESUMES (Branch Filtered Showcase) */}
+      {/* TAB 3: LEARN FROM PAST SELECTION (Locked to Candidate Branch) */}
       {/* ================================================================ */}
       {activeTab === "resumes" && (
-        <div className="rounded-3xl p-6 sm:p-8 border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
+        <div className="rounded-3xl p-6 sm:p-8 border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-8">
+          {/* Header & Locked Branch Banner */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 border-b border-slate-200 dark:border-slate-800 pb-6">
             <div>
               <div className="inline-flex items-center gap-1.5 rounded-full bg-saffron/20 px-3 py-0.5 text-xs font-black uppercase tracking-wider text-orange-700 dark:text-orange-300 border border-saffron/40 mb-2">
-                <Award className="h-3.5 w-3.5 text-orange-600" /> Real Shortlisted Candidates
+                <GraduationCap className="h-3.5 w-3.5 text-orange-600" /> Learn from Past Selection
               </div>
               <h2 className="font-display text-2xl font-black text-slate-900 dark:text-white">
-                See Past Selected Resumes by Academic Branch
+                Learn from Past Selection: {userBranchCategory}
               </h2>
               <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 mt-1 max-w-xl">
-                Real shortlisted resumes across IT, Mechanical, Electrical, Civil, Chemical, Commerce, Biotech, Mining, and Agriculture.
+                Verified winning candidate resume blueprints and enterprise interview preparation, customized exclusively for your academic discipline.
               </p>
             </div>
 
-            {/* Branch Filter Dropdown */}
-            <div className="min-w-[240px]">
-              <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-1">
-                Filter by Candidate Branch:
-              </label>
-              <select
-                value={selectedBranchFilter}
-                onChange={(e) => setSelectedBranchFilter(e.target.value)}
-                className="w-full rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-primary cursor-pointer"
-              >
-                {BRANCH_CATEGORIES.map((b) => (
-                  <option key={b} value={b}>
-                    {b}
-                  </option>
-                ))}
-              </select>
+            {/* Locked to Candidate Branch Badge (User cannot change it) */}
+            <div className="flex items-center gap-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border-2 border-amber-300 dark:border-amber-800/80 px-4 py-3 shrink-0 shadow-xs">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 shrink-0">
+                <Lock className="h-4 w-4" />
+              </div>
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-300 block">
+                  Locked to Profile Discipline
+                </span>
+                <span className="text-xs font-black text-slate-900 dark:text-white">
+                  {userBranchCategory}
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {pastResumes.map((resume) => (
-              <div
-                key={resume.id}
-                className="rounded-2xl border-2 border-slate-200 dark:border-slate-800 p-5 bg-white dark:bg-slate-900 shadow-xs flex flex-col justify-between hover:border-primary/60 transition"
+          {/* Sub-Section Toggle Bar (Resume vs Interview) */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 w-full sm:w-auto">
+              <button
+                type="button"
+                onClick={() => setPastSelectionSubTab("resume")}
+                className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-xs font-black transition cursor-pointer ${
+                  pastSelectionSubTab === "resume"
+                    ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                }`}
               >
-                <div>
-                  <div className="flex items-start justify-between gap-3 mb-3">
-                    <span className="rounded-full bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-[10px] font-extrabold px-3 py-1 border border-slate-300 dark:border-slate-700">
-                      {resume.branch_category}
-                    </span>
-                    <span className="rounded-full bg-green-100 text-green-900 text-[10px] font-black px-2.5 py-0.5 border border-green-300">
-                      {resume.match_score}
-                    </span>
-                  </div>
+                <FileText className="h-4 w-4 text-orange-500" />
+                Resume Breakdown
+              </button>
+              <button
+                type="button"
+                onClick={() => setPastSelectionSubTab("interview")}
+                className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-xs font-black transition cursor-pointer ${
+                  pastSelectionSubTab === "interview"
+                    ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                }`}
+              >
+                <Video className="h-4 w-4 text-orange-500" />
+                Interview Preparation
+              </button>
+            </div>
 
-                  <h3 className="font-display text-base font-extrabold text-slate-900 dark:text-white">
-                    {resume.candidate}
-                  </h3>
-                  <p className="text-xs font-bold text-primary mt-0.5">
-                    {resume.role} • {resume.company}
-                  </p>
-                  <p className="text-[11px] text-slate-500 font-semibold mt-0.5">
-                    {resume.academic_degree} ({resume.cgpa})
-                  </p>
+            <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+              {pastSelectionSubTab === "resume"
+                ? `Showing ${pastResumes.length} verified candidate blueprint(s) for ${userBranchCategory}`
+                : `Showing enterprise interview walkthrough & rounds for ${userBranchCategory}`}
+            </p>
+          </div>
 
-                  {/* Shortlist Factors */}
-                  <div className="mt-4 space-y-1.5 bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-200/80 dark:border-slate-700/80">
-                    <p className="text-[10px] font-black text-slate-600 dark:text-slate-300 uppercase tracking-wide">
-                      Why This Resume Got Shortlisted:
-                    </p>
-                    <ul className="space-y-1 text-[11px] text-slate-700 dark:text-slate-300">
-                      {resume.shortlist_factors.slice(0, 3).map((f, i) => (
-                        <li key={i} className="flex items-start gap-1.5">
-                          <Check className="h-3 w-3 text-green-600 shrink-0 mt-0.5" />
-                          <span className="line-clamp-2">{f}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* Skills Tagged */}
-                  <div className="mt-3">
-                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-wide mb-1.5">
-                      Highlighted Skills in JD:
-                    </p>
-                    <div className="flex flex-wrap gap-1">
-                      {resume.highlighted_skills.map((s) => (
-                        <span
-                          key={s}
-                          className="rounded-md bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-[10px] font-bold px-2 py-0.5 border border-slate-200 dark:border-slate-700"
-                        >
-                          {s}
+          {/* ============================================================ */}
+          {/* SUB-SECTION 1: RESUME BREAKDOWN */}
+          {/* ============================================================ */}
+          {pastSelectionSubTab === "resume" && (
+            <div className="space-y-8 animate-in fade-in duration-200">
+              {/* Shortlisted Candidate Cards (Company names HIDDEN) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {pastResumes.map((resume) => (
+                  <div
+                    key={resume.id}
+                    className="rounded-2xl border-2 border-slate-200 dark:border-slate-800 p-6 bg-white dark:bg-slate-900 shadow-xs flex flex-col justify-between hover:border-primary/60 transition"
+                  >
+                    <div>
+                      <div className="flex items-start justify-between gap-3 mb-3">
+                        <span className="rounded-full bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-[10px] font-extrabold px-3 py-1 border border-slate-300 dark:border-slate-700">
+                          {resume.branch_category}
                         </span>
-                      ))}
+                        <span className="rounded-full bg-green-100 text-green-900 text-[10px] font-black px-2.5 py-0.5 border border-green-300">
+                          {resume.match_score}
+                        </span>
+                      </div>
+
+                      <h3 className="font-display text-lg font-extrabold text-slate-900 dark:text-white">
+                        {resume.candidate}
+                      </h3>
+
+                      {/* Role & Sector (Company is HIDDEN) */}
+                      <p className="text-xs font-bold text-primary mt-1">
+                        Role: {resume.role}
+                      </p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold mt-0.5">
+                        Sector: {resume.sector} •{" "}
+                        <span className="italic text-slate-400 dark:text-slate-500">
+                          (Company Name Hidden for Privacy)
+                        </span>
+                      </p>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-300 font-medium mt-1">
+                        {resume.academic_degree} • CGPA: {resume.cgpa}
+                      </p>
+
+                      {/* Shortlist Factors */}
+                      <div className="mt-4 space-y-2 bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-200/80 dark:border-slate-700/80">
+                        <p className="text-[10px] font-black text-slate-600 dark:text-slate-300 uppercase tracking-wide">
+                          Why This Resume Got Shortlisted in &lt;15 Seconds:
+                        </p>
+                        <ul className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
+                          {resume.shortlist_factors.map((f, i) => (
+                            <li key={i} className="flex items-start gap-2">
+                              <Check className="h-3.5 w-3.5 text-green-600 shrink-0 mt-0.5" />
+                              <span>{f}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      {/* Skills Tagged */}
+                      <div className="mt-4">
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-wide mb-1.5">
+                          Highlighted Skills in Selected Application:
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {resume.highlighted_skills.map((s) => (
+                            <span
+                              key={s}
+                              className="rounded-md bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-[10px] font-bold px-2.5 py-1 border border-slate-200 dark:border-slate-700"
+                            >
+                              {s}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-5 pt-3 border-t border-slate-200 dark:border-slate-800">
+                      <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 italic">
+                        &ldquo;
+                        {resume.recruiter_feedback
+                          ? resume.recruiter_feedback
+                              .replace(/Tata Consultancy Services|TCS|Tata Motors|L&T|HDFC Bank|Sun Pharma|IOCL|BEL|Tata Steel|Godrej Agrovet/gi, "Corporate Recruiter")
+                          : "Clear sectioning and demonstrable project links ensure fast-track screening."}
+                        &rdquo;
+                      </p>
                     </div>
                   </div>
+                ))}
+              </div>
+
+              {/* In-Depth Resume Blueprint Anatomy */}
+              <div className="rounded-3xl border-2 border-slate-200 dark:border-slate-800 p-6 sm:p-8 bg-slate-50/50 dark:bg-slate-800/30 space-y-6">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="h-5 w-5 text-primary" />
+                  <h3 className="font-display text-lg font-black text-slate-900 dark:text-white">
+                    Winning 1-Page Resume Anatomy for {userBranchCategory}
+                  </h3>
                 </div>
 
-                <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-800">
-                  <p className="text-[10px] font-medium text-slate-500 italic">
-                    &ldquo;{resume.recruiter_feedback}&rdquo;
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 space-y-2">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-100 dark:bg-orange-950/60 text-orange-600 font-bold text-xs">
+                      1
+                    </span>
+                    <h4 className="text-xs font-black text-slate-900 dark:text-white">
+                      Strict 1-Page Layout Standard
+                    </h4>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                      Single-column layout with 0.5 to 0.75-inch margins. Multi-column CVs frequently fail corporate ATS parsers and lose candidate contact info.
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 space-y-2">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-950/60 text-blue-600 font-bold text-xs">
+                      2
+                    </span>
+                    <h4 className="text-xs font-black text-slate-900 dark:text-white">
+                      Quantifiable Impact Metrics
+                    </h4>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                      Every project bullet point must start with an action verb and contain measurable metrics (e.g. &apos;Reduced DB query time by 40%&apos; or &apos;14% mass reduction in CAD&apos;).
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 space-y-2">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 font-bold text-xs">
+                      3
+                    </span>
+                    <h4 className="text-xs font-black text-slate-900 dark:text-white">
+                      Live Repositories & Portfolio Links
+                    </h4>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                      Include verified GitHub, CAD portfolio, or hosted demo URLs right in project headers. Corporate evaluators prioritize demonstrable proof over claims.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ============================================================ */}
+          {/* SUB-SECTION 2: INTERVIEW ROUNDS & VIDEO PREPARATION */}
+          {/* ============================================================ */}
+          {pastSelectionSubTab === "interview" && (
+            <div className="space-y-8 animate-in fade-in duration-200">
+              {/* Featured Curated Video for this Academic Discipline */}
+              <div className="rounded-3xl border-2 border-slate-200 dark:border-slate-800 p-6 sm:p-8 bg-slate-50/60 dark:bg-slate-800/40 space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <div className="inline-flex items-center gap-1.5 rounded-full bg-red-100 dark:bg-red-950/60 px-3 py-0.5 text-[11px] font-black uppercase tracking-wider text-red-700 dark:text-red-300 border border-red-300 dark:border-red-800 mb-2">
+                      <Play className="h-3 w-3 fill-red-600 text-red-600" /> Curated Mock Interview Video
+                    </div>
+                    <h3 className="font-display text-xl font-black text-slate-900 dark:text-white">
+                      {currentBranchGuide.videoTitle}
+                    </h3>
+                    <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 mt-0.5">
+                      Recommended by PMIS Mentors • Channel:{" "}
+                      <span className="text-slate-900 dark:text-white font-bold">
+                        {currentBranchGuide.channel}
+                      </span>
+                    </p>
+                  </div>
+
+                  <a
+                    href={currentBranchGuide.videoUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 rounded-xl bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 text-xs font-black shadow-md hover:brightness-105 transition shrink-0 cursor-pointer"
+                  >
+                    <ExternalLink className="h-4 w-4" /> Watch on YouTube
+                  </a>
+                </div>
+
+                {/* 16:9 Responsive Embedded Video Player */}
+                <div className="relative w-full overflow-hidden rounded-2xl bg-black shadow-lg aspect-video border-2 border-slate-300 dark:border-slate-700">
+                  <iframe
+                    src={`https://www.youtube.com/embed/${currentBranchGuide.videoId}?rel=0`}
+                    title={currentBranchGuide.videoTitle}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                    className="absolute inset-0 h-full w-full"
+                  />
+                </div>
+
+                <div className="rounded-2xl bg-white dark:bg-slate-900 p-4 border border-slate-200 dark:border-slate-700">
+                  <p className="text-xs font-medium text-slate-700 dark:text-slate-300 leading-relaxed">
+                    <strong className="text-slate-900 dark:text-white font-bold">
+                      Key Takeaway for {userBranchCategory} Candidates:{" "}
+                    </strong>
+                    {currentBranchGuide.videoDescription}
                   </p>
                 </div>
               </div>
-            ))}
-          </div>
+
+              {/* 3-Round Corporate Selection Roadmap */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Layers className="h-5 w-5 text-primary" />
+                  <h3 className="font-display text-lg font-black text-slate-900 dark:text-white">
+                    3-Round Corporate Interview Structure for {userBranchCategory}
+                  </h3>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {currentBranchGuide.rounds.map((round, idx) => (
+                    <div
+                      key={idx}
+                      className="rounded-2xl border-2 border-slate-200 dark:border-slate-800 p-5 bg-white dark:bg-slate-900 shadow-xs flex flex-col justify-between"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="rounded-full bg-primary/10 text-primary text-[10px] font-black px-2.5 py-0.5 border border-primary/20">
+                            {round.roundNumber}
+                          </span>
+                          <span className="text-[10px] font-bold text-slate-500">
+                            {round.duration}
+                          </span>
+                        </div>
+
+                        <h4 className="font-display text-sm font-extrabold text-slate-900 dark:text-white mb-1">
+                          {round.title}
+                        </h4>
+                        <p className="text-[11px] text-slate-500 font-semibold mb-3">
+                          Format: {round.format}
+                        </p>
+                        <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
+                          {round.description}
+                        </p>
+
+                        <div className="space-y-1.5 bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-200/80 dark:border-slate-700/80">
+                          <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 block">
+                            Key Focus Areas:
+                          </span>
+                          <ul className="space-y-1 text-[11px] text-slate-700 dark:text-slate-300">
+                            {round.keyTopics.map((topic, i) => (
+                              <li key={i} className="flex items-start gap-1.5">
+                                <Check className="h-3 w-3 text-primary shrink-0 mt-0.5" />
+                                <span>{topic}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Real Past Selection Questions & Model Answers */}
+              <div className="rounded-3xl border-2 border-slate-200 dark:border-slate-800 p-6 sm:p-8 bg-white dark:bg-slate-900 shadow-sm space-y-6">
+                <div className="flex items-center gap-2">
+                  <HelpCircle className="h-5 w-5 text-orange-500" />
+                  <h3 className="font-display text-lg font-black text-slate-900 dark:text-white">
+                    Real Questions Asked in Past Selection &amp; Winning Model Answers
+                  </h3>
+                </div>
+
+                <div className="space-y-4">
+                  {currentBranchGuide.sampleQuestions.map((sq, i) => (
+                    <div
+                      key={i}
+                      className="rounded-2xl border border-slate-200 dark:border-slate-700/80 p-5 bg-slate-50/50 dark:bg-slate-800/40 space-y-2.5"
+                    >
+                      <div className="flex items-start gap-2">
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-white text-[10px] font-black shrink-0 mt-0.5">
+                          Q{i + 1}
+                        </span>
+                        <h4 className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">
+                          {sq.question}
+                        </h4>
+                      </div>
+
+                      <div className="pl-7 space-y-2">
+                        <p className="text-[11px] font-bold text-orange-700 dark:text-orange-400">
+                          Recruiter Focus: {sq.guidance}
+                        </p>
+                        <div className="rounded-xl bg-white dark:bg-slate-900 p-3.5 border border-slate-200 dark:border-slate-700 text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+                          <strong className="text-slate-900 dark:text-white font-bold block mb-1">
+                            Model Winning Response:
+                          </strong>
+                          {sq.sampleAnswer}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

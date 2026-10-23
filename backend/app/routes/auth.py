@@ -40,6 +40,26 @@ SELECTED_RESUMES = [
         "recruiter_feedback": "Corporate tech screeners spend under 15 seconds. Highlighting 3 core tools with live code repositories got her straight into Round 1."
     },
     {
+        "id": "res_cse_01_dev",
+        "branch_category": "Computer Science / IT",
+        "candidate": "Dev Raj Singh (Shortlisted)",
+        "role": "Full Stack Developer / Software Engineer",
+        "company": "Leading Enterprise Software Firm",
+        "sector": "IT & Software Development",
+        "college": "Maulana Abul Kalam Azad University of Technology (TMSL)",
+        "cgpa": "8.6 / 10",
+        "academic_degree": "B.Tech. in Computer Science and Engineering",
+        "match_score": "98% Selection Match",
+        "shortlist_factors": [
+            "Strict 1-page layout with high-impact single-column hierarchy and zero ATS formatting issues.",
+            "Proven production full-stack SaaS project metrics: 'reduced deployment times by 50%', 'reduced AWS costing and DB calls by 40%'.",
+            "Live deployment links (Render/Vercel) and public GitHub code repositories embedded directly in project headers.",
+            "600+ LeetCode/HackerRank algorithmic problems solved with national hackathon podium finishes (Smart India Hackathon, SFSU Hacks)."
+        ],
+        "highlighted_skills": ["Full stack development", "REST API", "SQL", "JavaScript", "TypeScript", "Next.js", "Python", "PostgreSQL", "Redis", "React", "MongoDB", "Node.js", "Docker", "AWS", "CI/CD & DevOps"],
+        "recruiter_feedback": "Corporate tech evaluators spend under 15 seconds per CV. Having measurable production metrics (e.g. 50% deployment speedup) and live GitHub links guaranteed immediate progression to the final interview round."
+    },
+    {
         "id": "res_mech_02",
         "branch_category": "Mechanical & Automobile",
         "candidate": "Rohan Deshmukh (Shortlisted)",
