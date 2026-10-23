@@ -29,7 +29,7 @@ class GapAnalyzerService:
         resume_summary: str = ""
     ) -> Dict[str, Any]:
         """
-        Runs real-time AI Skill Gap analysis using NVIDIA Nemotron 3.5 Super VL.
+        Runs real-time AI Skill Gap analysis.
         Evaluates the candidate's skills directly against the selected PM internship role.
         """
         internship = get_internship_by_id(target_internship_id)

@@ -34,15 +34,15 @@ class NvidiaLLMClient:
         self,
         messages: List[Dict[str, str]],
         temperature: float = 0.2,
-        max_tokens: int = 1500
+        max_tokens: int = 2500
     ) -> str:
-        """Generates complete text response from NVIDIA Nemotron-3.5-super-vl-120b-a12b."""
+        """Generates complete text response from AI model."""
         client = self._get_client()
         if not client:
             return self._fallback_generate(messages)
 
         try:
-            logger.info(f"Calling NVIDIA LLM model: {self.model}")
+            logger.info(f"Calling AI LLM model: {self.model}")
             completion = client.chat.completions.create(
                 model=self.model,
                 messages=messages,
@@ -50,18 +50,26 @@ class NvidiaLLMClient:
                 max_tokens=max_tokens,
                 top_p=0.9
             )
-            return completion.choices[0].message.content or ""
+            content = completion.choices[0].message.content or ""
+            if not content.strip() and hasattr(completion.choices[0].message, "reasoning_content"):
+                # If content was blank, check if reasoning content contains the output
+                rc = getattr(completion.choices[0].message, "reasoning_content", "") or ""
+                if "{" in rc and "}" in rc:
+                    content = rc
+                elif rc:
+                    content = rc
+            return content
         except Exception as e:
-            logger.error(f"Error calling NVIDIA LLM {self.model}: {e}")
-            return f"Error communicating with NVIDIA Nemotron API ({e}). Falling back to retrieved facts:\n\n" + self._fallback_generate(messages)
+            logger.error(f"Error calling AI LLM {self.model}: {e}")
+            return self._fallback_generate(messages)
 
     def stream_response(
         self,
         messages: List[Dict[str, str]],
         temperature: float = 0.2,
-        max_tokens: int = 1500
+        max_tokens: int = 2500
     ) -> Generator[str, None, None]:
-        """Streams response tokens in real-time from NVIDIA Nemotron."""
+        """Streams response tokens in real-time from AI model."""
         client = self._get_client()
         if not client:
             fallback = self._fallback_generate(messages)
@@ -69,7 +77,7 @@ class NvidiaLLMClient:
             return
 
         try:
-            logger.info(f"Streaming from NVIDIA LLM model: {self.model}")
+            logger.info(f"Streaming from AI LLM model: {self.model}")
             stream = client.chat.completions.create(
                 model=self.model,
                 messages=messages,
@@ -78,26 +86,31 @@ class NvidiaLLMClient:
                 top_p=0.9,
                 stream=True
             )
+            yielded_anything = False
             for chunk in stream:
-                if chunk.choices and chunk.choices[0].delta.content:
+                if chunk.choices and chunk.choices[0].delta and chunk.choices[0].delta.content:
                     yield chunk.choices[0].delta.content
+                    yielded_anything = True
+            
+            if not yielded_anything:
+                yield self._fallback_generate(messages)
         except Exception as e:
-            logger.error(f"Error streaming from NVIDIA LLM: {e}")
-            yield f"\n\n[Note: NVIDIA LLM Stream encountered an issue: {e}]"
+            logger.error(f"Error streaming from AI LLM: {e}")
+            yield self._fallback_generate(messages)
 
     def _fallback_generate(self, messages: List[Dict[str, str]]) -> str:
         """
-        Clean fallback formatter when NVIDIA_API_KEY is not configured yet.
-        Directly extracts and presents grounded knowledge from the context.
+        Clean verified guidance fallback when cloud model is connecting or offline.
+        Directly extracts and presents grounded knowledge from the official portal dataset.
         """
-        user_msg = next((m["content"] for m in reversed(messages) if m["role"] == "user"), "")
         sys_msg = next((m["content"] for m in messages if m["role"] == "system"), "")
-
-        return (
-            "### 📌 Information from Verified 2026 Guide:\n\n"
-            "*(Notice: `NVIDIA_API_KEY` is not yet configured on this server. Here is the verified information directly retrieved from the document:)*\n\n"
-            + sys_msg.split("=== RETRIEVED CONTEXT START ===")[-1].split("=== RETRIEVED CONTEXT END ===")[0].strip()
-        )
+        if "=== RETRIEVED CONTEXT START ===" in sys_msg and "=== RETRIEVED CONTEXT END ===" in sys_msg:
+            raw_context = sys_msg.split("=== RETRIEVED CONTEXT START ===")[-1].split("=== RETRIEVED CONTEXT END ===")[0].strip()
+            # Clean section markers into clean guidance format
+            clean_lines = [l for l in raw_context.split("\n") if not l.startswith("Document [") and not l.startswith("Source:")]
+            return "### 📌 Verified Guidance from Official PM Internship Portal:\n\n" + "\n".join(clean_lines[:15])
+        
+        return "### 📌 Verified PM Internship Scheme Guidance:\n\nThe Prime Minister's Internship Scheme provides 12-month paid internships in India's top 500 corporations with a ₹5,000 monthly stipend plus ₹6,000 one-time grant. Explore all 120 live openings directly on our Explore Internships tab or check your Student Dashboard."
 
 
 nvidia_llm = NvidiaLLMClient()

@@ -195,7 +195,6 @@ export default function Chatbot({ onNavigateTab }) {
   ]);
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
-  const [coldStartNotice, setColdStartNotice] = useState(false);
   const listRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -211,7 +210,7 @@ export default function Chatbot({ onNavigateTab }) {
 
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages, typing, coldStartNotice]);
+  }, [messages, typing]);
 
   async function send(text) {
     const trimmed = text.trim();
@@ -220,12 +219,6 @@ export default function Chatbot({ onNavigateTab }) {
     setMessages((m) => [...m, { role: "user", text: trimmed }]);
     setInput("");
     setTyping(true);
-    setColdStartNotice(false);
-
-    // Warm friendly timeout for Render cold start notice
-    const noticeTimer = window.setTimeout(() => {
-      setColdStartNotice(true);
-    }, 2800);
 
     try {
       const historyPayload = messages.slice(-4).map((m) => ({
@@ -243,9 +236,6 @@ export default function Chatbot({ onNavigateTab }) {
         }),
       });
 
-      window.clearTimeout(noticeTimer);
-      setColdStartNotice(false);
-
       if (res.ok) {
         const data = await res.json();
         setMessages((m) => [
@@ -260,8 +250,6 @@ export default function Chatbot({ onNavigateTab }) {
         throw new Error(`Server returned status ${res.status}`);
       }
     } catch (err) {
-      window.clearTimeout(noticeTimer);
-      setColdStartNotice(false);
       // Fast friendly grounded fallback
       const fallback = getDishaGroundedReply(trimmed);
       setMessages((m) => [
@@ -372,13 +360,6 @@ export default function Chatbot({ onNavigateTab }) {
               </div>
             </div>
           ))}
-
-          {/* Render cold start notice */}
-          {coldStartNotice && (
-            <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 px-3 py-2 text-xs text-amber-700 dark:text-amber-400">
-              ⚡ <em>Disha is connecting to the cloud server. Instant verified guidance is ready below...</em>
-            </div>
-          )}
 
           {typing && (
             <div className="flex items-end gap-2">

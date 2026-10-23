@@ -41,7 +41,7 @@ class ChatResponse(BaseModel):
 async def chat_endpoint(payload: ChatRequest):
     """
     Standard synchronous JSON endpoint for RAG chatbot.
-    Retrieves grounded context from IIT Internship Guide using Hybrid RAG + NVIDIA Nemotron LLM.
+    Retrieves grounded context from IIT Internship Guide using Hybrid RAG + AI Assistant Engine.
     """
     try:
         result = rag_service.answer_query(
@@ -59,7 +59,7 @@ async def chat_endpoint(payload: ChatRequest):
 async def chat_stream_endpoint(payload: ChatRequest):
     """
     Real-time streaming endpoint for chatbot UI (Server-Sent Events).
-    Streams tokens as they are produced by NVIDIA Nemotron-3.5-super-vl.
+    Streams tokens as they are produced by AI Assistant Engine.
     """
     try:
         return StreamingResponse(

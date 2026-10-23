@@ -442,7 +442,7 @@ async def upload_and_analyze_resume(
     Real-time Resume Processing:
     1. Validates strictly that the resume is a 1-page PDF.
     2. Uploads the document to Cloudinary (returns Cloudinary secure URL).
-    3. Runs NVIDIA Nemotron 3.5 Super VL to extract candidate skills and branch.
+    3. Runs AI Recruiter Audit to extract candidate skills and branch.
     4. Automatically updates the candidate's skills profile.
     """
     if not file.filename.lower().endswith(".pdf"):
@@ -456,7 +456,7 @@ async def upload_and_analyze_resume(
     # 2. Upload to Cloudinary (or local static fallback)
     cloudinary_url = resume_service.upload_to_cloudinary_or_storage(file_bytes, file.filename)
 
-    # 3. Analyze with NVIDIA Nemotron
+    # 3. Analyze with AI Recruiter Engine
     analysis = resume_service.analyze_resume_with_ai(resume_text)
 
     # 4. Update user profile in persistent database
@@ -502,7 +502,7 @@ def analyze_skill_gap(payload: GapAnalysisRequest):
     """
     Real-time AI Skill Gap Analyzer:
     Matches student skills against the exact requirements of a selected PM internship role
-    using NVIDIA Nemotron 3.5 Super VL.
+    using AI Recruiter Engine.
     """
     result = gap_analyzer.analyze_gap(
         target_internship_id=payload.target_internship_id,

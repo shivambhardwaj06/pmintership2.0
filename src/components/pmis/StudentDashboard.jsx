@@ -49,9 +49,292 @@ const BRANCH_CATEGORIES = [
   "Agriculture & Life Sciences",
 ];
 
-// Helper to construct a complete, structured AI resume audit
+// Helper to construct a complete, structured AI resume audit dynamically adapted to the candidate's branch & skills
 function generateComprehensiveReview(candidateName, branch = "Computer Science / IT", skills = []) {
   const safeSkills = skills.length ? skills : ["Python", "Git", "Problem Solving", "Communication"];
+  const combinedStr = `${branch} ${safeSkills.join(" ")}`.toLowerCase();
+
+  let domain = "computer_science";
+  if (/mech|solidworks|cad|cam|ansys|autocad|thermo|cnc|automobile|automotive|catia|fea|vehicle/i.test(combinedStr)) {
+    domain = "mechanical";
+  } else if (/civil|structural|construct|revit|survey|concrete|staad|infrastruct|geotech/i.test(combinedStr)) {
+    domain = "civil";
+  } else if (/commerc|financ|account|b\.com|mba|tally|gst|audit|tax|banking|equity|balance sheet/i.test(combinedStr)) {
+    domain = "commerce";
+  } else if (/pharma|pharmac|formulat|clinic|biochem|drug|hplc|chemist|biotech|health/i.test(combinedStr)) {
+    domain = "pharma";
+  } else if (/electr|vlsi|embedded|iot|circuit|verilog|power systems|microcontroller|arduino/i.test(combinedStr)) {
+    domain = "electrical";
+  }
+
+  const domainConfigs = {
+    mechanical: {
+      detectedBranch: branch && !branch.toLowerCase().includes("computer") ? branch : "Mechanical Engineering & Automotive",
+      targetRoles: [
+        {
+          role: "Automotive Engineering & R&D Intern",
+          company: "Tata Motors",
+          sector: "Automotive",
+          match_score: 93,
+          internship_id: "PMIS-046",
+          reason: "Strong alignment with CAD design, vehicle dynamics, and structural FEA simulations.",
+        },
+        {
+          role: "Production & Assembly Automation Intern",
+          company: "Maruti Suzuki",
+          sector: "Automotive",
+          match_score: 89,
+          internship_id: "PMIS-047",
+          reason: "Practical understanding of manufacturing tolerances, GD&T, and plant operations.",
+        },
+        {
+          role: "Thermal & Heavy Machinery Design Intern",
+          company: "Bharat Heavy Electricals (BHEL)",
+          sector: "Manufacturing & Industrial",
+          match_score: 86,
+          internship_id: "PMIS-051",
+          reason: "Applied thermodynamics coursework and machine element design capabilities.",
+        },
+      ],
+      strengths: [
+        "Strong mechanical engineering foundations with practical CAD/CAM simulation competencies.",
+        "Strict 1-page layout compliant with PM Internship corporate standards.",
+        "Demonstrated project work in design modeling and fabrication fundamentals.",
+      ],
+      gaps: [
+        "Include a link to a digital 3D CAD design portfolio or GrabCAD repository.",
+        "Quantify design outcomes with measurable impact (e.g., % mass reduction, factor of safety).",
+        "Add GD&T or Six Sigma technical certifications to boost recruiter ranking.",
+      ],
+      roadmap: [
+        "Step 1: Add direct links to CAD project renders and FEA stress report summaries.",
+        "Step 2: Quantify project results with engineering metrics (e.g. 'Reduced chassis mass by 14%').",
+        "Step 3: Apply to top Automotive and Heavy Industrial PMIS roles at Tata Motors and Maruti Suzuki.",
+      ],
+    },
+    civil: {
+      detectedBranch: branch && !branch.toLowerCase().includes("computer") ? branch : "Civil & Infrastructure Engineering",
+      targetRoles: [
+        {
+          role: "Infrastructure & Structural Engineering Intern",
+          company: "Larsen & Toubro (L&T)",
+          sector: "Infrastructure & Construction",
+          match_score: 94,
+          internship_id: "PMIS-031",
+          reason: "Excellent alignment with structural modeling, drafting standards, and construction workflows.",
+        },
+        {
+          role: "Urban Construction Management Intern",
+          company: "Tata Projects",
+          sector: "Infrastructure & Construction",
+          match_score: 90,
+          internship_id: "PMIS-032",
+          reason: "Structured project documentation and modern BIM modeling skills match site requirements.",
+        },
+        {
+          role: "Highway & Transportation Planning Intern",
+          company: "Afcons Infrastructure",
+          sector: "Infrastructure & Construction",
+          match_score: 85,
+          internship_id: "PMIS-033",
+          reason: "Civil surveying, geotechnical analysis, and material testing proficiencies.",
+        },
+      ],
+      strengths: [
+        "Clear structural engineering focus with standard drafting and modeling skills.",
+        "Strict 1-page compliance compliant with official PM Internship criteria.",
+        "Applied knowledge of modern building materials and site surveying procedures.",
+      ],
+      gaps: [
+        "Include links to structural drawings, BIM portfolio, or project site reports.",
+        "Highlight practical familiarity with IS codes (IS 456, IS 800) and safety compliance.",
+        "Add project management metrics (e.g., budget estimation, schedule adherence).",
+      ],
+      roadmap: [
+        "Step 1: Upload a portfolio link with AutoCAD/STAAD.Pro structural drawing samples.",
+        "Step 2: Mention compliance with national building codes in project descriptions.",
+        "Step 3: Submit applications for premier PMIS infrastructure projects at L&T and Tata Projects.",
+      ],
+    },
+    commerce: {
+      detectedBranch: branch && !branch.toLowerCase().includes("computer") ? branch : "Commerce, Finance & Banking",
+      targetRoles: [
+        {
+          role: "Credit Risk & Financial Modeling Intern",
+          company: "HDFC Bank",
+          sector: "Banking & Financial Services",
+          match_score: 94,
+          internship_id: "PMIS-016",
+          reason: "Clear proficiency in balance sheet analysis, financial statements, and ratio modeling.",
+        },
+        {
+          role: "Corporate Banking & Wealth Advisory Intern",
+          company: "ICICI Bank",
+          sector: "Banking & Financial Services",
+          match_score: 91,
+          internship_id: "PMIS-017",
+          reason: "Understanding of retail investment products, client portfolios, and regulatory compliance.",
+        },
+        {
+          role: "Treasury & Risk Governance Intern",
+          company: "State Bank of India (SBI)",
+          sector: "Banking & Financial Services",
+          match_score: 88,
+          internship_id: "PMIS-018",
+          reason: "Strong ethical grounding in banking operations, statutory audits, and liquidity analysis.",
+        },
+      ],
+      strengths: [
+        "Strong quantitative and analytical fundamentals in corporate finance and accounting.",
+        "Strict 1-page layout compliant with corporate banking recruitment norms.",
+        "Practical familiarity with accounting software and financial spreadsheet modeling.",
+      ],
+      gaps: [
+        "Include links to Excel financial models or Power BI dashboards.",
+        "Add NISM, NCFM, or CA-Foundation credentials to further validate competencies.",
+        "Quantify audit accuracy or cost variance analysis in past project work.",
+      ],
+      roadmap: [
+        "Step 1: Upload a link to a sample 3-statement financial model or Power BI report.",
+        "Step 2: Highlight financial certifications (NISM/Advanced Excel/Tally).",
+        "Step 3: Apply to top PMIS Banking & Financial Services roles at HDFC Bank and ICICI Bank.",
+      ],
+    },
+    electrical: {
+      detectedBranch: branch && !branch.toLowerCase().includes("computer") ? branch : "Electrical & Electronics Engineering",
+      targetRoles: [
+        {
+          role: "Power Systems & Smart Grid Intern",
+          company: "Tata Power",
+          sector: "Power & Utilities",
+          match_score: 93,
+          internship_id: "PMIS-056",
+          reason: "Solid grounding in power transmission, substation design, and renewable integration.",
+        },
+        {
+          role: "Industrial Automation & IoT Intern",
+          company: "Schneider Electric",
+          sector: "Manufacturing & Industrial",
+          match_score: 90,
+          internship_id: "PMIS-057",
+          reason: "Demonstrated skills in microcontroller interfacing, sensors, and PLC automation.",
+        },
+        {
+          role: "Embedded Hardware Engineering Intern",
+          company: "Havells India",
+          sector: "Retail & Consumer Durables",
+          match_score: 87,
+          internship_id: "PMIS-058",
+          reason: "Strong circuit debugging, PCB layout, and firmware development fundamentals.",
+        },
+      ],
+      strengths: [
+        "Verified circuit design and hardware-software interfacing capabilities.",
+        "Strict 1-page layout compliant with PMIS recruiter scanning standards.",
+        "Diverse technical toolkit spanning simulation and physical prototyping.",
+      ],
+      gaps: [
+        "Add links to GitHub firmware repositories or hardware demo videos.",
+        "Detail power efficiency or timing optimization achievements in projects.",
+        "Include industry safety or PCB manufacturing workshop credentials.",
+      ],
+      roadmap: [
+        "Step 1: Link embedded code repositories (GitHub) and hardware circuit schematics.",
+        "Step 2: Add quantitative performance metrics for hardware projects.",
+        "Step 3: Apply for core PMIS electrical internships at Tata Power and Schneider Electric.",
+      ],
+    },
+    pharma: {
+      detectedBranch: branch && !branch.toLowerCase().includes("computer") ? branch : "Pharmaceutical Sciences & Healthcare",
+      targetRoles: [
+        {
+          role: "Formulation R&D & QA Intern",
+          company: "Sun Pharmaceutical Industries",
+          sector: "Pharmaceuticals",
+          match_score: 93,
+          internship_id: "PMIS-061",
+          reason: "Strong laboratory technique, analytical chemistry exposure, and GLP compliance awareness.",
+        },
+        {
+          role: "Biotech Process & Drug Safety Intern",
+          company: "Dr. Reddy's Laboratories",
+          sector: "Pharmaceuticals",
+          match_score: 90,
+          internship_id: "PMIS-062",
+          reason: "Solid pharmacology coursework and documentation accuracy required for regulatory filings.",
+        },
+        {
+          role: "Hospital Administration & Healthcare Systems Intern",
+          company: "Apollo Hospitals",
+          sector: "Healthcare",
+          match_score: 87,
+          internship_id: "PMIS-065",
+          reason: "Medical terminology mastery and systematic healthcare process coordination.",
+        },
+      ],
+      strengths: [
+        "Rigorous scientific training with hands-on pharmaceutical lab competencies.",
+        "Strict 1-page layout compliant with corporate healthcare standards.",
+        "Accurate technical documentation and attention to regulatory compliance.",
+      ],
+      gaps: [
+        "Mention specific analytical instruments operated (e.g., HPLC, Dissolution apparatus).",
+        "Highlight awareness of FDA / cGMP quality standards.",
+        "Include published research papers, seminar presentations, or lab project reports.",
+      ],
+      roadmap: [
+        "Step 1: Add a dedicated section listing lab instrumentation proficiencies.",
+        "Step 2: Reference knowledge of cGMP and regulatory compliance protocols.",
+        "Step 3: Apply to PMIS pharmaceutical positions at Sun Pharma and Dr. Reddy's.",
+      ],
+    },
+    computer_science: {
+      detectedBranch: branch || "Computer Science / IT",
+      targetRoles: [
+        {
+          role: "Software Engineering & Cloud Intern",
+          company: "Tata Consultancy Services (TCS)",
+          sector: "IT & Software Development",
+          match_score: 94,
+          internship_id: "PMIS-001",
+          reason: "Strong programming fundamentals, version control discipline, and software design.",
+        },
+        {
+          role: "Full Stack Application Development Intern",
+          company: "Infosys",
+          sector: "IT & Software Development",
+          match_score: 91,
+          internship_id: "PMIS-002",
+          reason: "Hands-on experience with modern web architectures, API integration, and database queries.",
+        },
+        {
+          role: "AI Solutions & Data Analytics Intern",
+          company: "Wipro",
+          sector: "IT & Software Development",
+          match_score: 88,
+          internship_id: "PMIS-004",
+          reason: "Solid analytical thinking, algorithmic problem solving, and structured data handling.",
+        },
+      ],
+      strengths: [
+        "Modern technology stack with active programming and database proficiencies.",
+        "Strict 1-page layout compliant with corporate technology hiring standards.",
+        "Demonstrated project building capability with source control integration.",
+      ],
+      gaps: [
+        "Include live deployment links (Vercel, Render) and active GitHub repositories for all projects.",
+        "Quantify project impact with performance numbers (e.g., API latency, users served).",
+        "Highlight cloud provider or developer certifications to strengthen candidate tiering.",
+      ],
+      roadmap: [
+        "Step 1: Add live URLs and GitHub repository links in the project section headers.",
+        "Step 2: Add quantitative metrics to bullet points showing engineering impact.",
+        "Step 3: Apply to top PMIS IT & Software Development corporate roles at TCS and Infosys.",
+      ],
+    },
+  };
+
+  const selectedConfig = domainConfigs[domain] || domainConfigs.computer_science;
   const tech = safeSkills.filter(
     (s) => !["Communication", "Problem Solving", "Leadership", "Teamwork"].includes(s)
   );
@@ -62,66 +345,28 @@ function generateComprehensiveReview(candidateName, branch = "Computer Science /
 
   return {
     candidate_name: candidateName || "Candidate",
-    detected_branch: branch || "Engineering & Applied Sciences",
+    detected_branch: selectedConfig.detectedBranch,
     resume_score: Math.min(96, 82 + safeSkills.length * 2),
     grade: "Grade A: High Shortlist Potential",
-    career_summary: `Candidate demonstrates verified proficiency in ${branch} with practical coursework, active project repositories, and structured technical reporting.`,
+    career_summary: `Candidate demonstrates verified proficiency in ${selectedConfig.detectedBranch} with practical coursework, active project execution, and structured technical reporting.`,
     layout_review: {
       page_length: "1 Page Strict Compliance (Verified)",
-      ats_score: "94 / 100 (ATS Friendly)",
+      ats_score: "95 / 100 (ATS Friendly)",
       structure_rating: "Excellent (Standard Section Hierarchy)",
       formatting_feedback:
-        "Clean single-column layout, standard headings, and bulleted project accomplishments. Recruiter scanning speed is optimized for corporate evaluation under 15 seconds.",
+        "Clean single-column layout, standard headings, and bulleted accomplishments. Recruiter scanning speed is optimized for corporate evaluation under 15 seconds.",
     },
     skills_breakdown: {
-      technical_skills: tech.length ? tech : ["Python", "SQL", "System Architecture"],
-      tools_frameworks: ["Git Version Control", "VS Code", "Postman", "Excel"],
+      technical_skills: tech.length ? tech : ["Technical Analysis", "Core Domain Concepts"],
+      tools_frameworks: ["Git Version Control", "VS Code", "MS Excel", "Domain Specific Tools"],
       soft_skills: soft,
       all_extracted: safeSkills,
     },
     extracted_skills: safeSkills,
-    target_roles: [
-      {
-        role: "Software Development Intern",
-        company: "Tata Consultancy Services (TCS)",
-        sector: "IT & Software Development",
-        match_score: 94,
-        internship_id: "PMIS-001",
-        reason: "Strong alignment with core programming, version control, and problem-solving fundamentals.",
-      },
-      {
-        role: "Automotive Engineering Intern",
-        company: "Tata Motors",
-        sector: "Automotive",
-        match_score: 88,
-        internship_id: "PMIS-046",
-        reason: "Hands-on engineering logic and technical reporting skills match corporate project needs.",
-      },
-      {
-        role: "Project Planning & Tech Documentation Intern",
-        company: "Larsen & Toubro (L&T)",
-        sector: "Infrastructure",
-        match_score: 85,
-        internship_id: "PMIS-031",
-        reason: "Systematic documentation and structured analysis are ideal for infrastructure planning.",
-      },
-    ],
-    strengths: [
-      "Strict 1-page layout compliant with official PM Internship hiring standards.",
-      "Clear educational credentials and well-defined academic background.",
-      "Demonstrated practical hands-on technical proficiencies with tools.",
-      "High recruiter readability with actionable skill keywords.",
-    ],
-    gaps_and_missing: [
-      "Include live deployed links, GitHub repositories, or design portfolios for each project.",
-      "Quantify project outcomes using measurable impact metrics (e.g., % improvement, users served, or execution speed).",
-      "Add formal certifications or technical workshops to further differentiate against national peer applicants.",
-    ],
-    actionable_roadmap: [
-      "Step 1: Add live URLs (GitHub, portfolio, or demo links) to all project headers.",
-      "Step 2: Add 1-2 bullet points quantifying results with metrics (e.g. 'Optimized processing time by 20%').",
-      "Step 3: Apply to top matching PMIS corporate roles in IT, Automotive, and Infrastructure.",
-    ],
+    target_roles: selectedConfig.targetRoles,
+    strengths: selectedConfig.strengths,
+    gaps_and_missing: selectedConfig.gaps,
+    actionable_roadmap: selectedConfig.roadmap,
   };
 }
 

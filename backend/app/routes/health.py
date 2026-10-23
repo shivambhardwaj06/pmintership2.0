@@ -39,6 +39,7 @@ def get_stats():
         "qdrant_points_indexed": vector_store.count(),
         "embedding_model": settings.NVIDIA_EMBEDDING_MODEL,
         "llm_model": settings.NVIDIA_LLM_MODEL,
+        "ai_key_configured": bool(settings.NVIDIA_API_KEY and settings.NVIDIA_API_KEY.startswith("nvapi-")),
         "nvidia_key_configured": bool(settings.NVIDIA_API_KEY and settings.NVIDIA_API_KEY.startswith("nvapi-"))
     }
 

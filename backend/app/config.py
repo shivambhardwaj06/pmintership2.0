@@ -1,6 +1,15 @@
 import os
-from pydantic_settings import BaseSettings
+from pathlib import Path
 from typing import Optional
+from dotenv import load_dotenv
+from pydantic_settings import BaseSettings
+
+# Load environment variables from both backend directory and root directory
+_BACKEND_DIR = Path(__file__).resolve().parent.parent
+if (_BACKEND_DIR / ".env").exists():
+    load_dotenv(_BACKEND_DIR / ".env")
+if (_BACKEND_DIR.parent / ".env").exists():
+    load_dotenv(_BACKEND_DIR.parent / ".env")
 
 
 class Settings(BaseSettings):
@@ -11,11 +20,11 @@ class Settings(BaseSettings):
     HOST: str = os.getenv("HOST", "0.0.0.0")
     CORS_ORIGINS: str = os.getenv("CORS_ORIGINS", "*")
 
-    # NVIDIA NIM LLM Configuration
+    # AI LLM Engine Configuration
     NVIDIA_API_KEY: Optional[str] = os.getenv("NVIDIA_API_KEY", "")
     NVIDIA_BASE_URL: str = os.getenv("NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1")
     NVIDIA_LLM_MODEL: str = os.getenv("NVIDIA_LLM_MODEL", "nvidia/nemotron-3.5-super-vl-120b-a12b")
-    NVIDIA_EMBEDDING_MODEL: str = os.getenv("NVIDIA_EMBEDDING_MODEL", "baai/bge-m3")
+    NVIDIA_EMBEDDING_MODEL: str = os.getenv("NVIDIA_EMBEDDING_MODEL", "nvidia/llama-3.2-nv-embedqa-1b-v1")
 
     # Qdrant Vector Database
     QDRANT_URL: Optional[str] = os.getenv("QDRANT_URL", None)
