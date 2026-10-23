@@ -465,20 +465,46 @@ async def upload_and_analyze_resume(
         user["resume_name"] = file.filename
         user["cloudinary_url"] = cloudinary_url
 
-        # If name in resume is clean and user name is generic, update name
+        # Sync candidate name from verified resume
         cand_name = analysis.get("candidate_name")
-        if cand_name and cand_name not in ["Candidate", "Student Candidate"]:
-            if "authenticated candidate" in user.get("name", "").lower() or user.get("name") in ["Guest", "Student Candidate"]:
-                user["name"] = cand_name
+        if cand_name and cand_name.strip() and cand_name not in ["Candidate", "Student Candidate", "Full Name"]:
+            # If user name is default/generic or candidate uploaded their resume, use extracted real name
+            current_name = user.get("name", "").lower()
+            if "candidate" in current_name or "guest" in current_name or not user.get("name"):
+                user["name"] = cand_name.strip()
+            elif cand_name.strip():
+                user["name"] = cand_name.strip()
+
+        # Update academic branch detected by AI
+        if analysis.get("detected_branch"):
+            user["branch"] = analysis["detected_branch"]
+
+        # Update college/university
+        if analysis.get("college") and analysis["college"] not in ["College/University", "College or University name"]:
+            user["college"] = analysis["college"]
+
+        # Update degree qualification
+        if analysis.get("degree") and analysis["degree"] not in ["Degree", "Degree qualification"]:
+            user["degree"] = analysis["degree"]
+
+        # Update career goals from professional AI summary
+        if analysis.get("career_summary"):
+            user["career_goals"] = analysis["career_summary"]
+
+        # Update location/state if detected
+        if analysis.get("location"):
+            user["state"] = analysis["location"]
+
+        # Update phone if found and missing
+        if analysis.get("phone") and not user.get("phone"):
+            user["phone"] = analysis["phone"]
 
         # Merge extracted skills into profile without duplicates
-        existing_skills = set(user.get("skills", []))
+        existing_skills = list(user.get("skills", []))
         for sk in analysis.get("extracted_skills", []):
-            existing_skills.add(sk)
-        user["skills"] = list(existing_skills)
-
-        if analysis.get("detected_branch") and not user.get("branch"):
-            user["branch"] = analysis["detected_branch"]
+            if sk and sk not in existing_skills:
+                existing_skills.append(sk)
+        user["skills"] = existing_skills
 
         save_user(user)
 
@@ -489,6 +515,7 @@ async def upload_and_analyze_resume(
         "cloudinary_url": cloudinary_url,
         "pages": num_pages,
         "analysis": analysis,
+        "user": user,
         "updated_skills": user.get("skills", []) if user else analysis.get("extracted_skills", [])
     }
 

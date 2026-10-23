@@ -34,7 +34,8 @@ class NvidiaLLMClient:
         self,
         messages: List[Dict[str, str]],
         temperature: float = 0.2,
-        max_tokens: int = 2500
+        max_tokens: int = 2500,
+        extra_body: Optional[Dict[str, Any]] = None
     ) -> str:
         """Generates complete text response from AI model."""
         client = self._get_client()
@@ -43,13 +44,19 @@ class NvidiaLLMClient:
 
         try:
             logger.info(f"Calling AI LLM model: {self.model}")
-            completion = client.chat.completions.create(
-                model=self.model,
-                messages=messages,
-                temperature=temperature,
-                max_tokens=max_tokens,
-                top_p=0.9
-            )
+            kwargs: Dict[str, Any] = {
+                "model": self.model,
+                "messages": messages,
+                "temperature": temperature,
+                "max_tokens": max_tokens,
+                "top_p": 0.9
+            }
+            if extra_body:
+                kwargs["extra_body"] = extra_body
+            elif "nemotron" in self.model.lower() or "vl" in self.model.lower():
+                kwargs["extra_body"] = {"chat_template_kwargs": {"thinking": False}}
+
+            completion = client.chat.completions.create(**kwargs)
             content = completion.choices[0].message.content or ""
             if not content.strip() and hasattr(completion.choices[0].message, "reasoning_content"):
                 # If content was blank, check if reasoning content contains the output
@@ -67,7 +74,8 @@ class NvidiaLLMClient:
         self,
         messages: List[Dict[str, str]],
         temperature: float = 0.2,
-        max_tokens: int = 2500
+        max_tokens: int = 2500,
+        extra_body: Optional[Dict[str, Any]] = None
     ) -> Generator[str, None, None]:
         """Streams response tokens in real-time from AI model."""
         client = self._get_client()
@@ -78,19 +86,30 @@ class NvidiaLLMClient:
 
         try:
             logger.info(f"Streaming from AI LLM model: {self.model}")
-            stream = client.chat.completions.create(
-                model=self.model,
-                messages=messages,
-                temperature=temperature,
-                max_tokens=max_tokens,
-                top_p=0.9,
-                stream=True
-            )
+            kwargs: Dict[str, Any] = {
+                "model": self.model,
+                "messages": messages,
+                "temperature": temperature,
+                "max_tokens": max_tokens,
+                "top_p": 0.9,
+                "stream": True
+            }
+            if extra_body:
+                kwargs["extra_body"] = extra_body
+            elif "nemotron" in self.model.lower() or "vl" in self.model.lower():
+                kwargs["extra_body"] = {"chat_template_kwargs": {"thinking": False}}
+
+            stream = client.chat.completions.create(**kwargs)
             yielded_anything = False
             for chunk in stream:
-                if chunk.choices and chunk.choices[0].delta and chunk.choices[0].delta.content:
-                    yield chunk.choices[0].delta.content
-                    yielded_anything = True
+                if chunk.choices and chunk.choices[0].delta:
+                    delta = chunk.choices[0].delta
+                    token = delta.content
+                    if not token:
+                        token = getattr(delta, "reasoning_content", None)
+                    if token:
+                        yield token
+                        yielded_anything = True
             
             if not yielded_anything:
                 yield self._fallback_generate(messages)

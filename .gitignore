@@ -41,4 +41,5 @@ env/
 venv/
 qdrant_storage/
 backend/qdrant_storage/
+backend/static/
 

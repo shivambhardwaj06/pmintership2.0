@@ -626,26 +626,56 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                 extracted
               );
 
+        const extractedName =
+          completeAnalysis.candidate_name &&
+          !["Candidate", "Student Candidate", "Full Name"].includes(completeAnalysis.candidate_name)
+            ? completeAnalysis.candidate_name
+            : profile.name;
+        const extractedBranch = completeAnalysis.detected_branch || profile.branch;
+        const extractedCollege =
+          completeAnalysis.college &&
+          !["College/University", "College or University name", "Engineering & Technology Institute"].includes(completeAnalysis.college)
+            ? completeAnalysis.college
+            : profile.college;
+        const extractedDegree =
+          completeAnalysis.degree &&
+          !["Degree", "Degree qualification"].includes(completeAnalysis.degree)
+            ? completeAnalysis.degree
+            : profile.degree;
+        const extractedCareerGoals = completeAnalysis.career_summary || profile.career_goals;
+        const extractedState =
+          completeAnalysis.location && completeAnalysis.location !== "National"
+            ? completeAnalysis.location
+            : profile.state;
+
         setProfile((prev) => ({
           ...prev,
+          name: extractedName,
+          branch: extractedBranch,
+          college: extractedCollege,
+          degree: extractedDegree,
+          career_goals: extractedCareerGoals,
+          state: extractedState,
           resume_name: data.filename,
           cloudinary_url: data.cloudinary_url,
           skills: extracted,
-          branch: completeAnalysis.detected_branch || prev.branch,
-          career_goals: completeAnalysis.career_summary || prev.career_goals,
         }));
         setAiAnalysis(completeAnalysis);
 
-        if (user) {
-          const updatedUser = {
-            ...user,
-            resume_name: data.filename,
-            cloudinary_url: data.cloudinary_url,
-            skills: extracted,
-          };
-          localStorage.setItem("pmis_user", JSON.stringify(updatedUser));
-          window.dispatchEvent(new Event("pmis_user_updated"));
-        }
+        const updatedUser = {
+          ...(user || {}),
+          name: extractedName,
+          branch: extractedBranch,
+          college: extractedCollege,
+          degree: extractedDegree,
+          career_goals: extractedCareerGoals,
+          state: extractedState,
+          resume_name: data.filename,
+          cloudinary_url: data.cloudinary_url,
+          skills: extracted,
+        };
+        localStorage.setItem("pmis_user", JSON.stringify(updatedUser));
+        window.dispatchEvent(new Event("pmis_user_updated"));
 
         setUploadingResume(false);
         setUploadStep("");
@@ -1293,12 +1323,39 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                       </span>
                     </div>
 
+                    {(aiAnalysis.college || profile.college) && (
+                      <div className="flex justify-between py-1.5 border-b border-slate-200 dark:border-slate-700/80">
+                        <span className="font-semibold text-slate-500">College / Institute:</span>
+                        <span className="font-bold text-slate-900 dark:text-white text-right max-w-[65%] truncate">
+                          {aiAnalysis.college || profile.college}
+                        </span>
+                      </div>
+                    )}
+
+                    {(aiAnalysis.degree || profile.degree) && (
+                      <div className="flex justify-between py-1.5 border-b border-slate-200 dark:border-slate-700/80">
+                        <span className="font-semibold text-slate-500">Degree Qualification:</span>
+                        <span className="font-bold text-slate-900 dark:text-white text-right">
+                          {aiAnalysis.degree || profile.degree}
+                        </span>
+                      </div>
+                    )}
+
                     <div className="flex justify-between py-1.5 border-b border-slate-200 dark:border-slate-700/80">
                       <span className="font-semibold text-slate-500">Detected Discipline:</span>
                       <span className="font-bold text-slate-900 dark:text-white">
                         {aiAnalysis.detected_branch || profile.branch}
                       </span>
                     </div>
+
+                    {(aiAnalysis.location || profile.state) && (
+                      <div className="flex justify-between py-1.5 border-b border-slate-200 dark:border-slate-700/80">
+                        <span className="font-semibold text-slate-500">Location / Territory:</span>
+                        <span className="font-bold text-slate-900 dark:text-white">
+                          {aiAnalysis.location || profile.state}
+                        </span>
+                      </div>
+                    )}
 
                     <div className="flex justify-between py-1.5 border-b border-slate-200 dark:border-slate-700/80">
                       <span className="font-semibold text-slate-500">Page Length:</span>
@@ -1310,7 +1367,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                     <div className="flex justify-between py-1.5 border-b border-slate-200 dark:border-slate-700/80">
                       <span className="font-semibold text-slate-500">ATS Parsing Rating:</span>
                       <span className="font-bold text-primary">
-                        {aiAnalysis.layout_review?.ats_score || "94 / 100 (Clean)"}
+                        {aiAnalysis.layout_review?.ats_score || "95 / 100 (Clean)"}
                       </span>
                     </div>
 

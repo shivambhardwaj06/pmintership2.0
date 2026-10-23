@@ -97,41 +97,47 @@ class ResumeService:
 
     def analyze_resume_with_ai(self, resume_text: str) -> Dict[str, Any]:
         """
-        Evaluates the 1-page student resume using AI recruiter models.
-        Extracts verified skills, academic branch, layout analysis, target role matching,
-        and step-by-step corporate selection recommendations dynamically.
+        Evaluates the 1-page student resume using AI recruiter models (NVIDIA Nemotron).
+        Extracts verified full candidate profile (name, email, phone, college, degree, branch, location),
+        skills, layout analysis, target role matching from PMIS sectors, and step-by-step roadmap.
         """
-        prompt = f"""Return ONLY a valid JSON object evaluating this candidate resume. Do not include internal monologue, explanations, or chain of thought.
-Evaluate the exact candidate profile, detect their exact academic branch (e.g. Mechanical Engineering, Civil Engineering, Electrical & Electronics, Computer Science / IT, Commerce / Finance, Healthcare / Pharmacy, Chemical Industry, etc.), and recommend 3 corporate roles from PMIS sectors that match their specific skills and branch.
+        prompt = f"""You are a professional resume parser and corporate recruiter auditor for the Prime Minister's Internship Scheme (PMIS).
+Carefully read the candidate's resume and extract their profile information accurately.
+Return ONLY a valid JSON object matching the exact structure below. Do NOT output markdown code blocks (e.g. no ```json).
 
 RESUME CONTENT:
-{resume_text[:3000]}
+{resume_text[:3500]}
 
-JSON format:
+JSON FORMAT:
 {{
-  "candidate_name": "Full Name or 'Candidate'",
-  "detected_branch": "Candidate Exact Branch (e.g. Mechanical Engineering)",
-  "resume_score": 88,
+  "candidate_name": "Exact Full Name from resume",
+  "email": "Candidate email address",
+  "phone": "Candidate phone number",
+  "college": "Candidate College / University name",
+  "degree": "Degree qualification (e.g. B.Tech in Computer Science and Engineering)",
+  "detected_branch": "Candidate exact academic branch (e.g. Computer Science & Engineering, Mechanical Engineering, Civil Engineering, Commerce / Finance, etc.)",
+  "location": "City, State or Country",
+  "resume_score": 92,
   "grade": "Grade A: High Shortlist Potential",
   "career_summary": "Crisp 1-2 sentence professional summary of candidate strengths",
   "layout_review": {{
     "page_length": "1 Page Strict Compliance (Verified)",
-    "ats_score": "94 / 100 (ATS Friendly)",
+    "ats_score": "95 / 100 (ATS Friendly)",
     "structure_rating": "Excellent (Clear Hierarchy)",
     "formatting_feedback": "Clean single-column layout, readable bullet points, high recruiter scan speed."
   }},
   "skills_breakdown": {{
     "technical_skills": ["Skill1", "Skill2", "Skill3"],
     "tools_frameworks": ["Tool1", "Tool2", "Tool3"],
-    "soft_skills": ["Communication", "Problem Solving", "Teamwork"],
-    "all_extracted": ["Skill1", "Skill2", "Tool1", "Tool2", "Communication", "Problem Solving"]
+    "soft_skills": ["Communication", "Problem Solving"],
+    "all_extracted": ["Skill1", "Skill2", "Tool1", "Tool2"]
   }},
   "target_roles": [
     {{
-      "role": "Role matching their branch",
-      "company": "Top Indian enterprise in this sector",
+      "role": "Role Title matching branch",
+      "company": "Top Indian Enterprise in sector",
       "sector": "PMIS Sector",
-      "match_score": 92,
+      "match_score": 94,
       "internship_id": "PMIS-001",
       "reason": "Clear explanation of how their specific skills align with this role."
     }}
@@ -139,15 +145,14 @@ JSON format:
   "strengths": ["Strength 1", "Strength 2", "Strength 3"],
   "gaps_and_missing": ["Gap 1", "Gap 2", "Gap 3"],
   "actionable_roadmap": ["Step 1", "Step 2", "Step 3"]
-}}
-"""
+}}"""
         messages = [
-            {"role": "system", "content": "You are a professional JSON resume reviewer. Output only pure JSON without markdown or markdown code blocks."},
+            {"role": "system", "content": "You are a JSON-only API. You output ONLY raw valid JSON starting with { and ending with }."},
             {"role": "user", "content": prompt}
         ]
 
         try:
-            raw_res = nvidia_llm.generate_response(messages, temperature=0.15, max_tokens=2600)
+            raw_res = nvidia_llm.generate_response(messages, temperature=0.0, max_tokens=2500)
             cleaned = re.sub(r"^```(json)?", "", raw_res.strip())
             cleaned = re.sub(r"```$", "", cleaned.strip())
 
@@ -503,9 +508,44 @@ JSON format:
         if len(candidate_name.split()) > 4 or len(candidate_name) > 35:
             candidate_name = "Candidate"
 
+        # Regex heuristics for contact & education details
+        email_match = re.search(r'[\w.+-]+@[\w-]+\.[\w.-]+', resume_text)
+        email = email_match.group(0) if email_match else ""
+
+        phone_match = re.search(r'(\+?\d{1,3}[-.\s]?)?\(?\d{3,5}\)?[-.\s]?\d{3}[-.\s]?\d{3,4}', resume_text)
+        phone = phone_match.group(0).strip() if phone_match else ""
+
+        # Degree detection
+        degree = "B.Tech / B.E."
+        for deg in ["B.Tech", "B.E.", "B.Com", "B.Sc", "Diploma", "BCA", "MCA", "M.Tech", "MBA"]:
+            if deg.lower() in text_lower:
+                degree = deg
+                break
+
+        # College detection
+        college = ""
+        for line in resume_text.split("\n"):
+            line_str = line.strip()
+            if any(term in line_str.lower() for term in ["university", "institute of technology", "college of engineering", "autonomous institute", "iit", "nit", "iiit"]):
+                if len(line_str) < 60:
+                    college = line_str
+                    break
+
+        # Location detection
+        location = ""
+        for city in ["Kolkata", "Delhi", "Bengaluru", "Bangalore", "Mumbai", "Pune", "Hyderabad", "Gurugram", "Gurgaon", "Noida", "Chennai", "Jaipur", "Ahmedabad", "Chandigarh", "Lucknow"]:
+            if city.lower() in text_lower:
+                location = f"{city}, India"
+                break
+
         return {
             "candidate_name": candidate_name,
+            "email": email,
+            "phone": phone,
+            "college": college or "Engineering & Technology Institute",
+            "degree": degree,
             "detected_branch": cfg["branch_name"],
+            "location": location or "National",
             "resume_score": min(95, 80 + len(all_skills)),
             "grade": "Grade A: High Shortlist Potential",
             "career_summary": f"Targeted {cfg['branch_name']} candidate with proven hands-on capability in {', '.join(detected_tech[:3])}. Well-aligned for premier national corporate internships.",
