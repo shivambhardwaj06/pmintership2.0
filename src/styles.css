@@ -237,4 +237,11 @@
     transition: left .7s ease; left: -60%; }
   &:hover::after { left: 130%; }
 }
+@utility scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
 @media (prefers-reduced-motion: reduce) { .aurora span { animation: none; } }
