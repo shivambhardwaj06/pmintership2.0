@@ -5,7 +5,7 @@ from typing import Optional
 
 class Settings(BaseSettings):
     # App
-    PROJECT_NAME: str = "IIT Summer Internships & Leads RAG Backend"
+    PROJECT_NAME: str = "PM Internship Scheme (PMIS) Disha AI & RAG Backend"
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
     PORT: int = int(os.getenv("PORT", 8000))
     HOST: str = os.getenv("HOST", "0.0.0.0")
@@ -18,14 +18,21 @@ class Settings(BaseSettings):
     NVIDIA_EMBEDDING_MODEL: str = os.getenv("NVIDIA_EMBEDDING_MODEL", "baai/bge-m3")
 
     # Qdrant Vector Database
-    # If QDRANT_URL is not set, runs embedded local vector storage (Render zero-external dependency)
     QDRANT_URL: Optional[str] = os.getenv("QDRANT_URL", None)
     QDRANT_API_KEY: Optional[str] = os.getenv("QDRANT_API_KEY", None)
-    QDRANT_COLLECTION_NAME: str = os.getenv("QDRANT_COLLECTION_NAME", "iit_internships_knowledge_base")
+    QDRANT_COLLECTION_NAME: str = os.getenv("QDRANT_COLLECTION_NAME", "pmis_internships_120_kb")
     QDRANT_LOCAL_PATH: str = os.getenv("QDRANT_LOCAL_PATH", "./qdrant_storage")
 
+    # Cloudinary configuration for dynamic Resume Storage
+    CLOUDINARY_CLOUD_NAME: Optional[str] = os.getenv("CLOUDINARY_CLOUD_NAME", "")
+    CLOUDINARY_API_KEY: Optional[str] = os.getenv("CLOUDINARY_API_KEY", "")
+    CLOUDINARY_API_SECRET: Optional[str] = os.getenv("CLOUDINARY_API_SECRET", "")
+
+    # Google OAuth 2.0
+    GOOGLE_CLIENT_ID: Optional[str] = os.getenv("GOOGLE_CLIENT_ID", "")
+
     # RAG Settings
-    TOP_K_RETRIEVAL: int = 6
+    TOP_K_RETRIEVAL: int = 5
     SIMILARITY_THRESHOLD: float = 0.25
 
     class Config:

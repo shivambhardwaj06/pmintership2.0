@@ -4,6 +4,7 @@ import Header from "./Header";
 import NoticeBar from "./NoticeBar";
 import BannerCarousel from "./BannerCarousel";
 import StateDashboard from "./StateDashboard";
+import TopFeaturedInternships from "./TopFeaturedInternships";
 import ExploreInternships from "./ExploreInternships";
 import StudentDashboard from "./StudentDashboard";
 import AuthModal from "./AuthModal";
@@ -80,9 +81,16 @@ export default function Landing() {
             <NoticeBar />
             <BannerCarousel onExploreClick={() => setActiveView("explore")} />
             <StateDashboard />
-            <ExploreInternships
+            <TopFeaturedInternships
               user={user}
-              onRequireAuth={() => openAuthWithMode("login")}
+              onExploreAll={() => setActiveView("explore")}
+              onApplyClick={(item) => {
+                if (!user) {
+                  openAuthWithMode("login");
+                } else {
+                  setActiveView("explore");
+                }
+              }}
             />
           </div>
         )}

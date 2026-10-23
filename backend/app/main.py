@@ -76,6 +76,13 @@ app.include_router(chat.router)
 app.include_router(internships.router)
 app.include_router(auth.router)
 
+# Mount static folder for uploaded resumes
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
+static_dir = Path(__file__).parent.parent / "static"
+static_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+
 
 @app.get("/")
 def root():
