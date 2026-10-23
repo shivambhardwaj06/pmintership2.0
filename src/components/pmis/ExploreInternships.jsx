@@ -28,9 +28,24 @@ export default function ExploreInternships({ user, onRequireAuth, onApplySuccess
   const [selectedState, setSelectedState] = useState("All");
   const [selectedMode, setSelectedMode] = useState("All");
   const [selectedInternship, setSelectedInternship] = useState(null);
-  const [appliedIds, setAppliedIds] = useState(["PMIS-001", "PMIS-046"]);
+  const [appliedIds, setAppliedIds] = useState([]);
   const [applyingId, setApplyingId] = useState(null);
   const [applySuccessModal, setApplySuccessModal] = useState(null);
+
+  // Sync applied IDs for the logged in user
+  useEffect(() => {
+    try {
+      const storageKey = user?.user_id ? `pmis_applied_ids_${user.user_id}` : "pmis_applied_ids";
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        setAppliedIds(JSON.parse(saved));
+      } else {
+        setAppliedIds([]);
+      }
+    } catch {
+      setAppliedIds([]);
+    }
+  }, [user]);
 
   // Extract unique sectors, states, modes
   const sectors = useMemo(() => {
@@ -78,9 +93,24 @@ export default function ExploreInternships({ user, onRequireAuth, onApplySuccess
 
     setApplyingId(item.id);
 
+    const storageKey = user?.user_id ? `pmis_applied_ids_${user.user_id}` : "pmis_applied_ids";
+    const appStorageKey = user?.user_id ? `pmis_applications_${user.user_id}` : "pmis_applications";
+
+    const newAppRecord = {
+      id: `APP-2026-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+      company: item.company,
+      title: item.title,
+      sector: item.sector,
+      stipend: item.stipend,
+      location: item.location,
+      date: new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
+      status: "Application Submitted",
+      badgeColor: "bg-blue-100 text-blue-900 border-blue-300 font-bold",
+    };
+
     try {
       // Call real-time backend endpoint
-      const res = await fetch(`${BACKEND_URL}/api/user/apply?user_id=${user.user_id || "PMIS-DEMO"}`, {
+      await fetch(`${BACKEND_URL}/api/user/apply?user_id=${user.user_id}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -90,21 +120,25 @@ export default function ExploreInternships({ user, onRequireAuth, onApplySuccess
           notes: "Applied via PM Internship Portal",
         }),
       });
+    } catch (err) {
+      console.warn("Backend apply endpoint sync error:", err);
+    } finally {
+      const updatedIds = [...appliedIds, item.id];
+      setAppliedIds(updatedIds);
+      localStorage.setItem(storageKey, "pmis_applied_ids", JSON.stringify(updatedIds));
+      localStorage.setItem(storageKey, JSON.stringify(updatedIds));
 
-      if (res.ok) {
-        const data = await res.json();
-        setAppliedIds((prev) => [...prev, item.id]);
-        setApplySuccessModal(item);
-        onApplySuccess?.(item);
-      } else {
-        throw new Error("Application submission failed.");
+      // Save application record
+      try {
+        const existingApps = JSON.parse(localStorage.getItem(appStorageKey) || "[]");
+        existingApps.unshift(newAppRecord);
+        localStorage.setItem(appStorageKey, JSON.stringify(existingApps));
+      } catch {
+        // ignore
       }
-    } catch {
-      // Fallback local persistence
-      setAppliedIds((prev) => [...prev, item.id]);
+
       setApplySuccessModal(item);
       onApplySuccess?.(item);
-    } finally {
       setApplyingId(null);
     }
   };

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Briefcase,
   MapPin,
@@ -27,7 +27,22 @@ export default function TopFeaturedInternships({
   onApplyClick,
   user,
 }) {
-  const [appliedIds, setAppliedIds] = useState(["PMIS-001"]);
+  const [appliedIds, setAppliedIds] = useState([]);
+
+  // Load real user applications from storage
+  useEffect(() => {
+    try {
+      const storageKey = user?.user_id ? `pmis_applied_ids_${user.user_id}` : "pmis_applied_ids";
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        setAppliedIds(JSON.parse(saved));
+      } else {
+        setAppliedIds([]);
+      }
+    } catch {
+      setAppliedIds([]);
+    }
+  }, [user]);
 
   const topInternships = rawInternships.filter((item) =>
     TOP_SELECTION_IDS.includes(item.id)

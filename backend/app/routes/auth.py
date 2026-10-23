@@ -7,13 +7,15 @@ from pydantic import BaseModel, Field
 
 from app.services.resume_service import resume_service
 from app.services.gap_analyzer_service import gap_analyzer
+from app.db import (
+    get_user_by_identifier,
+    save_user,
+    get_user_applications,
+    add_user_application
+)
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api", tags=["Auth, Profile & AI Analysis"])
-
-# Persistent user profiles & application database
-USERS_DB: Dict[str, Dict[str, Any]] = {}
-APPLICATIONS_DB: Dict[str, List[Dict[str, Any]]] = {}
 
 # Comprehensive Real Shortlisted Resumes across EVERY Major Academic Branch
 SELECTED_RESUMES = [
@@ -254,32 +256,42 @@ class GapAnalysisRequest(BaseModel):
 
 @router.post("/auth/register")
 def register_user(payload: RegisterRequest):
-    """Registers a youth candidate in real-time."""
+    """Registers a youth candidate in real-time with disk persistence."""
     mobile = payload.mobile.strip()
     if len(mobile) < 10:
         raise HTTPException(status_code=400, detail="Please enter a valid 10-digit mobile number.")
+
+    existing = get_user_by_identifier(mobile)
+    if existing:
+        raise HTTPException(
+            status_code=400,
+            detail="An account with this mobile number already exists. Please log in."
+        )
 
     user_id = f"PMIS-{mobile[-6:]}"
     user_data = {
         "user_id": user_id,
         "mobile": mobile,
-        "name": payload.name or f"Candidate {mobile[-4:]}",
+        "name": payload.name if payload.name and payload.name != "Student Candidate" else f"Youth Candidate {mobile[-4:]}",
         "email": f"{mobile}@candidate.pminternship.gov.in",
+        "password": payload.password or "Pmis@2026",
         "branch": "Computer Science & Engineering",
+        "degree": "B.Tech / B.E.",
+        "college": "State Technological University",
+        "state": "National",
         "career_goals": "Targeting top corporate internships under PM Scheme.",
-        "skills": ["Python", "Git", "SQL"],
+        "skills": [],
         "resume_name": "",
         "cloudinary_url": "",
         "registered_at": "2026-10-23"
     }
-    USERS_DB[user_id] = user_data
-    USERS_DB[mobile] = user_data
+    saved = save_user(user_data)
 
     return {
         "status": "success",
         "message": "Youth Registration Successful! User ID generated.",
         "user_id": user_id,
-        "user": user_data,
+        "user": saved,
         "token": f"pmis-token-{uuid.uuid4().hex[:12]}"
     }
 
@@ -288,21 +300,21 @@ def register_user(payload: RegisterRequest):
 def login_user(payload: LoginRequest):
     """Logs in using Username / Mobile / CIN and password in real-time."""
     ident = payload.username_or_mobile.strip()
-    if ident in USERS_DB:
-        user = USERS_DB[ident]
-    else:
-        user = {
-            "user_id": ident if ident.startswith("PMIS-") else f"PMIS-{ident[-6:] if len(ident)>=6 else '849102'}",
-            "mobile": ident if ident.isdigit() else "9876543210",
-            "name": f"Candidate {ident[:8]}",
-            "email": f"{ident}@candidate.pminternship.gov.in",
-            "branch": "Computer Science & Engineering",
-            "career_goals": "Seeking high-impact corporate internship.",
-            "skills": ["Python", "SQL", "Git", "Excel"],
-            "resume_name": "Sample_Candidate_Resume.pdf",
-            "cloudinary_url": ""
-        }
-        USERS_DB[ident] = user
+    user = get_user_by_identifier(ident)
+    
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="Account not found. Please register first as a new youth candidate."
+        )
+
+    # Validate password if registered
+    stored_password = user.get("password")
+    if stored_password and payload.password and payload.password != stored_password:
+        raise HTTPException(
+            status_code=401,
+            detail="Incorrect password. Please verify or use Forgot Password to reset."
+        )
 
     return {
         "status": "success",
@@ -314,28 +326,47 @@ def login_user(payload: LoginRequest):
 
 @router.post("/auth/google")
 def google_auth(payload: GoogleAuthRequest):
-    """Real-time Google OAuth 2.0 authentication."""
+    """Real-time Google OAuth 2.0 authentication with disk persistence."""
     email = payload.email.lower().strip()
-    user_id = f"G-{email.split('@')[0]}"
+    existing = get_user_by_identifier(email)
+    
+    if existing:
+        if payload.name:
+            existing["name"] = payload.name
+        if payload.picture:
+            existing["picture"] = payload.picture
+        save_user(existing)
+        return {
+            "status": "success",
+            "message": "Google Authentication Successful (Welcome back!)",
+            "user": existing,
+            "token": f"google-oauth-{uuid.uuid4().hex[:16]}"
+        }
+
+    # Create new student from Google Account
+    user_id = f"G-{uuid.uuid4().hex[:6].upper()}"
     user_data = {
         "user_id": user_id,
         "mobile": "Google Verified",
-        "name": payload.name,
+        "name": payload.name or email.split("@")[0].capitalize(),
         "email": email,
-        "picture": payload.picture,
-        "branch": "Computer Science & Engineering",
-        "career_goals": "Seeking technology and data engineering corporate internship under PMIS.",
-        "skills": ["Python", "SQL", "Git", "Data Analysis", "Communication"],
+        "picture": payload.picture or "https://lh3.googleusercontent.com/a/default-user",
+        "branch": "Engineering & Technology",
+        "degree": "Undergraduate",
+        "college": "State University",
+        "state": "National",
+        "career_goals": "Seeking high-impact corporate internship under PM Scheme.",
+        "skills": [],
         "resume_name": "",
-        "cloudinary_url": ""
+        "cloudinary_url": "",
+        "registered_at": "2026-10-23"
     }
-    USERS_DB[email] = user_data
-    USERS_DB[user_id] = user_data
+    saved = save_user(user_data)
 
     return {
         "status": "success",
         "message": "Google Authentication Successful",
-        "user": user_data,
+        "user": saved,
         "token": f"google-oauth-{uuid.uuid4().hex[:16]}"
     }
 
@@ -343,6 +374,9 @@ def google_auth(payload: GoogleAuthRequest):
 @router.post("/auth/reset-password")
 def reset_password(payload: ResetPasswordRequest):
     ident = payload.user_id.strip()
+    user = get_user_by_identifier(ident)
+    if not user:
+        raise HTTPException(status_code=404, detail="No registered account found with this ID / Mobile.")
     return {
         "status": "success",
         "message": f"A One-Time Password (OTP) has been sent to the registered mobile / email for User ID: {ident}."
@@ -354,26 +388,19 @@ def reset_password(payload: ResetPasswordRequest):
 # =========================================================================
 
 @router.get("/user/profile")
-def get_profile(user_id: str = "PMIS-DEMO"):
-    return USERS_DB.get(user_id, {
-        "user_id": user_id,
-        "name": "Arjun Patel",
-        "mobile": "9876543210",
-        "email": "arjun.patel@sample.gov.in",
-        "branch": "Computer Science & Engineering",
-        "degree": "B.Tech / B.E.",
-        "college": "State Technological University",
-        "state": "Karnataka",
-        "career_goals": "Aiming to build a career in software development and full-stack cloud systems.",
-        "skills": ["Python", "FastAPI", "SQL", "Git", "React"],
-        "resume_name": "Arjun_Patel_CV.pdf",
-        "cloudinary_url": ""
-    })
+def get_profile(user_id: str):
+    user = get_user_by_identifier(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Profile not found for this candidate.")
+    return user
 
 
 @router.put("/user/profile")
 def update_profile(user_id: str, payload: ProfileUpdateRequest):
-    user = USERS_DB.get(user_id, get_profile(user_id))
+    user = get_user_by_identifier(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Candidate not found.")
+        
     if payload.branch is not None:
         user["branch"] = payload.branch
     if payload.degree is not None:
@@ -384,20 +411,20 @@ def update_profile(user_id: str, payload: ProfileUpdateRequest):
         user["state"] = payload.state
     if payload.career_goals is not None:
         user["career_goals"] = payload.career_goals
-    if payload.skills:
+    if payload.skills is not None:
         user["skills"] = payload.skills
-    if payload.resume_name:
+    if payload.resume_name is not None:
         user["resume_name"] = payload.resume_name
-    if payload.cloudinary_url:
+    if payload.cloudinary_url is not None:
         user["cloudinary_url"] = payload.cloudinary_url
 
-    USERS_DB[user_id] = user
+    save_user(user)
     return {"status": "success", "message": "Profile updated successfully!", "user": user}
 
 
 @router.post("/user/upload-resume")
 async def upload_and_analyze_resume(
-    user_id: str = Form("PMIS-DEMO"),
+    user_id: str = Form(...),
     file: UploadFile = File(...)
 ):
     """
@@ -421,30 +448,31 @@ async def upload_and_analyze_resume(
     # 3. Analyze with NVIDIA Nemotron
     analysis = resume_service.analyze_resume_with_ai(resume_text)
 
-    # 4. Update user profile in real-time
-    user = USERS_DB.get(user_id, get_profile(user_id))
-    user["resume_name"] = file.filename
-    user["cloudinary_url"] = cloudinary_url
+    # 4. Update user profile in persistent database
+    user = get_user_by_identifier(user_id)
+    if user:
+        user["resume_name"] = file.filename
+        user["cloudinary_url"] = cloudinary_url
 
-    # Merge extracted skills into profile without duplicates
-    existing_skills = set(user.get("skills", []))
-    for sk in analysis.get("extracted_skills", []):
-        existing_skills.add(sk)
-    user["skills"] = list(existing_skills)
+        # Merge extracted skills into profile without duplicates
+        existing_skills = set(user.get("skills", []))
+        for sk in analysis.get("extracted_skills", []):
+            existing_skills.add(sk)
+        user["skills"] = list(existing_skills)
 
-    if analysis.get("detected_branch") and not user.get("branch"):
-        user["branch"] = analysis["detected_branch"]
+        if analysis.get("detected_branch") and not user.get("branch"):
+            user["branch"] = analysis["detected_branch"]
 
-    USERS_DB[user_id] = user
+        save_user(user)
 
     return {
         "status": "success",
-        "message": "Resume uploaded to Cloudinary and analyzed by AI!",
+        "message": "Resume uploaded and analyzed by AI!",
         "filename": file.filename,
         "cloudinary_url": cloudinary_url,
         "pages": num_pages,
         "analysis": analysis,
-        "updated_skills": user["skills"]
+        "updated_skills": user.get("skills", []) if user else analysis.get("extracted_skills", [])
     }
 
 
@@ -473,36 +501,14 @@ def analyze_skill_gap(payload: GapAnalysisRequest):
 # =========================================================================
 
 @router.get("/user/applications")
-def get_applications(user_id: str = "PMIS-DEMO"):
-    apps = APPLICATIONS_DB.get(user_id, [
-        {
-            "application_id": "APP-2026-081",
-            "internship_id": "PMIS-001",
-            "company": "Tata Consultancy Services",
-            "title": "Software Development Intern",
-            "applied_date": "2026-10-22",
-            "status": "Shortlisted for Round 1",
-            "stipend": "₹8,000–₹12,000/month",
-            "location": "Bengaluru, Karnataka (Hybrid)"
-        },
-        {
-            "application_id": "APP-2026-092",
-            "internship_id": "PMIS-046",
-            "company": "Maruti Suzuki",
-            "title": "Automotive Engineering Intern",
-            "applied_date": "2026-10-23",
-            "status": "Under Employer Review",
-            "stipend": "₹8,000–₹12,000/month",
-            "location": "Bengaluru, Karnataka (Hybrid)"
-        }
-    ])
-    return {"applications": apps}
+def get_applications(user_id: str):
+    apps = get_user_applications(user_id)
+    return {"applications": apps, "total": len(apps)}
 
 
 @router.post("/user/apply")
 def apply_internship(user_id: str, payload: ApplyRequest):
-    """Real-time internship application submission."""
-    app_list = APPLICATIONS_DB.get(user_id, [])
+    """Real-time internship application submission with disk persistence."""
     new_app = {
         "application_id": f"APP-2026-{uuid.uuid4().hex[:6].upper()}",
         "internship_id": payload.internship_id,
@@ -510,15 +516,14 @@ def apply_internship(user_id: str, payload: ApplyRequest):
         "title": payload.title,
         "applied_date": "2026-10-23",
         "status": "Application Submitted",
-        "notes": payload.notes
+        "notes": payload.notes or "Applied via PM Internship Scheme Portal"
     }
-    app_list.insert(0, new_app)
-    APPLICATIONS_DB[user_id] = app_list
+    updated_apps = add_user_application(user_id, new_app)
     return {
         "status": "success",
         "message": f"Successfully applied for {payload.title} at {payload.company}!",
         "application": new_app,
-        "total_applied": len(app_list)
+        "total_applied": len(updated_apps)
     }
 
 

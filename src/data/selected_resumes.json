@@ -1,0 +1,182 @@
+[
+  {
+    "id": "res_cse_01",
+    "branch_category": "Computer Science / IT",
+    "candidate": "Priya Sharma (Shortlisted)",
+    "role": "Software Development Intern",
+    "company": "Tata Consultancy Services (TCS)",
+    "sector": "IT & Software Development",
+    "college": "State Technological University",
+    "cgpa": "8.4 / 10",
+    "academic_degree": "B.Tech Computer Science & Engineering (3rd Year)",
+    "match_score": "96% Selection Match",
+    "shortlist_factors": [
+      "Strict 1-page layout highlighting verifiable GitHub repositories with live demo links.",
+      "Showcased 2 practical full-stack projects using Python, FastAPI, and Git with quantifiable outcomes.",
+      "Demonstrated unit testing rigor (pytest) and basic database optimization (indexing & query tuning).",
+      "Clear section on data structures with hackathon problem-solving credentials."
+    ],
+    "highlighted_skills": ["Python", "FastAPI", "Git", "Data Structures", "SQL", "Unit Testing", "React"],
+    "recruiter_feedback": "Corporate tech screeners spend under 15 seconds. Highlighting 3 core tools with live code repositories got her straight into Round 1."
+  },
+  {
+    "id": "res_mech_02",
+    "branch_category": "Mechanical & Automobile",
+    "candidate": "Rohan Deshmukh (Shortlisted)",
+    "role": "Automotive Engineering Intern",
+    "company": "Tata Motors",
+    "sector": "Automotive",
+    "college": "Government College of Engineering",
+    "cgpa": "7.9 / 10",
+    "academic_degree": "B.E. Mechanical Engineering (Pre-Final Year)",
+    "match_score": "94% Selection Match",
+    "shortlist_factors": [
+      "Attached a 1-click portfolio link featuring 3D SolidWorks and AutoCAD assembly blueprints.",
+      "Detailed participation in SAE BAJA vehicle suspension fabrication and torsional stress analysis.",
+      "Demonstrated knowledge of Electric Vehicle (EV) battery pack cooling and powertrain basics.",
+      "Clean tabular format of engineering internships with shop-floor safety certifications."
+    ],
+    "highlighted_skills": ["SolidWorks", "AutoCAD", "Thermodynamics", "EV Powertrains", "Finite Element Analysis", "Lean Basics"],
+    "recruiter_feedback": "Candidates with actual CAD portfolios and FSAE/BAJA fabrication experience receive immediate priority over pure textbook applicants."
+  },
+  {
+    "id": "res_ece_03",
+    "branch_category": "Electrical & Electronics (ECE / EEE)",
+    "candidate": "Aditya Sengupta (Shortlisted)",
+    "role": "Engineering & Technical Documentation Intern",
+    "company": "Bharat Electronics Limited (BEL)",
+    "sector": "Aviation & Defence",
+    "college": "National Institute of Technology (NIT)",
+    "cgpa": "8.2 / 10",
+    "academic_degree": "B.Tech Electronics & Communication (3rd Year)",
+    "match_score": "95% Selection Match",
+    "shortlist_factors": [
+      "Demonstrated hands-on microcontroller programming (STM32, Arduino) and PCB layout in KiCad.",
+      "Documented circuit debugging methodology, oscilloscope signal tracing, and RF basics.",
+      "Highlighted thorough technical documentation skills adhering to defence communication standards.",
+      "Coursework certifications in Embedded C and Digital Signal Processing (DSP)."
+    ],
+    "highlighted_skills": ["Embedded C", "KiCad PCB Design", "Circuit Debugging", "Microcontrollers", "MATLAB", "Technical Documentation"],
+    "recruiter_feedback": "Defence and public electronics units value circuit tracing diligence, safety protocols, and structured test documentation above all else."
+  },
+  {
+    "id": "res_civil_04",
+    "branch_category": "Civil & Infrastructure",
+    "candidate": "Ananya Patel (Shortlisted)",
+    "role": "Project Planning Intern",
+    "company": "Larsen & Toubro (L&T)",
+    "sector": "Infrastructure & Construction",
+    "college": "State Engineering Institute",
+    "cgpa": "8.6 / 10",
+    "academic_degree": "B.Tech Civil Engineering (Final Year)",
+    "match_score": "97% Selection Match",
+    "shortlist_factors": [
+      "Demonstrated proficiency in MS Project and Primavera P6 for construction milestone scheduling.",
+      "Quantified site internship experiences: Concrete volume estimation, Bar Bending Schedules (BBS), and slump tests.",
+      "Certified in Environmental Health & Safety (EHS) and green building rating norms.",
+      "Accurate structural drawing interpretation skills and total station survey fundamentals."
+    ],
+    "highlighted_skills": ["MS Project", "AutoCAD Civil 3D", "Bar Bending Schedule (BBS)", "Quantity Surveying", "Site Safety", "Quality Audits"],
+    "recruiter_feedback": "L&T reviewers seek civil students who already understand site safety checklists and how to read structural blueprints without hand-holding."
+  },
+  {
+    "id": "res_chem_05",
+    "branch_category": "Chemical & Materials",
+    "candidate": "Vikram Choudhary (Shortlisted)",
+    "role": "Energy Operations & Sustainability Intern",
+    "company": "Indian Oil Corporation (IOCL)",
+    "sector": "Oil, Gas & Energy",
+    "college": "University Institute of Chemical Technology",
+    "cgpa": "8.1 / 10",
+    "academic_degree": "B.Tech Chemical Engineering (3rd Year)",
+    "match_score": "93% Selection Match",
+    "shortlist_factors": [
+      "Deep understanding of mass and energy balance calculations and P&ID (Piping & Instrumentation) schematics.",
+      "Simulated distillation column parameters using Aspen Plus with carbon emission reduction calculations.",
+      "Industrial plant safety awareness (HAZOP analysis, PPE compliance, and OSHA standards).",
+      "Strong spreadsheet modeling for refinery operational data tracking."
+    ],
+    "highlighted_skills": ["Aspen Plus", "P&ID Reading", "Mass & Energy Balance", "HAZOP Safety", "Data Recording", "Process Optimization"],
+    "recruiter_feedback": "Chemical process plants prioritize process safety compliance (HAZOP) and familiarity with P&ID drawings."
+  },
+  {
+    "id": "res_finance_06",
+    "branch_category": "Commerce, Finance & Management",
+    "candidate": "Sneha Kulkarni (Shortlisted)",
+    "role": "Finance & Banking Operations Intern",
+    "company": "HDFC Bank",
+    "sector": "Banking & Financial Services",
+    "college": "Premier Commerce College",
+    "cgpa": "8.5 / 10",
+    "academic_degree": "B.Com Honours (2nd Year)",
+    "match_score": "95% Selection Match",
+    "shortlist_factors": [
+      "Advanced Excel mastery: Dynamic XLOOKUP, Pivot Charts, nested formulas, and financial modeling.",
+      "Conducted an empirical financial project analyzing NPAs (Non-Performing Assets) of commercial banks.",
+      "Demonstrated knowledge of retail banking workflows, KYC norms, and anti-money laundering (AML) guidelines.",
+      "Exceptional tabular presentation with zero formatting inconsistencies or spelling errors."
+    ],
+    "highlighted_skills": ["Advanced Excel", "Financial Modeling", "KYC Compliance", "Power BI", "Data Validation", "Customer Communication"],
+    "recruiter_feedback": "Financial institutions screen heavily for data entry accuracy and mathematical agility in spreadsheets."
+  },
+  {
+    "id": "res_pharma_07",
+    "branch_category": "Biotechnology & Healthcare",
+    "candidate": "Drithi Nair (Shortlisted)",
+    "role": "Pharma Quality & Research Intern",
+    "company": "Sun Pharmaceutical Industries",
+    "sector": "Pharmaceuticals",
+    "college": "College of Pharmaceutical Sciences",
+    "cgpa": "8.7 / 10",
+    "academic_degree": "B.Pharm (3rd Year)",
+    "match_score": "96% Selection Match",
+    "shortlist_factors": [
+      "Hands-on familiarity with analytical instruments: HPLC, UV-Vis Spectrophotometer, and dissolution apparatus.",
+      "Thorough training in Good Manufacturing Practices (GMP) and Good Laboratory Practices (GLP).",
+      "Co-authored a college research paper on dosage formulation quality control.",
+      "Meticulous lab recordkeeping and SOP compliance documentation."
+    ],
+    "highlighted_skills": ["HPLC Operation", "GMP / GLP Norms", "Quality Control", "Spectrophotometry", "SOP Documentation", "Data Tracking"],
+    "recruiter_feedback": "Pharmaceutical QC teams immediately shortlist candidates who can cite exact GMP norms and HPLC experience."
+  },
+  {
+    "id": "res_mining_08",
+    "branch_category": "Mining & Metallurgy",
+    "candidate": "Kunal Mahato (Shortlisted)",
+    "role": "Industrial Operations Intern",
+    "company": "Tata Steel",
+    "sector": "Metals & Mining",
+    "college": "National Metallurgical Institute",
+    "cgpa": "8.0 / 10",
+    "academic_degree": "B.Tech Metallurgical Engineering (3rd Year)",
+    "match_score": "92% Selection Match",
+    "shortlist_factors": [
+      "Hands-on blast furnace process parameter tracking and slag analysis coursework.",
+      "Familiarity with metallographic specimen polishing, hardness testing, and microstructural analysis.",
+      "Steel plant efficiency improvement report modeling energy reduction in electric arc furnaces.",
+      "Rigorous safety-first training certificates."
+    ],
+    "highlighted_skills": ["Metallography", "Quality Inspection", "Blast Furnace Operations", "Safety Protocols", "Excel", "Data Recording"],
+    "recruiter_feedback": "Heavy industry recruiters value ground plant resilience, physical testing familiarity, and safety discipline."
+  },
+  {
+    "id": "res_agri_09",
+    "branch_category": "Agriculture & Life Sciences",
+    "candidate": "Manish Jat (Shortlisted)",
+    "role": "Agriculture Research & Field Data Intern",
+    "company": "Godrej Agrovet",
+    "sector": "Agriculture & Allied Industries",
+    "college": "State Agricultural University",
+    "cgpa": "8.3 / 10",
+    "academic_degree": "B.Sc Agriculture (3rd Year)",
+    "match_score": "94% Selection Match",
+    "shortlist_factors": [
+      "Conducted supervised field trials assessing hybrid seed drought resistance and fertilizer efficacy.",
+      "Organized farmer survey datasets across 12 villages with local language communication skills.",
+      "Demonstrated knowledge of precision agriculture, soil pH telemetry, and integrated pest management (IPM).",
+      "Strong report writing and statistical data organization in Excel."
+    ],
+    "highlighted_skills": ["Field Trial Protocols", "Agronomy Basics", "Soil Science", "Data Collection", "Farmer Communication", "Report Writing"],
+    "recruiter_feedback": "Agri-business companies hire students who combine scientific field observation with practical data recording."
+  }
+]
