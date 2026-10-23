@@ -29,19 +29,25 @@ export default function TopFeaturedInternships({
 }) {
   const [appliedIds, setAppliedIds] = useState([]);
 
-  // Load real user applications from storage
+  // Load real user applications from storage + listen to global application updates
   useEffect(() => {
-    try {
-      const storageKey = user?.user_id ? `pmis_applied_ids_${user.user_id}` : "pmis_applied_ids";
-      const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        setAppliedIds(JSON.parse(saved));
-      } else {
+    const syncApplied = () => {
+      try {
+        const storageKey = user?.user_id ? `pmis_applied_ids_${user.user_id}` : "pmis_applied_ids";
+        const saved = localStorage.getItem(storageKey);
+        if (saved) {
+          setAppliedIds(JSON.parse(saved));
+        } else {
+          setAppliedIds([]);
+        }
+      } catch {
         setAppliedIds([]);
       }
-    } catch {
-      setAppliedIds([]);
-    }
+    };
+
+    syncApplied();
+    window.addEventListener("pmis_application_updated", syncApplied);
+    return () => window.removeEventListener("pmis_application_updated", syncApplied);
   }, [user]);
 
   const topInternships = rawInternships.filter((item) =>

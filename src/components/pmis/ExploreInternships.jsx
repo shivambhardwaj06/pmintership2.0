@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Search,
   MapPin,
@@ -15,6 +15,8 @@ import {
   ChevronDown,
   Layers,
   Loader2,
+  Sparkles,
+  ExternalLink,
 } from "lucide-react";
 import rawInternships from "@/data/internships.json";
 import CompanyLogo from "./CompanyLogo";
@@ -22,7 +24,12 @@ import CompanyLogo from "./CompanyLogo";
 const RAW_BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
 const BACKEND_URL = RAW_BACKEND_URL.replace(/\/+$/, "");
 
-export default function ExploreInternships({ user, onRequireAuth, onApplySuccess }) {
+export default function ExploreInternships({
+  user,
+  onRequireAuth,
+  onApplySuccess,
+  onNavigateToDashboard,
+}) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSector, setSelectedSector] = useState("All");
   const [selectedState, setSelectedState] = useState("All");
@@ -32,19 +39,25 @@ export default function ExploreInternships({ user, onRequireAuth, onApplySuccess
   const [applyingId, setApplyingId] = useState(null);
   const [applySuccessModal, setApplySuccessModal] = useState(null);
 
-  // Sync applied IDs for the logged in user
+  // Sync applied IDs for the logged in user + listen to global application updates
   useEffect(() => {
-    try {
-      const storageKey = user?.user_id ? `pmis_applied_ids_${user.user_id}` : "pmis_applied_ids";
-      const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        setAppliedIds(JSON.parse(saved));
-      } else {
+    const syncApplied = () => {
+      try {
+        const storageKey = user?.user_id ? `pmis_applied_ids_${user.user_id}` : "pmis_applied_ids";
+        const saved = localStorage.getItem(storageKey);
+        if (saved) {
+          setAppliedIds(JSON.parse(saved));
+        } else {
+          setAppliedIds([]);
+        }
+      } catch {
         setAppliedIds([]);
       }
-    } catch {
-      setAppliedIds([]);
-    }
+    };
+
+    syncApplied();
+    window.addEventListener("pmis_application_updated", syncApplied);
+    return () => window.removeEventListener("pmis_application_updated", syncApplied);
   }, [user]);
 
   // Extract unique sectors, states, modes
@@ -103,7 +116,11 @@ export default function ExploreInternships({ user, onRequireAuth, onApplySuccess
       sector: item.sector,
       stipend: item.stipend,
       location: item.location,
-      date: new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
+      date: new Date().toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      }),
       status: "Application Submitted",
       badgeColor: "bg-blue-100 text-blue-900 border-blue-300 font-bold",
     };
@@ -125,7 +142,6 @@ export default function ExploreInternships({ user, onRequireAuth, onApplySuccess
     } finally {
       const updatedIds = [...appliedIds, item.id];
       setAppliedIds(updatedIds);
-      localStorage.setItem(storageKey, "pmis_applied_ids", JSON.stringify(updatedIds));
       localStorage.setItem(storageKey, JSON.stringify(updatedIds));
 
       // Save application record
@@ -137,6 +153,7 @@ export default function ExploreInternships({ user, onRequireAuth, onApplySuccess
         // ignore
       }
 
+      window.dispatchEvent(new Event("pmis_application_updated"));
       setApplySuccessModal(item);
       onApplySuccess?.(item);
       setApplyingId(null);
@@ -190,14 +207,16 @@ export default function ExploreInternships({ user, onRequireAuth, onApplySuccess
             <select
               value={selectedSector}
               onChange={(e) => setSelectedSector(e.target.value)}
-              className="w-full appearance-none rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 pl-3.5 pr-8 py-2.5 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-primary"
+              className="w-full appearance-none rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 pl-3.5 pr-8 py-2.5 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-primary cursor-pointer"
             >
               <option value="All">All 24 Sectors</option>
-              {sectors.filter((s) => s !== "All").map((sec) => (
-                <option key={sec} value={sec}>
-                  {sec}
-                </option>
-              ))}
+              {sectors
+                .filter((s) => s !== "All")
+                .map((sec) => (
+                  <option key={sec} value={sec}>
+                    {sec}
+                  </option>
+                ))}
             </select>
             <ChevronDown className="pointer-events-none absolute right-3 top-3 h-4 w-4 text-slate-400" />
           </div>
@@ -207,14 +226,16 @@ export default function ExploreInternships({ user, onRequireAuth, onApplySuccess
             <select
               value={selectedState}
               onChange={(e) => setSelectedState(e.target.value)}
-              className="w-full appearance-none rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 pl-3.5 pr-8 py-2.5 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-primary"
+              className="w-full appearance-none rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 pl-3.5 pr-8 py-2.5 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-primary cursor-pointer"
             >
               <option value="All">All States / Locations</option>
-              {states.filter((s) => s !== "All").map((st) => (
-                <option key={st} value={st}>
-                  {st}
-                </option>
-              ))}
+              {states
+                .filter((s) => s !== "All")
+                .map((st) => (
+                  <option key={st} value={st}>
+                    {st}
+                  </option>
+                ))}
             </select>
             <ChevronDown className="pointer-events-none absolute right-3 top-3 h-4 w-4 text-slate-400" />
           </div>
@@ -224,14 +245,16 @@ export default function ExploreInternships({ user, onRequireAuth, onApplySuccess
             <select
               value={selectedMode}
               onChange={(e) => setSelectedMode(e.target.value)}
-              className="w-full appearance-none rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 pl-3.5 pr-8 py-2.5 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-primary"
+              className="w-full appearance-none rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 pl-3.5 pr-8 py-2.5 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-primary cursor-pointer"
             >
               <option value="All">All Work Modes (Hybrid / On-site / Remote)</option>
-              {modes.filter((m) => m !== "All").map((md) => (
-                <option key={md} value={md}>
-                  {md}
-                </option>
-              ))}
+              {modes
+                .filter((m) => m !== "All")
+                .map((md) => (
+                  <option key={md} value={md}>
+                    {md}
+                  </option>
+                ))}
             </select>
             <ChevronDown className="pointer-events-none absolute right-3 top-3 h-4 w-4 text-slate-400" />
           </div>
@@ -245,7 +268,7 @@ export default function ExploreInternships({ user, onRequireAuth, onApplySuccess
           {hasActiveFilters && (
             <button
               onClick={clearAllFilters}
-              className="text-xs font-extrabold text-red-600 hover:underline flex items-center gap-1"
+              className="text-xs font-extrabold text-red-600 hover:underline flex items-center gap-1 cursor-pointer"
             >
               <X className="h-3.5 w-3.5" /> Clear Filters
             </button>
@@ -256,13 +279,15 @@ export default function ExploreInternships({ user, onRequireAuth, onApplySuccess
       {/* Internship Cards Grid */}
       {filteredList.length === 0 ? (
         <div className="rounded-3xl p-12 text-center border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
-          <p className="text-base font-extrabold text-slate-900 dark:text-white">No internships match your current filters</p>
+          <p className="text-base font-extrabold text-slate-900 dark:text-white">
+            No internships match your current filters
+          </p>
           <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mt-1 mb-4">
             Try choosing a different state, sector, or clearing the search keyword.
           </p>
           <button
             onClick={clearAllFilters}
-            className="rounded-xl bg-primary text-primary-foreground px-5 py-2.5 text-xs font-extrabold hover:bg-primary/90 transition shadow-xs"
+            className="rounded-xl bg-primary text-primary-foreground px-5 py-2.5 text-xs font-extrabold hover:bg-primary/90 transition shadow-xs cursor-pointer"
           >
             Reset All Filters
           </button>
@@ -291,7 +316,9 @@ export default function ExploreInternships({ user, onRequireAuth, onApplySuccess
                     <h3 className="font-display text-base font-black text-slate-900 dark:text-white group-hover:text-primary transition line-clamp-1">
                       {item.title}
                     </h3>
-                    <p className="text-xs font-extrabold text-slate-600 dark:text-slate-300 mt-0.5">{item.company}</p>
+                    <p className="text-xs font-extrabold text-slate-600 dark:text-slate-300 mt-0.5">
+                      {item.company}
+                    </p>
                   </div>
 
                   {/* Summary */}
@@ -333,7 +360,7 @@ export default function ExploreInternships({ user, onRequireAuth, onApplySuccess
                 <div className="mt-5 pt-3.5 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3">
                   <button
                     onClick={() => setSelectedInternship(item)}
-                    className="text-xs font-extrabold text-primary hover:underline"
+                    className="text-xs font-extrabold text-primary hover:underline cursor-pointer"
                   >
                     View Details
                   </button>
@@ -341,7 +368,7 @@ export default function ExploreInternships({ user, onRequireAuth, onApplySuccess
                   <button
                     onClick={() => handleApplyClick(item)}
                     disabled={isApplied || isCurrentlyApplying}
-                    className={`rounded-xl px-4 py-2 text-xs font-extrabold transition shadow-xs ${
+                    className={`rounded-xl px-4 py-2 text-xs font-extrabold transition shadow-xs cursor-pointer ${
                       isApplied
                         ? "bg-green-100 text-green-900 border border-green-300 cursor-default"
                         : "bg-gradient-to-r from-[#F57C00] to-[#E65100] text-white hover:brightness-105 active:scale-95 disabled:opacity-50"
@@ -372,7 +399,7 @@ export default function ExploreInternships({ user, onRequireAuth, onApplySuccess
           <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 shadow-2xl p-6 sm:p-8">
             <button
               onClick={() => setSelectedInternship(null)}
-              className="absolute right-5 top-5 rounded-full p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900"
+              className="absolute right-5 top-5 rounded-full p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 cursor-pointer"
             >
               <X className="h-5 w-5" />
             </button>
@@ -396,23 +423,33 @@ export default function ExploreInternships({ user, onRequireAuth, onApplySuccess
               <div className="rounded-2xl bg-slate-50 dark:bg-slate-800 p-4 border border-slate-200 dark:border-slate-700 grid grid-cols-2 sm:grid-cols-3 gap-3">
                 <div>
                   <span className="text-[10px] text-slate-500 uppercase font-black">Stipend</span>
-                  <p className="font-black text-slate-900 dark:text-white">{selectedInternship.stipend}</p>
+                  <p className="font-black text-slate-900 dark:text-white">
+                    {selectedInternship.stipend}
+                  </p>
                 </div>
                 <div>
                   <span className="text-[10px] text-slate-500 uppercase font-black">Location</span>
-                  <p className="font-black text-slate-900 dark:text-white">{selectedInternship.location}</p>
+                  <p className="font-black text-slate-900 dark:text-white">
+                    {selectedInternship.location}
+                  </p>
                 </div>
                 <div>
                   <span className="text-[10px] text-slate-500 uppercase font-black">Work Mode</span>
-                  <p className="font-black text-slate-900 dark:text-white">{selectedInternship.mode}</p>
+                  <p className="font-black text-slate-900 dark:text-white">
+                    {selectedInternship.mode}
+                  </p>
                 </div>
                 <div>
                   <span className="text-[10px] text-slate-500 uppercase font-black">Duration</span>
-                  <p className="font-black text-slate-900 dark:text-white">{selectedInternship.duration}</p>
+                  <p className="font-black text-slate-900 dark:text-white">
+                    {selectedInternship.duration}
+                  </p>
                 </div>
                 <div>
                   <span className="text-[10px] text-slate-500 uppercase font-black">Deadline</span>
-                  <p className="font-black text-slate-900 dark:text-white">{selectedInternship.deadline}</p>
+                  <p className="font-black text-slate-900 dark:text-white">
+                    {selectedInternship.deadline}
+                  </p>
                 </div>
                 <div>
                   <span className="text-[10px] text-slate-500 uppercase font-black">Status</span>
@@ -421,18 +458,30 @@ export default function ExploreInternships({ user, onRequireAuth, onApplySuccess
               </div>
 
               <div>
-                <h4 className="font-black text-slate-900 dark:text-white text-sm mb-1">Role Summary</h4>
-                <p className="text-slate-600 dark:text-slate-300 font-medium">{selectedInternship.summary}</p>
+                <h4 className="font-black text-slate-900 dark:text-white text-sm mb-1">
+                  Role Summary
+                </h4>
+                <p className="text-slate-600 dark:text-slate-300 font-medium">
+                  {selectedInternship.summary}
+                </p>
               </div>
 
               <div>
-                <h4 className="font-black text-slate-900 dark:text-white text-sm mb-1">Eligibility Criteria</h4>
-                <p className="text-slate-600 dark:text-slate-300 font-medium">{selectedInternship.eligibility}</p>
+                <h4 className="font-black text-slate-900 dark:text-white text-sm mb-1">
+                  Eligibility Criteria
+                </h4>
+                <p className="text-slate-600 dark:text-slate-300 font-medium">
+                  {selectedInternship.eligibility}
+                </p>
               </div>
 
               <div>
-                <h4 className="font-black text-slate-900 dark:text-white text-sm mb-1">Required Skills in JD</h4>
-                <p className="text-slate-600 dark:text-slate-300 font-medium">{selectedInternship.skills}</p>
+                <h4 className="font-black text-slate-900 dark:text-white text-sm mb-1">
+                  Required Skills in JD
+                </h4>
+                <p className="text-slate-600 dark:text-slate-300 font-medium">
+                  {selectedInternship.skills}
+                </p>
               </div>
 
               <div className="rounded-2xl bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800 p-3.5 text-orange-900 dark:text-orange-200">
@@ -446,7 +495,7 @@ export default function ExploreInternships({ user, onRequireAuth, onApplySuccess
               <div className="flex gap-2">
                 <button
                   onClick={() => setSelectedInternship(null)}
-                  className="rounded-xl border border-slate-300 dark:border-slate-700 px-4 py-2 text-xs font-extrabold hover:bg-slate-100"
+                  className="rounded-xl border border-slate-300 dark:border-slate-700 px-4 py-2 text-xs font-extrabold hover:bg-slate-100 cursor-pointer"
                 >
                   Close
                 </button>
@@ -455,7 +504,7 @@ export default function ExploreInternships({ user, onRequireAuth, onApplySuccess
                     handleApplyClick(selectedInternship);
                     setSelectedInternship(null);
                   }}
-                  className="rounded-xl bg-gradient-to-r from-[#F57C00] to-[#E65100] text-white px-6 py-2 text-xs font-black hover:brightness-105"
+                  className="rounded-xl bg-gradient-to-r from-[#F57C00] to-[#E65100] text-white px-6 py-2 text-xs font-black hover:brightness-105 cursor-pointer"
                 >
                   Apply for this Role
                 </button>
@@ -482,12 +531,25 @@ export default function ExploreInternships({ user, onRequireAuth, onApplySuccess
             <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 p-2.5 rounded-xl">
               Track review status anytime in your <strong>Student Dashboard</strong>.
             </p>
-            <button
-              onClick={() => setApplySuccessModal(null)}
-              className="w-full rounded-xl bg-primary text-primary-foreground py-2.5 text-xs font-black hover:bg-primary/90 transition shadow-xs"
-            >
-              Done
-            </button>
+            <div className="flex flex-col gap-2 pt-2">
+              {onNavigateToDashboard && (
+                <button
+                  onClick={() => {
+                    setApplySuccessModal(null);
+                    onNavigateToDashboard();
+                  }}
+                  className="w-full rounded-xl bg-primary text-primary-foreground py-2.5 text-xs font-black hover:bg-primary/90 transition shadow-xs cursor-pointer"
+                >
+                  Track in Student Dashboard
+                </button>
+              )}
+              <button
+                onClick={() => setApplySuccessModal(null)}
+                className="w-full rounded-xl border border-slate-300 dark:border-slate-700 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+              >
+                Continue Browsing
+              </button>
+            </div>
           </div>
         </div>
       )}
