@@ -19,16 +19,43 @@ export default function Landing() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authInitialMode, setAuthInitialMode] = useState("login");
 
-  // Load existing session on boot
+  // Load existing session on boot & auto-sanitize generic name placeholders
   useEffect(() => {
     try {
       const saved = localStorage.getItem("pmis_user");
       if (saved) {
-        setUser(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        if (
+          parsed.name &&
+          (parsed.name.toLowerCase().includes("authenticated candidate") ||
+            parsed.name.toLowerCase() === "guest" ||
+            parsed.name.toLowerCase() === "student candidate")
+        ) {
+          if (parsed.email && parsed.email.includes("@")) {
+            const raw = parsed.email.split("@")[0].replace(/[0-9._-]+/g, " ").trim();
+            if (raw) {
+              parsed.name = raw
+                .split(" ")
+                .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                .join(" ");
+              localStorage.setItem("pmis_user", JSON.stringify(parsed));
+            }
+          }
+        }
+        setUser(parsed);
       }
     } catch {
       // ignore
     }
+
+    const handleUserUpdate = () => {
+      try {
+        const saved = localStorage.getItem("pmis_user");
+        if (saved) setUser(JSON.parse(saved));
+      } catch {}
+    };
+    window.addEventListener("pmis_user_updated", handleUserUpdate);
+    return () => window.removeEventListener("pmis_user_updated", handleUserUpdate);
   }, []);
 
   // Smooth scroll to top whenever the active view changes

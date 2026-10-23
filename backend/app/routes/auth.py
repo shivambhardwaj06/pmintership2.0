@@ -226,6 +226,7 @@ class GoogleAuthRequest(BaseModel):
 
 
 class ProfileUpdateRequest(BaseModel):
+    name: Optional[str] = None
     branch: Optional[str] = None
     degree: Optional[str] = None
     college: Optional[str] = None
@@ -328,17 +329,25 @@ def login_user(payload: LoginRequest):
 def google_auth(payload: GoogleAuthRequest):
     """Real-time Google OAuth 2.0 authentication with disk persistence."""
     email = payload.email.lower().strip()
-    existing = get_user_by_identifier(email)
     
+    # Clean real human name - eliminate placeholders like "Google Authenticated Candidate"
+    clean_name = (payload.name or "").strip()
+    if not clean_name or "authenticated candidate" in clean_name.lower() or clean_name.lower() in ["guest", "student candidate"]:
+        raw_part = re.sub(r"[0-9._-]+", " ", email.split("@")[0]).strip()
+        clean_name = " ".join([w.capitalize() for w in raw_part.split()]) if raw_part else "Candidate"
+
+    existing = get_user_by_identifier(email)
     if existing:
-        if payload.name:
-            existing["name"] = payload.name
+        if clean_name and (not existing.get("name") or "authenticated candidate" in existing.get("name", "").lower() or existing.get("name") in ["Guest", "Student Candidate"]):
+            existing["name"] = clean_name
+        elif payload.name and payload.name.strip() and "authenticated candidate" not in payload.name.lower():
+            existing["name"] = payload.name.strip()
         if payload.picture:
             existing["picture"] = payload.picture
         save_user(existing)
         return {
             "status": "success",
-            "message": "Google Authentication Successful (Welcome back!)",
+            "message": f"Google Authentication Successful (Welcome back, {existing.get('name', clean_name)}!)",
             "user": existing,
             "token": f"google-oauth-{uuid.uuid4().hex[:16]}"
         }
@@ -348,7 +357,7 @@ def google_auth(payload: GoogleAuthRequest):
     user_data = {
         "user_id": user_id,
         "mobile": "Google Verified",
-        "name": payload.name or email.split("@")[0].capitalize(),
+        "name": clean_name,
         "email": email,
         "picture": payload.picture or "https://lh3.googleusercontent.com/a/default-user",
         "branch": "Engineering & Technology",
@@ -365,7 +374,7 @@ def google_auth(payload: GoogleAuthRequest):
 
     return {
         "status": "success",
-        "message": "Google Authentication Successful",
+        "message": f"Welcome, {clean_name}! Google profile verified.",
         "user": saved,
         "token": f"google-oauth-{uuid.uuid4().hex[:16]}"
     }
@@ -401,6 +410,8 @@ def update_profile(user_id: str, payload: ProfileUpdateRequest):
     if not user:
         raise HTTPException(status_code=404, detail="Candidate not found.")
         
+    if payload.name is not None and payload.name.strip():
+        user["name"] = payload.name.strip()
     if payload.branch is not None:
         user["branch"] = payload.branch
     if payload.degree is not None:
@@ -453,6 +464,12 @@ async def upload_and_analyze_resume(
     if user:
         user["resume_name"] = file.filename
         user["cloudinary_url"] = cloudinary_url
+
+        # If name in resume is clean and user name is generic, update name
+        cand_name = analysis.get("candidate_name")
+        if cand_name and cand_name not in ["Candidate", "Student Candidate"]:
+            if "authenticated candidate" in user.get("name", "").lower() or user.get("name") in ["Guest", "Student Candidate"]:
+                user["name"] = cand_name
 
         # Merge extracted skills into profile without duplicates
         existing_skills = set(user.get("skills", []))

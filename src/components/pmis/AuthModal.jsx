@@ -203,19 +203,27 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
     }
   };
 
-  // Real-time Google OAuth Submission
-  const handleGoogleSubmit = async (e) => {
-    e.preventDefault();
-    if (!googleEmail.trim() || !googleEmail.includes("@")) {
-      setStatusMessage({ type: "error", text: "Please enter a valid Google email address." });
-      return;
+  // Unified Real-time Google Authentication Processor
+  const processGoogleUser = async (rawEmail, rawName, rawPicture) => {
+    const email = rawEmail.trim().toLowerCase();
+    let name = (rawName || "").trim();
+
+    if (
+      !name ||
+      name.toLowerCase().includes("authenticated candidate") ||
+      ["guest", "student candidate"].includes(name.toLowerCase())
+    ) {
+      const userPart = email.split("@")[0].replace(/[0-9._-]+/g, " ").trim();
+      name = userPart
+        ? userPart
+            .split(" ")
+            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+            .join(" ")
+        : "Candidate";
     }
 
     setLoading(true);
     setStatusMessage(null);
-
-    const email = googleEmail.trim().toLowerCase();
-    const name = googleName.trim() || email.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
     try {
       const res = await fetch(`${BACKEND_URL}/api/auth/google`, {
@@ -224,50 +232,66 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
         body: JSON.stringify({
           email: email,
           name: name,
-          picture: "https://lh3.googleusercontent.com/a/default-user",
+          picture: rawPicture || "https://lh3.googleusercontent.com/a/default-user",
         }),
       });
 
       const data = await res.json();
 
-      if (res.ok) {
+      if (res.ok && data.user) {
         const user = data.user;
         localStorage.setItem("pmis_user", JSON.stringify(user));
-        setStatusMessage({ type: "success", text: `Google OAuth Verified: Welcome, ${user.name}!` });
+        window.dispatchEvent(new Event("pmis_user_updated"));
+        setStatusMessage({
+          type: "success",
+          text: `Google OAuth Verified: Welcome, ${user.name}!`,
+        });
         setTimeout(() => {
           onAuthSuccess?.(user);
           onClose();
         }, 800);
-      } else {
-        throw new Error(data.detail || "Google verification failed.");
+        return;
       }
-    } catch {
-      // Local Google Account creation
-      const gUser = {
-        user_id: `G-${email.split("@")[0].toUpperCase().slice(0, 8)}`,
-        mobile: "Google Verified",
-        name: name,
-        email: email,
-        picture: "https://lh3.googleusercontent.com/a/default-user",
-        branch: "Engineering & Applied Sciences",
-        degree: "Undergraduate",
-        college: "State University",
-        state: "National",
-        career_goals: "Targeting top corporate internships under PM Scheme.",
-        skills: ["Problem Solving", "Data Analysis", "Communication"],
-        resume_name: "",
-        cloudinary_url: "",
-        registered_at: "2026-10-23",
-      };
-      localStorage.setItem("pmis_user", JSON.stringify(gUser));
-      setStatusMessage({ type: "success", text: `Google OAuth Verified: Welcome, ${name}!` });
-      setTimeout(() => {
-        onAuthSuccess?.(gUser);
-        onClose();
-      }, 800);
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      console.warn("Backend Google Auth endpoint warning, using client fallback:", err);
     }
+
+    // Local Google Account creation fallback with verified name
+    const gUser = {
+      user_id: `G-${email.split("@")[0].toUpperCase().slice(0, 8)}`,
+      mobile: "Google Verified",
+      name: name,
+      email: email,
+      picture: rawPicture || "https://lh3.googleusercontent.com/a/default-user",
+      branch: "Engineering & Applied Sciences",
+      degree: "Undergraduate",
+      college: "State University",
+      state: "National",
+      career_goals: "Targeting top corporate internships under PM Scheme.",
+      skills: ["Problem Solving", "Data Analysis", "Communication"],
+      resume_name: "",
+      cloudinary_url: "",
+      registered_at: "2026-10-23",
+    };
+    localStorage.setItem("pmis_user", JSON.stringify(gUser));
+    window.dispatchEvent(new Event("pmis_user_updated"));
+    setStatusMessage({ type: "success", text: `Google OAuth Verified: Welcome, ${name}!` });
+    setTimeout(() => {
+      onAuthSuccess?.(gUser);
+      onClose();
+    }, 800);
+    setLoading(false);
+  };
+
+  // Real-time Google OAuth Submission
+  const handleGoogleSubmit = async (e) => {
+    e.preventDefault();
+    if (!googleEmail.trim() || !googleEmail.includes("@")) {
+      setStatusMessage({ type: "error", text: "Please enter a valid Google email address." });
+      return;
+    }
+
+    await processGoogleUser(googleEmail, googleName);
   };
 
   const handleResetPassword = async (e) => {
@@ -652,7 +676,21 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
                   <input
                     type="email"
                     value={googleEmail}
-                    onChange={(e) => setGoogleEmail(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setGoogleEmail(val);
+                      if (!googleName && val.includes("@")) {
+                        const raw = val.split("@")[0].replace(/[0-9._-]+/g, " ").trim();
+                        if (raw) {
+                          setGoogleName(
+                            raw
+                              .split(" ")
+                              .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                              .join(" ")
+                          );
+                        }
+                      }
+                    }}
                     placeholder="student@gmail.com"
                     className="w-full rounded-2xl border-2 border-slate-200 bg-white pl-10 pr-4 py-2.5 text-sm font-semibold text-slate-900 outline-none transition focus:border-primary shadow-xs"
                     required
