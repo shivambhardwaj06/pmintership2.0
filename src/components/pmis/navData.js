@@ -69,7 +69,7 @@ export const NAV = [
     ],
   },
   {
-    label: "Guidance Videos",
+    label: "Videos",
     groups: [
       {
         title: "English",
@@ -91,10 +91,7 @@ export const NAV = [
       },
     ],
   },
-  { label: "Gallery", href: "#gallery-block" },
   { label: "Benefits", href: "#eligibility-criteria" },
-  { label: "Compendium", href: "#compendium" },
-  { label: "Mobile App", href: "#mobile-app" },
   {
     label: "Support",
     groups: [

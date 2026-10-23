@@ -12,8 +12,6 @@ import {
   PlayCircle,
   Images,
   Gift,
-  Library,
-  Smartphone,
   Headphones,
   Briefcase,
   LayoutDashboard,
@@ -34,21 +32,20 @@ const ICONS = {
   Guidelines: BookOpen,
   FAQs: HelpCircle,
   Manuals: FileText,
+  Videos: PlayCircle,
   "Guidance Videos": PlayCircle,
-  Gallery: Images,
   Benefits: Gift,
-  Compendium: Library,
-  "Mobile App": Smartphone,
   Support: Headphones,
 };
 
 function Dropdown({ item, Icon, open, onToggle }) {
+  const isRightAligned = item.label === "Support";
   return (
     <div className="relative">
       <button
         onClick={onToggle}
         aria-expanded={open}
-        className={`group flex items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-1.5 text-xs font-bold transition-all duration-200 cursor-pointer ${
+        className={`group flex items-center gap-1 whitespace-nowrap rounded-xl px-2 xl:px-2.5 py-1.5 text-xs font-bold transition-all duration-200 cursor-pointer ${
           open
             ? "bg-white/15 text-orange-400 shadow-xs"
             : "text-slate-200 hover:text-white hover:bg-white/10 hover:scale-105"
@@ -65,7 +62,7 @@ function Dropdown({ item, Icon, open, onToggle }) {
 
       {open && (
         <div
-          className={`absolute left-0 top-full z-50 mt-2.5 rounded-2xl border-2 border-slate-700/80 bg-slate-900/98 backdrop-blur-2xl p-5 text-white shadow-2xl animate-in fade-in slide-in-from-top-2 duration-150 ${
+          className={`absolute ${isRightAligned ? "right-0" : "left-0"} top-full z-50 mt-2.5 rounded-2xl border-2 border-slate-700/80 bg-slate-900/98 backdrop-blur-2xl p-5 text-white shadow-2xl animate-in fade-in slide-in-from-top-2 duration-150 ${
             item.groups.length > 1
               ? "grid w-[min(44rem,92vw)] grid-cols-2 gap-6 lg:grid-cols-3"
               : "w-80"
@@ -379,14 +376,14 @@ export default function Header({ user, onOpenAuth, onSetView, onNavigateToSectio
         <nav
           ref={navRef}
           aria-label="Main Navigation"
-          className="mx-auto max-w-7xl rounded-2xl bg-slate-900 dark:bg-slate-950 border border-slate-800/90 shadow-xl px-3 py-1 flex items-center justify-between"
+          className="mx-auto max-w-7xl rounded-2xl bg-slate-900 dark:bg-slate-950 border border-slate-800/90 shadow-xl px-2.5 py-1 flex items-center justify-between min-w-0"
         >
           {/* Left Core Navigation Tabs */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5 xl:gap-1 flex-nowrap min-w-0">
             {/* 1. SINGLE Home link (Navigates internally, no duplicate) */}
             <button
               onClick={() => onSetView("home")}
-              className={`flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all duration-200 cursor-pointer ${
+              className={`flex items-center gap-1.5 rounded-xl px-2.5 xl:px-3 py-1.5 text-xs font-bold transition-all duration-200 cursor-pointer ${
                 activeView === "home"
                   ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md shadow-orange-500/30 scale-102"
                   : "text-slate-300 hover:text-white hover:bg-white/10 hover:scale-105"
@@ -399,14 +396,15 @@ export default function Header({ user, onOpenAuth, onSetView, onNavigateToSectio
             {/* 2. Explore 120 Internships */}
             <button
               onClick={() => onSetView("explore")}
-              className={`flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all duration-200 cursor-pointer ${
+              className={`flex items-center gap-1.5 rounded-xl px-2.5 xl:px-3 py-1.5 text-xs font-bold transition-all duration-200 cursor-pointer ${
                 activeView === "explore"
                   ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md shadow-orange-500/30 scale-102"
                   : "text-slate-300 hover:text-white hover:bg-white/10 hover:scale-105"
               }`}
             >
               <Briefcase className="h-3.5 w-3.5 text-orange-400" />
-              <span>Explore Internships</span>
+              <span className="hidden xl:inline">Explore Internships</span>
+              <span className="xl:hidden">Explore</span>
               <span className="rounded-full bg-orange-500/25 text-orange-300 text-[10px] font-black px-1.5 py-0.2 border border-orange-500/40">
                 120
               </span>
@@ -415,14 +413,15 @@ export default function Header({ user, onOpenAuth, onSetView, onNavigateToSectio
             {/* 3. Student Dashboard */}
             <button
               onClick={() => (user ? onSetView("dashboard") : onOpenAuth())}
-              className={`flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all duration-200 cursor-pointer ${
+              className={`flex items-center gap-1.5 rounded-xl px-2.5 xl:px-3 py-1.5 text-xs font-bold transition-all duration-200 cursor-pointer ${
                 activeView === "dashboard"
                   ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md shadow-orange-500/30 scale-102"
                   : "text-slate-300 hover:text-white hover:bg-white/10 hover:scale-105"
               }`}
             >
               <LayoutDashboard className="h-3.5 w-3.5 text-orange-400" />
-              <span>Student Dashboard</span>
+              <span className="hidden 2xl:inline">Student Dashboard</span>
+              <span className="2xl:hidden">Dashboard</span>
             </button>
 
             {/* 4. Don't Fall in Trap */}
@@ -431,11 +430,12 @@ export default function Header({ user, onOpenAuth, onSetView, onNavigateToSectio
                 if (onNavigateToSection) onNavigateToSection("dont-fall-in-trap");
                 else onSetView("home");
               }}
-              className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all duration-200 cursor-pointer text-amber-300 hover:text-white hover:bg-amber-500/20 hover:scale-105"
+              className="flex items-center gap-1.5 rounded-xl px-2 xl:px-2.5 py-1.5 text-xs font-bold transition-all duration-200 cursor-pointer text-amber-300 hover:text-white hover:bg-amber-500/20 hover:scale-105"
               title="Daily Corporate Job Announcements & Hiring Highlights"
             >
               <TrendingUp className="h-3.5 w-3.5 text-amber-400" />
-              <span>Don't Fall in Trap</span>
+              <span className="hidden xl:inline">Don't Fall in Trap</span>
+              <span className="xl:hidden">Daily Jobs</span>
             </button>
 
             {/* 5. Find Your Path (AI Roadmap) */}
@@ -444,18 +444,19 @@ export default function Header({ user, onOpenAuth, onSetView, onNavigateToSectio
                 if (onNavigateToSection) onNavigateToSection("find-your-path");
                 else onSetView("home");
               }}
-              className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all duration-200 cursor-pointer text-indigo-300 hover:text-white hover:bg-indigo-500/20 hover:scale-105"
+              className="flex items-center gap-1.5 rounded-xl px-2 xl:px-2.5 py-1.5 text-xs font-bold transition-all duration-200 cursor-pointer text-indigo-300 hover:text-white hover:bg-indigo-500/20 hover:scale-105"
               title="AI-Powered Personalized Career Roadmap"
             >
               <Compass className="h-3.5 w-3.5 text-indigo-400" />
-              <span>Find Your Path</span>
+              <span className="hidden xl:inline">Find Your Path</span>
+              <span className="xl:hidden">Roadmap</span>
               <span className="rounded-full bg-indigo-500/30 text-indigo-200 text-[9px] font-black px-1.5 py-0.2 border border-indigo-400/40">
                 AI
               </span>
             </button>
 
             {/* Subtle Divider */}
-            <span className="h-4 w-px bg-slate-700/80 mx-1.5" />
+            <span className="h-4 w-px bg-slate-700/80 mx-1 xl:mx-1.5 shrink-0" />
 
             {/* Government Resources & Guidelines Dropdowns */}
             {NAV.map((item, i) => {
@@ -472,7 +473,7 @@ export default function Header({ user, onOpenAuth, onSetView, onNavigateToSectio
                 <a
                   key={item.label}
                   href={item.href}
-                  className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 hover:scale-105 transition-all duration-200"
+                  className="flex items-center gap-1 rounded-xl px-2 xl:px-2.5 py-1.5 text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 hover:scale-105 transition-all duration-200"
                 >
                   {Icon && <Icon className="h-3.5 w-3.5 text-orange-400" />}
                   <span>{item.label}</span>
@@ -482,7 +483,7 @@ export default function Header({ user, onOpenAuth, onSetView, onNavigateToSectio
           </div>
 
           {/* Right subtle portal badge */}
-          <div className="flex items-center gap-2 pr-2">
+          <div className="hidden xl:flex items-center gap-2 pr-2 shrink-0">
             <span className="inline-flex items-center gap-1 rounded-full bg-orange-500/10 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-orange-400 border border-orange-500/20">
               <Sparkles className="h-3 w-3 text-orange-400" /> 2026 Batch
             </span>
