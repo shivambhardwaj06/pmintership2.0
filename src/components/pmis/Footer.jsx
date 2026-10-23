@@ -294,7 +294,7 @@ export default function Footer({ onSetView }) {
               </li>
               <li>
                 <button
-                  onClick={() => navigateToView("home", "dont-fall-in-trap")}
+                  onClick={() => navigateToView("trap")}
                   className="group flex items-center gap-2 text-slate-300 hover:text-amber-400 transition-colors cursor-pointer"
                 >
                   <ChevronRight className="h-3.5 w-3.5 text-slate-500 group-hover:text-amber-400 group-hover:translate-x-1 transition-all" />
@@ -306,7 +306,7 @@ export default function Footer({ onSetView }) {
               </li>
               <li>
                 <button
-                  onClick={() => navigateToView("home", "find-your-path")}
+                  onClick={() => navigateToView("path")}
                   className="group flex items-center gap-2 text-slate-300 hover:text-indigo-400 transition-colors cursor-pointer"
                 >
                   <ChevronRight className="h-3.5 w-3.5 text-slate-500 group-hover:text-indigo-400 group-hover:translate-x-1 transition-all" />
@@ -318,11 +318,29 @@ export default function Footer({ onSetView }) {
               </li>
               <li>
                 <button
-                  onClick={() => navigateToView("home", "top-featured-internships")}
-                  className="group flex items-center gap-2 text-slate-300 hover:text-orange-400 transition-colors cursor-pointer"
+                  onClick={() => navigateToView("faqs")}
+                  className="group flex items-center gap-2 text-slate-300 hover:text-sky-400 transition-colors cursor-pointer"
                 >
-                  <ChevronRight className="h-3.5 w-3.5 text-slate-500 group-hover:text-orange-400 group-hover:translate-x-1 transition-all" />
-                  <span>Top 6 Featured Openings</span>
+                  <ChevronRight className="h-3.5 w-3.5 text-slate-500 group-hover:text-sky-400 group-hover:translate-x-1 transition-all" />
+                  <span>FAQs & Help</span>
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => navigateToView("benefits")}
+                  className="group flex items-center gap-2 text-slate-300 hover:text-purple-400 transition-colors cursor-pointer"
+                >
+                  <ChevronRight className="h-3.5 w-3.5 text-slate-500 group-hover:text-purple-400 group-hover:translate-x-1 transition-all" />
+                  <span>Scheme Benefits & Perks</span>
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => navigateToView("support")}
+                  className="group flex items-center gap-2 text-slate-300 hover:text-rose-400 transition-colors cursor-pointer"
+                >
+                  <ChevronRight className="h-3.5 w-3.5 text-slate-500 group-hover:text-rose-400 group-hover:translate-x-1 transition-all" />
+                  <span>Grievance & Support</span>
                 </button>
               </li>
               <li>

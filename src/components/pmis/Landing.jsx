@@ -9,16 +9,20 @@ import ExploreInternships from "./ExploreInternships";
 import StudentDashboard from "./StudentDashboard";
 import DontFallInTrap from "./DontFallInTrap";
 import FindYourPath from "./FindYourPath";
+import FAQs from "./FAQs";
+import Benefits from "./Benefits";
+import Support from "./Support";
 import AuthModal from "./AuthModal";
 import Footer from "./Footer";
 import { applyTheme, getTheme } from "@/lib/theme";
+import { TrendingUp, Compass, ArrowRight, ShieldCheck, Flame, Sparkles, Gift } from "lucide-react";
 
 const RAW_BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
 const BACKEND_URL = RAW_BACKEND_URL.replace(/\/+$/, "");
 
 export default function Landing() {
   const [user, setUser] = useState(null);
-  const [activeView, setActiveView] = useState("home"); // "home" | "explore" | "dashboard"
+  const [activeView, setActiveView] = useState("home"); // "home" | "explore" | "dashboard" | "trap" | "path" | "faqs" | "benefits" | "support"
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authInitialMode, setAuthInitialMode] = useState("login");
 
@@ -71,10 +75,10 @@ export default function Landing() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [activeView]);
 
-  // Handle URL hash changes (e.g. #explore, #dashboard, #home, #dont-fall-in-trap, #find-your-path)
+  // Handle URL hash changes
   useEffect(() => {
     const handleHash = () => {
-      const hash = window.location.hash;
+      const hash = window.location.hash.toLowerCase();
       if (hash === "#explore" || hash === "#explore-internships") {
         setActiveView("explore");
       } else if (
@@ -87,16 +91,16 @@ export default function Landing() {
         hash === "#applications"
       ) {
         setActiveView("dashboard");
-      } else if (hash === "#dont-fall-in-trap" || hash === "#dont-fall-on-the-trap") {
-        setActiveView("home");
-        setTimeout(() => {
-          document.getElementById("dont-fall-in-trap")?.scrollIntoView({ behavior: "smooth" });
-        }, 150);
-      } else if (hash === "#find-your-path") {
-        setActiveView("home");
-        setTimeout(() => {
-          document.getElementById("find-your-path")?.scrollIntoView({ behavior: "smooth" });
-        }, 150);
+      } else if (hash === "#trap" || hash === "#dont-fall-in-trap" || hash === "#dont-fall-on-the-trap") {
+        setActiveView("trap");
+      } else if (hash === "#path" || hash === "#find-your-path") {
+        setActiveView("path");
+      } else if (hash === "#faqs" || hash === "#faq") {
+        setActiveView("faqs");
+      } else if (hash === "#benefits") {
+        setActiveView("benefits");
+      } else if (hash === "#support" || hash === "#help") {
+        setActiveView("support");
       } else if (hash === "#home") {
         setActiveView("home");
       }
@@ -224,7 +228,34 @@ export default function Landing() {
               onNavigateToDashboard={() => setActiveView("dashboard")}
             />
           </div>
+        ) : activeView === "trap" ? (
+          <DontFallInTrap
+            user={user}
+            onRequireAuth={() => openAuthWithMode("login")}
+            onNavigateToExplore={() => setActiveView("explore")}
+            onNavigateToPath={() => setActiveView("path")}
+          />
+        ) : activeView === "path" ? (
+          <FindYourPath
+            user={user}
+            onRequireAuth={() => openAuthWithMode("login")}
+            onNavigateToExplore={() => setActiveView("explore")}
+          />
+        ) : activeView === "faqs" ? (
+          <FAQs
+            onNavigateToExplore={() => setActiveView("explore")}
+            onNavigateToSupport={() => setActiveView("support")}
+          />
+        ) : activeView === "benefits" ? (
+          <Benefits
+            user={user}
+            onNavigateToExplore={() => setActiveView("explore")}
+            onOpenAuth={() => openAuthWithMode("login")}
+          />
+        ) : activeView === "support" ? (
+          <Support user={user} />
         ) : (
+          /* HOME PAGE */
           <div>
             <NoticeBar />
             <BannerCarousel onExploreClick={() => setActiveView("explore")} />
@@ -234,17 +265,77 @@ export default function Landing() {
               onExploreAll={() => setActiveView("explore")}
               onApplyClick={handleApplyFromLanding}
             />
-            {/* "Don't Fall in the Trap": Daily Job Announcements & Opportunities Stream */}
-            <DontFallInTrap
-              user={user}
-              onRequireAuth={() => openAuthWithMode("login")}
-            />
-            {/* "Find Your Path": AI-Powered Personalized Career Roadmap */}
-            <FindYourPath
-              user={user}
-              onRequireAuth={() => openAuthWithMode("login")}
-              onNavigateToExplore={() => setActiveView("explore")}
-            />
+
+            {/* TWO HIGH-IMPACT PROMOTIONAL CARDS FOR "DON'T FALL IN THE TRAP" & "FIND YOUR PATH" */}
+            <section className="py-12 px-4 bg-slate-100/60 dark:bg-slate-900/40 border-t border-slate-200 dark:border-slate-800">
+              <div className="mx-auto max-w-7xl">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  {/* Promo Card 1: Don't Fall in the Trap */}
+                  <div className="relative overflow-hidden rounded-3xl border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-white dark:to-slate-900 p-8 shadow-sm flex flex-col justify-between group hover:border-amber-500/60 hover:shadow-xl transition-all duration-300">
+                    <div className="space-y-3">
+                      <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 px-3 py-1 text-xs font-black uppercase text-amber-600 dark:text-amber-400">
+                        <Flame className="h-3.5 w-3.5 fill-amber-500 text-amber-500 animate-pulse" />
+                        <span>Daily Verified Hiring Stream</span>
+                      </div>
+                      <h3 className="font-display text-2xl font-black text-slate-900 dark:text-white">
+                        Don&apos;t Fall in the Trap
+                      </h3>
+                      <p className="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 leading-relaxed">
+                        <span className="text-rose-600 dark:text-rose-400 font-extrabold line-through mr-1">
+                          Stop focusing on layoffs.
+                        </span>
+                        <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">
+                          Focus on massive new corporate roles created daily!
+                        </span>{" "}
+                        Track verified hiring announcements from Google News, Tata Semiconductor, GCC expansions, and top Indian MNCs.
+                      </p>
+                    </div>
+
+                    <div className="mt-6 pt-4 border-t border-amber-500/20 flex items-center justify-between">
+                      <span className="text-xs font-bold text-amber-700 dark:text-amber-400">
+                        1,25,000+ PMIS Openings • Real-time Sources
+                      </span>
+                      <button
+                        onClick={() => setActiveView("trap")}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white px-5 py-2.5 text-xs font-black shadow-md hover:brightness-105 transition cursor-pointer"
+                      >
+                        <span>View Hiring Stream</span>
+                        <ArrowRight className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Promo Card 2: Find Your Path */}
+                  <div className="relative overflow-hidden rounded-3xl border-2 border-indigo-500/30 bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-white dark:to-slate-900 p-8 shadow-sm flex flex-col justify-between group hover:border-indigo-500/60 hover:shadow-xl transition-all duration-300">
+                    <div className="space-y-3">
+                      <div className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/15 border border-indigo-500/30 px-3 py-1 text-xs font-black uppercase text-indigo-600 dark:text-indigo-400">
+                        <Compass className="h-3.5 w-3.5 text-indigo-500" />
+                        <span>AI-Powered Career Navigator</span>
+                      </div>
+                      <h3 className="font-display text-2xl font-black text-slate-900 dark:text-white">
+                        Find Your Path
+                      </h3>
+                      <p className="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 leading-relaxed">
+                        Select your dream corporate role from official PM Internship Scheme tracks, and let AI generate an actionable, week-by-week preparation roadmap with 100% free open-source resources and progress tracking.
+                      </p>
+                    </div>
+
+                    <div className="mt-6 pt-4 border-t border-indigo-500/20 flex items-center justify-between">
+                      <span className="text-xs font-bold text-indigo-700 dark:text-indigo-400">
+                        Custom 4, 8 or 12-Week Sprints
+                      </span>
+                      <button
+                        onClick={() => setActiveView("path")}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-5 py-2.5 text-xs font-black shadow-md hover:brightness-105 transition cursor-pointer"
+                      >
+                        <span>Generate AI Roadmap</span>
+                        <ArrowRight className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
           </div>
         )}
       </main>
