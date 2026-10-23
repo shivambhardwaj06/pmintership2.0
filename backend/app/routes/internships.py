@@ -27,7 +27,7 @@ def list_internships(
     limit: int = Query(120, ge=1, le=200),
     offset: int = Query(0, ge=0)
 ):
-    """Lists and filters official 120 PM Internship Scheme records."""
+    """Lists and filters official PM Internship Scheme records."""
     records = load_internships()
 
     filtered = records

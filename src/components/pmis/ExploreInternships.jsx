@@ -178,7 +178,7 @@ export default function ExploreInternships({
           <ShieldCheck className="h-4 w-4 text-orange-600" /> Official PM Internship Scheme Openings
         </span>
         <h2 className="font-display text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
-          Explore All 120 Paid Corporate Internships
+          Explore All Paid Corporate Internships
         </h2>
         <p className="text-sm font-semibold text-slate-600 dark:text-slate-300 mt-2">
           Filter by your State, Work Mode, or Sector across 24 sectors. Real-time selection criteria and direct application.

@@ -91,7 +91,7 @@ def build_scheme_guidance_chunks() -> List[Dict[str, Any]]:
             "apply_url": "/dashboard",
             "content": (
                 "How to Navigate the PM Internship Portal:\n"
-                "1. Explore All Internships: Go to the 'Explore Internships' section to filter 120 opportunities across 24 sectors by State, Work Mode (Hybrid/Remote/On-site), Sector, or Field.\n"
+                "1. Explore All Internships: Go to the 'Explore Internships' section to filter opportunities across 24 sectors by State, Work Mode (Hybrid/Remote/On-site), Sector, or Field.\n"
                 "2. Register / Login: Click 'Login / Register' on top right. Register using your 10-digit mobile number or Google Account.\n"
                 "3. Student Dashboard: Once logged in, visit the Dashboard to update your Academic Branch, Career Goals, and upload your Resume.\n"
                 "4. Past Selected Resumes: Visit the 'See Past Selected Resumes' tab in the dashboard to review anonymized sample resumes that succeeded in top corporate selections.\n"

@@ -175,7 +175,7 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
     }
   });
 
-  // Unique titles from 120 PMIS dataset
+  // Unique titles from PMIS dataset
   const allPmisRoles = useMemo(() => {
     const set = new Set();
     internshipsData.forEach((item) => {
@@ -396,7 +396,7 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
           </h2>
 
           <p className="mt-4 text-sm sm:text-base font-semibold text-slate-600 dark:text-slate-300 leading-relaxed">
-            Stop guessing your next step. Select your dream corporate role from the 120 PM Internship Scheme tracks, and let AI generate an actionable, week-by-week roadmap with real projects, tools, and curated free resources.
+            Stop guessing your next step. Select your dream corporate role from official PM Internship Scheme tracks, and let AI generate an actionable, week-by-week roadmap with real projects, tools, and curated free resources.
           </p>
         </div>
 
@@ -435,7 +435,7 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
                   })}
                 </div>
 
-                {/* Custom / 120 PMIS Roles Autocomplete Input */}
+                {/* Custom / PMIS Roles Autocomplete Input */}
                 <div className="relative">
                   <div className="relative flex items-center">
                     <Search className="absolute left-3.5 h-4 w-4 text-slate-400" />
@@ -448,7 +448,7 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
                         setSearchQuery(e.target.value);
                         setIsSearchingRole(true);
                       }}
-                      placeholder="Or search among 120 PMIS roles (e.g. VLSI, Financial Analyst, Civil Site...)"
+                      placeholder="Or search among official PMIS roles (e.g. VLSI, Financial Analyst, Civil Site...)"
                       className="w-full rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 pl-10 pr-4 py-3 text-xs sm:text-sm font-bold text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
                     />
                   </div>
@@ -792,7 +792,7 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
                 </h4>
 
                 <p className="mt-2 text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 max-w-xl mx-auto leading-relaxed">
-                  Log in to generate tailored roadmaps for any of the 120 PM Internship Scheme roles, check off weekly milestones, unlock verified free learning resources, and directly apply to matching corporate opportunities.
+                  Log in to generate tailored roadmaps for any official PM Internship Scheme role, check off weekly milestones, unlock verified free learning resources, and directly apply to matching corporate opportunities.
                 </p>
 
                 <div className="mt-6 flex flex-wrap items-center justify-center gap-3">

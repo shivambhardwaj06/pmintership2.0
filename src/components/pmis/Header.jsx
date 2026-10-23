@@ -146,7 +146,7 @@ function MobileMenu({ onClose, user, onOpenAuth, onSetView, onNavigateToSection,
             }}
             className="flex w-full items-center gap-2 rounded-xl bg-primary/10 px-3 py-2 text-xs font-extrabold text-primary"
           >
-            <Briefcase className="h-4 w-4" /> Explore 120 Internships
+            <Briefcase className="h-4 w-4" /> Explore Internships
           </button>
           <button
             onClick={() => {
@@ -393,7 +393,7 @@ export default function Header({ user, onOpenAuth, onSetView, onNavigateToSectio
               <span>Home</span>
             </button>
 
-            {/* 2. Explore 120 Internships */}
+            {/* 2. Explore Internships */}
             <button
               onClick={() => onSetView("explore")}
               className={`flex items-center gap-1.5 rounded-xl px-2.5 xl:px-3 py-1.5 text-xs font-bold transition-all duration-200 cursor-pointer ${
@@ -405,9 +405,6 @@ export default function Header({ user, onOpenAuth, onSetView, onNavigateToSectio
               <Briefcase className="h-3.5 w-3.5 text-orange-400" />
               <span className="hidden xl:inline">Explore Internships</span>
               <span className="xl:hidden">Explore</span>
-              <span className="rounded-full bg-orange-500/25 text-orange-300 text-[10px] font-black px-1.5 py-0.2 border border-orange-500/40">
-                120
-              </span>
             </button>
 
             {/* 3. Student Dashboard */}

@@ -229,7 +229,7 @@ export default function Footer({ onSetView }) {
                       <Sparkles className="h-3 w-3 text-orange-400" />
                     </div>
                     <p className="text-[11px] font-medium text-slate-300">
-                      Instant assistance for 120 roles & resumes
+                      Instant assistance for all roles & resumes
                     </p>
                   </div>
                 </div>
@@ -262,7 +262,7 @@ export default function Footer({ onSetView }) {
                   className="group flex items-center gap-2 text-slate-300 hover:text-orange-400 transition-colors cursor-pointer"
                 >
                   <ChevronRight className="h-3.5 w-3.5 text-slate-500 group-hover:text-orange-400 group-hover:translate-x-1 transition-all" />
-                  <span>Explore 120 Internships</span>
+                  <span>Explore Internships</span>
                   <span className="rounded-full bg-orange-500/20 px-2 py-0.5 text-[10px] font-extrabold text-orange-400 border border-orange-500/30">
                     24 Sectors
                   </span>

@@ -1057,7 +1057,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
               onClick={onNavigateToInternships}
               className="flex items-center gap-2 rounded-xl bg-primary text-primary-foreground px-4 py-2.5 text-xs font-extrabold shadow-sm hover:bg-primary/90 transition cursor-pointer"
             >
-              <Briefcase className="h-4 w-4" /> Explore 120 Roles
+              <Briefcase className="h-4 w-4" /> Explore Internships
             </button>
             <button
               onClick={() => setActiveTab("gap")}
@@ -1817,13 +1817,13 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                 No Applications Submitted Yet
               </h3>
               <p className="text-xs text-slate-600 dark:text-slate-400 max-w-md mx-auto">
-                Explore all 120 partner opportunities across 24 sectors and click &quot;Apply Now&quot; to track your real-time status here.
+                Explore all partner opportunities across 24 sectors and click &quot;Apply Now&quot; to track your real-time status here.
               </p>
               <button
                 onClick={onNavigateToInternships}
                 className="rounded-xl bg-gradient-to-r from-[#F57C00] to-[#E65100] text-white px-5 py-2.5 text-xs font-black shadow-md hover:brightness-105 transition cursor-pointer"
               >
-                Browse 120 PM Internships
+                Browse All PM Internships
               </button>
             </div>
           ) : (

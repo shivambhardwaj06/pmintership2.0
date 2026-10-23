@@ -21,7 +21,7 @@ logger = logging.getLogger("pm_internship_backend")
 async def lifespan(app: FastAPI):
     """
     Automatic startup lifecycle:
-    1. Parse and load all 120 official PM Internship Scheme records.
+    1. Parse and load official PM Internship Scheme records.
     2. Initialize BM25 lexical index.
     3. Seed Qdrant vector database with fresh records.
     """
@@ -52,7 +52,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="PM Internship Scheme (PMIS) Disha AI Backend",
-    description="Official Hybrid RAG & Career Guidance Backend for PM Internship Scheme 120 Records",
+    description="Official Hybrid RAG & Career Guidance Backend for PM Internship Scheme",
     version="2.0.0",
     lifespan=lifespan
 )

@@ -74,7 +74,7 @@ export default function TopFeaturedInternships({
           onClick={onExploreAll}
           className="group flex items-center gap-2 rounded-2xl bg-gradient-to-r from-primary to-primary/90 px-6 py-3 text-sm font-bold text-white shadow-md hover:shadow-lg transition-all active:scale-95 w-fit"
         >
-          <span>Explore All 120 Internships</span>
+          <span>Explore All Internships</span>
           <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
         </button>
       </div>
@@ -170,7 +170,7 @@ export default function TopFeaturedInternships({
           onClick={onExploreAll}
           className="inline-flex items-center gap-2 rounded-full border-2 border-primary/30 dark:border-primary/50 bg-primary/5 hover:bg-primary/10 dark:bg-primary/15 px-8 py-3.5 text-sm font-extrabold text-primary dark:text-sky-300 shadow-xs transition hover:scale-105 cursor-pointer"
         >
-          <span>Browse All 120 Opportunities with State & Sector Filters</span>
+          <span>Browse All Opportunities with State & Sector Filters</span>
           <ArrowRight className="h-4 w-4" />
         </button>
       </div>

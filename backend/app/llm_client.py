@@ -129,7 +129,7 @@ class NvidiaLLMClient:
             clean_lines = [l for l in raw_context.split("\n") if not l.startswith("Document [") and not l.startswith("Source:")]
             return "### 📌 Verified Guidance from Official PM Internship Portal:\n\n" + "\n".join(clean_lines[:15])
         
-        return "### 📌 Verified PM Internship Scheme Guidance:\n\nThe Prime Minister's Internship Scheme provides 12-month paid internships in India's top 500 corporations with a ₹5,000 monthly stipend plus ₹6,000 one-time grant. Explore all 120 live openings directly on our Explore Internships tab or check your Student Dashboard."
+        return "### 📌 Verified PM Internship Scheme Guidance:\n\nThe Prime Minister's Internship Scheme provides 12-month paid internships in India's top 500 corporations with a ₹5,000 monthly stipend plus ₹6,000 one-time grant. Explore all live openings directly on our Explore Internships tab or check your Student Dashboard."
 
 
 nvidia_llm = NvidiaLLMClient()

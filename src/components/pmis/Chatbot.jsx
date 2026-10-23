@@ -55,7 +55,7 @@ function getDishaGroundedReply(text) {
   if (t.includes("ask about an internship") || t.includes("internship") || t.includes("available")) {
     return {
       answer:
-        "We have **120 paid corporate internships across 24 sectors** right now!\n\n" +
+        "We have **paid corporate internships across 24 sectors** right now!\n\n" +
         "• **Stipends:** ₹8,000–₹15,000/month (sample prototype listings).\n" +
         "• **Modes:** Hybrid, On-site, and Remote options in Karnataka, Maharashtra, Tamil Nadu, Delhi/NCR, and Pan-India.\n" +
         "• **Top Companies:** TCS, Infosys, HDFC, Maruti Suzuki, Tata Motors, L&T, Sun Pharma, NTPC, etc.\n\n" +
@@ -79,7 +79,7 @@ function getDishaGroundedReply(text) {
   return {
     answer:
       "Namaste! I am **Disha**, your friendly PM Internship AI Guide.\n\n" +
-      "I can help you explore 120 corporate internships across 24 sectors, analyze your skill gaps, and share winning resume formats. Try asking one of the quick questions below!",
+      "I can help you explore corporate internships across 24 sectors, analyze your skill gaps, and share winning resume formats. Try asking one of the quick questions below!",
     sources: [{ title: "PM Internship Scheme (PMIS)", url: "" }],
   };
 }
@@ -189,7 +189,7 @@ export default function Chatbot({ onNavigateTab }) {
   const [messages, setMessages] = useState([
     {
       role: "bot",
-      text: "Namaste! I am **Disha**, your friendly PM Internship AI Guide.\n\nAsk me about 120 internships across 24 sectors, analyzing your skill gaps, or reviewing winning resumes!",
+      text: "Namaste! I am **Disha**, your friendly PM Internship AI Guide.\n\nAsk me about corporate internships across 24 sectors, analyzing your skill gaps, or reviewing winning resumes!",
       sources: [],
     },
   ]);
@@ -295,7 +295,7 @@ export default function Chatbot({ onNavigateTab }) {
                 <Sparkles className="h-2.5 w-2.5 text-yellow-300" /> Student AI Guide
               </span>
             </div>
-            <p className="text-[11px] text-primary-foreground/75">PM Internship Scheme · 120 Listings</p>
+            <p className="text-[11px] text-primary-foreground/75">PM Internship Scheme · Official Portal</p>
           </div>
           <button
             onClick={() => setOpen(false)}
