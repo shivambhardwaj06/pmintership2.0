@@ -200,6 +200,12 @@ export default function Chatbot({ onNavigateTab }) {
   const inputRef = useRef(null);
 
   useEffect(() => {
+    const handleOpen = () => setOpen(true);
+    window.addEventListener("open-disha", handleOpen);
+    return () => window.removeEventListener("open-disha", handleOpen);
+  }, []);
+
+  useEffect(() => {
     if (open) inputRef.current?.focus();
   }, [open]);
 

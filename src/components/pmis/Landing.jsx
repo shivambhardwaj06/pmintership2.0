@@ -96,7 +96,7 @@ export default function Landing() {
         )}
       </main>
 
-      <Footer />
+      <Footer onSetView={setActiveView} />
 
       {/* Global Auth Modal matching official MCA PMIS design */}
       <AuthModal

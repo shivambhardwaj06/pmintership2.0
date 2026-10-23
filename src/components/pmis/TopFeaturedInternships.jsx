@@ -49,7 +49,7 @@ export default function TopFeaturedInternships({
   );
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-14">
+    <section id="top-featured-internships" className="mx-auto max-w-7xl px-4 py-14">
       {/* Section Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
         <div>
