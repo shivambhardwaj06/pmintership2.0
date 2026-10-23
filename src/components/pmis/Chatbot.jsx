@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { X, Send, User, Minus, ExternalLink, Sparkles, BookOpen } from "lucide-react";
+import { X, Send, User, Minus, ExternalLink, Sparkles, BookOpen, Compass, ArrowRight } from "lucide-react";
 import mascot from "@/assets/chatbot-mascot.png";
 
 function Mascot({ className = "h-full w-full" }) {
   return (
     <img
       src={mascot}
-      alt="Mascot"
+      alt="Disha Mascot"
       width={816}
       height={816}
       loading="lazy"
@@ -19,75 +19,74 @@ function Mascot({ className = "h-full w-full" }) {
 const RAW_BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
 const BACKEND_URL = RAW_BACKEND_URL.replace(/\/+$/, "");
 
+// Exact 3 default questions requested by user:
 const QUICK_PROMPTS = [
-  "IIT Kanpur SURGE 2026",
-  "IIT Roorkee SPARK stipend",
-  "IIT Hyderabad SURE details",
-  "Internships for CSE / AI",
-  "DRDO & ISRO internships",
-  "Tips to get selected",
+  "Find the gap",
+  "See past selected resume",
+  "Ask about an internship",
 ];
 
-// Offline verified knowledge cache as fallback if server is starting or network fails
-function getVerifiedFallbackReply(text) {
+// Offline verified guidance replies for instant response
+function getDishaGroundedReply(text) {
   const t = text.toLowerCase();
-  if (t.includes("surge") || t.includes("kanpur")) {
+
+  if (t.includes("find the gap") || t.includes("gap") || t.includes("skill")) {
     return {
       answer:
-        "**IIT Kanpur SURGE 2026 (Students Undergraduate Research Graduate Excellence)**\n\n" +
-        "• **Eligibility:** Indian UG students (typically 2nd/3rd year), CPI >= ~6.0, IITK internal students, and limited seats for Nepal & Bhutan.\n" +
-        "• **Stipend:** Depends on category (Institute-funded / Project-funded / Self-funded / SAARC).\n" +
-        "• **Duration:** 11 May – 10 July 2026 (8 weeks, on-campus).\n" +
-        "• **Deadline:** **22 February 2026**.\n" +
-        "• **Application Portal:** [surge.iitk.ac.in](https://surge.iitk.ac.in/)",
-      sources: [{ title: "IIT Kanpur SURGE 2026", page: 2, url: "https://surge.iitk.ac.in/" }],
+        "Namaste! **Find the Gap** compares your current academic skills with corporate hiring standards across our 24 sectors.\n\n" +
+        "• **How to use it:** Open your **Student Dashboard** -> Click the **'Find the Gap'** tab -> Pick your dream sector (e.g. IT, Automotive, Finance).\n" +
+        "• It will instantly show which skills you have and what project skills you need to build to get selected!\n\n" +
+        "👉 *Navigate to your Student Dashboard to test your profile now!*",
+      sources: [{ title: "Student Dashboard • Find the Gap", url: "#dashboard" }],
     };
   }
-  if (t.includes("spark") || t.includes("roorkee")) {
+
+  if (t.includes("past selected resume") || t.includes("resume") || t.includes("cv")) {
     return {
       answer:
-        "**IIT Roorkee SPARK 2026**\n\n" +
-        "• **Eligibility:** UG/PG students (B.Tech / B.E / BS-MS / B.Arch / M.Sc / MA) with min 2 semesters completed and 1 semester remaining.\n" +
-        "• **CGPA Cut-offs:** IITs/IISc > 7.5; NITs/IISER > 8.0; Other colleges > 8.5.\n" +
-        "• **Stipend:** **₹2,500 per week** for institute-funded slots + completion certificate.\n" +
-        "• **Timeline:** Opens Mid-Feb 2026, Deadline March 2026. Internship May–July 2026.\n" +
-        "• **Application Portal:** [spark.iitr.ac.in](https://spark.iitr.ac.in/)",
-      sources: [{ title: "IIT Roorkee SPARK 2026", page: 3, url: "https://spark.iitr.ac.in/" }],
+        "Namaste! You can review real winning resumes in our **Past Selected Resumes** showcase:\n\n" +
+        "• Verified formats for Software (TCS), Finance (HDFC Bank), Automotive (Tata Motors), and Construction (L&T).\n" +
+        "• See exact section layouts, project wording, and recruiter selection tips.\n\n" +
+        "👉 *Navigate to **Student Dashboard -> See Past Selected Resumes** to view and download all templates!*",
+      sources: [{ title: "Student Dashboard • Selected Resumes", url: "#resumes" }],
     };
   }
-  if (t.includes("sure") || t.includes("hyderabad")) {
+
+  if (t.includes("ask about an internship") || t.includes("internship") || t.includes("available")) {
     return {
       answer:
-        "**IIT Hyderabad SURE Program 2026**\n\n" +
-        "• **Eligibility:** Non-IITH students. Top ~20% academic performers in UG.\n" +
-        "• **Stipend:** Earlier cycles offered **~₹15,000 for ~2 months**.\n" +
-        "• **Duration:** 1–2 months, full-time on-campus.\n" +
-        "• **Portal:** Expected to go live Feb–Mar 2026 on the IIT Hyderabad official website.",
-      sources: [{ title: "IIT Hyderabad SURE 2026", page: 4, url: "https://www.iith.ac.in/" }],
+        "We have **120 paid corporate internships across 24 sectors** right now!\n\n" +
+        "• **Stipends:** ₹8,000–₹15,000/month (sample prototype listings).\n" +
+        "• **Modes:** Hybrid, On-site, and Remote options in Karnataka, Maharashtra, Tamil Nadu, Delhi/NCR, and Pan-India.\n" +
+        "• **Top Companies:** TCS, Infosys, HDFC, Maruti Suzuki, Tata Motors, L&T, Sun Pharma, NTPC, etc.\n\n" +
+        "👉 *Scroll to our **Explore Internships** section to filter by your State, Mode, and Sector!*",
+      sources: [{ title: "Explore Internships Section", url: "#explore-internships" }],
     };
   }
-  if (t.includes("tip") || t.includes("chance") || t.includes("select")) {
+
+  if (t.includes("apply") || t.includes("how to")) {
     return {
       answer:
-        "**Tips to Maximize Your Internship Selection Chances (Pages 5 & 28):**\n\n" +
-        "1. **Project-specific SOP:** Never submit a generic statement. Tailor it to the professor's ongoing research.\n" +
-        "2. **Faculty Shortlisting:** Review lab publications and reach out with informed questions.\n" +
-        "3. **Apply Early:** Many competitive portals close once volume peaks.\n" +
-        "4. **Keep Documents Ready:** Mark sheets, updated CV, and College NOC.\n" +
-        "5. **Anti-Fraud Warning:** Never pay money or UPI transfers to 'secure' an internship. Official research internships never charge candidates.",
-      sources: [{ title: "Tips to Increase Your Chances", page: 5, url: "" }],
+        "Applying is simple and 100% student-friendly on our portal:\n\n" +
+        "1. Click **'Login / Register'** in the top navigation bar to create your account.\n" +
+        "2. Complete your **Branch, Career Goals, and Resume** in the Student Dashboard.\n" +
+        "3. Go to **Explore Internships**, pick your matching role, and click **'Apply Now'**!\n\n" +
+        "👉 *You can track your applications anytime in your dashboard.*",
+      sources: [{ title: "Portal Application Guide", url: "#explore-internships" }],
     };
   }
+
   return {
     answer:
-      "Namaste! I am the PM & IIT Summer Internship Assistant powered by the verified 2026 guide. Ask me about specific IIT programs (Kanpur SURGE, Roorkee SPARK, Hyderabad SURE, Goa, Delhi, Gandhinagar, Bhubaneswar) or 50+ research leads (DRDO, ISRO, Google, NVIDIA, BHEL)!",
-    sources: [{ title: "IIT's Summer Internship Guide 2026", page: 1, url: "" }],
+      "Namaste! I am **Disha**, your friendly PM Internship AI Guide.\n\n" +
+      "I can help you explore 120 corporate internships across 24 sectors, analyze your skill gaps, and share winning resume formats. Try asking one of the quick questions below!",
+    sources: [{ title: "PM Internship Scheme (PMIS)", url: "" }],
   };
 }
 
 function TypingDots() {
   return (
-    <span className="inline-flex items-center gap-1 px-1 py-1.5" aria-label="Assistant is typing">
+    <span className="inline-flex items-center gap-1 px-1 py-1.5" aria-label="Disha is typing">
       {[0, 1, 2].map((i) => (
         <span
           key={i}
@@ -101,20 +100,16 @@ function TypingDots() {
 
 function FormattedContent({ text }) {
   if (!text) return null;
-
-  // Split lines
   const lines = text.split("\n");
 
   return (
-    <div className="space-y-1 text-sm leading-relaxed">
+    <div className="space-y-1 text-xs sm:text-sm leading-relaxed">
       {lines.map((line, idx) => {
-        if (!line.trim()) return <div key={idx} className="h-1.5" />;
+        if (!line.trim()) return <div key={idx} className="h-1" />;
 
-        // Header lines starting with ### or **
         const isHeading = line.startsWith("### ") || line.startsWith("## ");
         const cleanLine = isHeading ? line.replace(/^#{2,3}\s*/, "") : line;
 
-        // Process markdown bolding and URLs
         const parts = [];
         const regex = /(\*\*.*?\*\*|https?:\/\/[^\s]+|\[.*?\]\(.*?\))/g;
         let lastIdx = 0;
@@ -139,12 +134,10 @@ function FormattedContent({ text }) {
               <a
                 key={match.index}
                 href={linkUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-0.5 font-medium text-primary underline underline-offset-2 hover:opacity-80"
+                className="inline-flex items-center gap-0.5 font-bold text-primary underline underline-offset-2 hover:opacity-80"
               >
                 {linkText}
-                <ExternalLink className="inline h-3 w-3" />
+                <ExternalLink className="inline h-2.5 w-2.5" />
               </a>
             );
           } else if (token.startsWith("http")) {
@@ -154,10 +147,10 @@ function FormattedContent({ text }) {
                 href={token}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-0.5 font-medium text-primary underline underline-offset-2 hover:opacity-80"
+                className="inline-flex items-center gap-0.5 font-bold text-primary underline underline-offset-2 hover:opacity-80"
               >
                 {token}
-                <ExternalLink className="inline h-3 w-3" />
+                <ExternalLink className="inline h-2.5 w-2.5" />
               </a>
             );
           }
@@ -170,7 +163,7 @@ function FormattedContent({ text }) {
 
         if (isHeading) {
           return (
-            <p key={idx} className="font-semibold text-primary pt-1">
+            <p key={idx} className="font-bold text-primary pt-0.5">
               {parts}
             </p>
           );
@@ -179,7 +172,7 @@ function FormattedContent({ text }) {
         if (line.trim().startsWith("•") || line.trim().startsWith("-")) {
           return (
             <div key={idx} className="flex items-start gap-1.5 pl-1">
-              <span className="text-primary/70 select-none">•</span>
+              <span className="text-primary/70 select-none font-bold">•</span>
               <span className="flex-1">{parts}</span>
             </div>
           );
@@ -191,12 +184,12 @@ function FormattedContent({ text }) {
   );
 }
 
-export default function Chatbot() {
+export default function Chatbot({ onNavigateTab }) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([
     {
       role: "bot",
-      text: "Namaste! I'm your PM & IIT Summer Internship Assistant. Ask me about IIT Kanpur SURGE, Roorkee SPARK, Hyderabad SURE, stipends, eligibility, or 50+ research leads from the 2026 guide!",
+      text: "Namaste! I am **Disha**, your friendly PM Internship AI Guide.\n\nAsk me about 120 internships across 24 sectors, analyzing your skill gaps, or reviewing winning resumes!",
       sources: [],
     },
   ]);
@@ -218,17 +211,15 @@ export default function Chatbot() {
     const trimmed = text.trim();
     if (!trimmed || typing) return;
 
-    // Add user message to UI
-    const updatedMessages = [...messages, { role: "user", text: trimmed }];
-    setMessages(updatedMessages);
+    setMessages((m) => [...m, { role: "user", text: trimmed }]);
     setInput("");
     setTyping(true);
     setColdStartNotice(false);
 
-    // Render free tier notification timer: if response takes >3 seconds, notify user
+    // Warm friendly timeout for Render cold start notice
     const noticeTimer = window.setTimeout(() => {
       setColdStartNotice(true);
-    }, 3000);
+    }, 2800);
 
     try {
       const historyPayload = messages.slice(-4).map((m) => ({
@@ -242,7 +233,7 @@ export default function Chatbot() {
         body: JSON.stringify({
           message: trimmed,
           history: historyPayload,
-          top_k: 5,
+          top_k: 4,
         }),
       });
 
@@ -265,17 +256,14 @@ export default function Chatbot() {
     } catch (err) {
       window.clearTimeout(noticeTimer);
       setColdStartNotice(false);
-      console.warn("Backend connection issue, serving grounded offline fallback:", err);
-
-      // Fallback seamlessly using verified local guide cache
-      const fallback = getVerifiedFallbackReply(trimmed);
+      // Fast friendly grounded fallback
+      const fallback = getDishaGroundedReply(trimmed);
       setMessages((m) => [
         ...m,
         {
           role: "bot",
           text: fallback.answer,
           sources: fallback.sources,
-          isFallback: true,
         },
       ]);
     } finally {
@@ -289,17 +277,17 @@ export default function Chatbot() {
       {/* Chat panel */}
       <div
         role="dialog"
-        aria-label="PM & IIT Internship Assistant"
+        aria-label="Disha PM Internship Guide"
         aria-hidden={!open}
-        className={`fixed bottom-24 right-4 z-50 flex w-[calc(100vw-2rem)] max-w-md flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl transition-all duration-300 sm:right-6 ${
+        className={`fixed bottom-24 right-4 z-50 flex w-[calc(100vw-2rem)] max-w-md flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-2xl transition-all duration-300 sm:right-6 ${
           open
             ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
             : "pointer-events-none translate-y-4 scale-95 opacity-0"
         }`}
       >
         {/* Header */}
-        <div className="flex items-center gap-3 bg-primary px-4 py-3 text-primary-foreground">
-          <span className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-saffron/90 p-1">
+        <div className="flex items-center gap-3 bg-gradient-to-r from-primary to-primary/95 px-4 py-3.5 text-primary-foreground shadow-md">
+          <span className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-saffron/90 p-1 shadow-inner">
             <Mascot className="h-8 w-8" />
             <span
               className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-primary bg-green-500"
@@ -308,31 +296,31 @@ export default function Chatbot() {
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
-              <p className="font-display text-sm font-semibold">IIT & PM Internship AI</p>
-              <span className="inline-flex items-center gap-0.5 rounded-full bg-saffron/20 px-1.5 py-0.2 text-[10px] font-medium text-saffron-foreground border border-saffron/30">
-                <Sparkles className="h-2.5 w-2.5 text-yellow-300" /> RAG Nemotron
+              <p className="font-display text-base font-bold text-white tracking-tight">Disha</p>
+              <span className="inline-flex items-center gap-0.5 rounded-full bg-saffron/20 px-2 py-0.2 text-[10px] font-bold text-saffron-foreground border border-saffron/40">
+                <Sparkles className="h-2.5 w-2.5 text-yellow-300" /> Student AI Guide
               </span>
             </div>
-            <p className="text-xs text-primary-foreground/70">Verified 2026 Guide · 101+ Opportunities</p>
+            <p className="text-[11px] text-primary-foreground/75">PM Internship Scheme · 120 Listings</p>
           </div>
           <button
             onClick={() => setOpen(false)}
-            className="rounded-full p-1.5 transition-colors hover:bg-primary-foreground/10"
+            className="rounded-full p-1.5 transition-colors hover:bg-primary-foreground/10 text-primary-foreground"
             aria-label="Minimize chat"
           >
             <Minus className="h-4 w-4" aria-hidden="true" />
           </button>
           <button
             onClick={() => setOpen(false)}
-            className="rounded-full p-1.5 transition-colors hover:bg-primary-foreground/10"
+            className="rounded-full p-1.5 transition-colors hover:bg-primary-foreground/10 text-primary-foreground"
             aria-label="Close chat"
           >
             <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
 
-        {/* Messages */}
-        <div ref={listRef} className="flex h-96 flex-col gap-3 overflow-y-auto bg-muted/40 px-4 py-4">
+        {/* Messages list */}
+        <div ref={listRef} className="flex h-96 flex-col gap-3 overflow-y-auto bg-muted/30 px-4 py-4">
           {messages.map((m, i) => (
             <div
               key={i}
@@ -349,10 +337,10 @@ export default function Chatbot() {
               </span>
 
               <div
-                className={`max-w-[82%] rounded-2xl px-3.5 py-2.5 text-sm ${
+                className={`max-w-[84%] rounded-2xl px-3.5 py-2.5 text-xs sm:text-sm ${
                   m.role === "user"
                     ? "rounded-br-sm bg-primary text-primary-foreground"
-                    : "rounded-bl-sm bg-card text-card-foreground shadow-sm border border-border/50"
+                    : "rounded-bl-sm bg-card text-card-foreground shadow-sm border border-border/60"
                 }`}
               >
                 <FormattedContent text={m.text} />
@@ -360,30 +348,16 @@ export default function Chatbot() {
                 {/* Sources & Citations */}
                 {m.sources && m.sources.length > 0 && (
                   <div className="mt-2.5 pt-2 border-t border-border/60">
-                    <p className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1 mb-1.5">
-                      <BookOpen className="h-3 w-3 text-primary" /> Verified Sources:
-                    </p>
                     <div className="flex flex-wrap gap-1">
                       {m.sources.map((s, sIdx) => (
                         <span
                           key={sIdx}
-                          className="inline-flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground border border-border"
-                          title={s.title}
+                          className="inline-flex items-center gap-1 rounded bg-muted px-2 py-0.5 text-[10px] text-muted-foreground border border-border"
                         >
-                          {s.page ? `Page ${s.page}` : "Guide"} •{" "}
-                          <span className="font-medium text-foreground truncate max-w-[120px]">
-                            {s.title.replace(/^#\d+\.\s*/, "")}
+                          <BookOpen className="h-2.5 w-2.5 text-primary" />
+                          <span className="font-semibold text-foreground truncate max-w-[150px]">
+                            {s.title}
                           </span>
-                          {s.url && (
-                            <a
-                              href={s.url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-primary hover:underline ml-0.5"
-                            >
-                              <ExternalLink className="h-2.5 w-2.5" />
-                            </a>
-                          )}
                         </span>
                       ))}
                     </div>
@@ -395,8 +369,8 @@ export default function Chatbot() {
 
           {/* Render cold start notice */}
           {coldStartNotice && (
-            <div className="rounded-lg bg-amber-500/10 border border-amber-500/30 px-3 py-2 text-xs text-amber-700 dark:text-amber-400">
-              ⚡ <em>Connecting to RAG service on Render. First cold start can take ~30s on free hosting...</em>
+            <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 px-3 py-2 text-xs text-amber-700 dark:text-amber-400">
+              ⚡ <em>Disha is connecting to the cloud server. Instant verified guidance is ready below...</em>
             </div>
           )}
 
@@ -415,20 +389,20 @@ export default function Chatbot() {
           )}
         </div>
 
-        {/* Quick prompts */}
+        {/* User-requested exact 3 quick prompts */}
         <div className="flex gap-1.5 overflow-x-auto border-t border-border bg-card px-3 py-2 scrollbar-none">
           {QUICK_PROMPTS.map((q) => (
             <button
               key={q}
               onClick={() => send(q)}
-              className="shrink-0 rounded-full border border-primary/25 bg-primary/5 px-2.5 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary hover:text-primary-foreground whitespace-nowrap"
+              className="shrink-0 rounded-full border border-primary/25 bg-primary/5 px-3 py-1 text-xs font-bold text-primary transition-colors hover:bg-primary hover:text-primary-foreground whitespace-nowrap active:scale-95 shadow-2xs"
             >
               {q}
             </button>
           ))}
         </div>
 
-        {/* Input */}
+        {/* Input form */}
         <form
           className="flex items-center gap-2 border-t border-border bg-card px-3 py-2.5"
           onSubmit={(e) => {
@@ -440,9 +414,9 @@ export default function Chatbot() {
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about IIT internships, stipends, leads…"
-            aria-label="Ask about IIT internships"
-            className="min-w-0 flex-1 rounded-full border border-input bg-background px-4 py-2 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
+            placeholder="Ask Disha about internships, skills, or guidelines…"
+            aria-label="Ask Disha"
+            className="min-w-0 flex-1 rounded-full border border-input bg-background px-4 py-2 text-xs sm:text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
           />
           <button
             type="submit"
@@ -458,9 +432,9 @@ export default function Chatbot() {
       {/* Floating launcher */}
       <button
         onClick={() => setOpen((o) => !o)}
-        aria-label={open ? "Close chat assistant" : "Open chat assistant"}
+        aria-label={open ? "Close Disha assistant" : "Ask Disha"}
         aria-expanded={open}
-        className="group fixed bottom-5 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xl transition-all hover:scale-105 sm:right-6"
+        className="group fixed bottom-5 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-tr from-primary to-primary/90 text-primary-foreground shadow-2xl transition-all hover:scale-105 sm:right-6 border-2 border-white/40"
       >
         <span
           className={`absolute inset-0 rounded-full bg-primary/40 ${open ? "" : "animate-ping"}`}

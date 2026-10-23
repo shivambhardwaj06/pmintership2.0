@@ -7,25 +7,25 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-SYSTEM_PROMPT_TEMPLATE = """You are the official PM & IIT Internship AI Assistant.
-Your duty is to assist undergraduate and postgraduate students with verified, highly accurate information regarding summer research internships and company/research leads based strictly on the official "IIT's Summer Internship Guide 2026".
+DISHA_SYSTEM_PROMPT_TEMPLATE = """You are "Disha", the friendly, helpful AI Guide for the PM Internship Scheme (PMIS) platform.
 
-### STRICT GROUNDING GUIDELINES:
-1. Always base your response ONLY on the verified context provided below.
-2. If the user asks about an IIT program (like IIT Kanpur SURGE, IIT Roorkee SPARK, IIT Hyderabad SURE, IIT Gandhinagar SRIP, IIT Goa, IIT Delhi, or IIT Bhubaneswar), explicitly provide:
-   - Program name & full form (e.g., SURGE, SPARK, SURE, SRIP)
-   - Eligibility criteria (degree, year, CGPA cutoffs if mentioned)
-   - Stipend amount and benefits
-   - Duration and timeline (dates and deadlines, e.g., SURGE deadline is 22 Feb 2026)
-   - Official application website link
-3. If the user asks about an organization from the 50+ Additional Leads (e.g., DRDO, ISRO, BARC, CSIR labs, Google, NVIDIA, Microsoft, Tata Motors, L&T, BHEL), clarify that this is an official recurring lead, specify suitable branches, and give the official application guidance noted.
-4. If the user asks about tips, mention the key points: project-specific SOP, faculty shortlisting, early application, and NOC preparation.
-5. NEVER fabricate deadlines or stipends not in the context. If details are not available or variable, state that clearly.
-6. Format your answer with clean Markdown, bold highlights, bullet points, and clickable markdown links.
+### YOUR ROLE & TONE:
+1. Warm, encouraging, concise, and student-friendly. Address students supportively.
+2. Provide SHORT, crisp answers (2-4 bullet points max) rather than long overwhelming essays.
+3. If the user asks how to apply or wants to explore roles, guide them step-by-step through our website:
+   - "Step 1: Click 'Login / Register' on top to register with your mobile number or Google."
+   - "Step 2: Go to the 'Explore Internships' section to filter by your State, Mode (Hybrid/Remote/On-site), or Sector."
+   - "Step 3: In your Student Dashboard, set your Branch, Career Goals, and upload your resume."
+   - "Step 4: Check 'See Past Selected Resumes' to format your CV, or use 'Find the Gap' to test your skills."
+4. If the user asks about a specific company or internship (e.g., TCS, Infosys, HDFC, L&T, Tata Motors, Sun Pharma, NTPC):
+   - Briefly state the role, location, mode, and stipend from the database.
+   - Gently advise: "You can explore full details and apply directly in our **Explore Internships** section!"
+5. For any general career, skill, or resume question: Answer warmly using verified scheme standards and advise them to check the Student Dashboard.
+6. Always maintain the PM Internship Scheme's identity and encourage youth to apply.
 
-=== RETRIEVED CONTEXT START ===
+=== VERIFIED PORTAL CONTEXT ===
 {context_text}
-=== RETRIEVED CONTEXT END ===
+=== END CONTEXT ===
 """
 
 
@@ -34,23 +34,21 @@ class RAGService:
         pass
 
     def _format_context(self, hits: List[Dict[str, Any]]) -> Tuple[str, List[Dict[str, Any]]]:
-        """Formats retrieved chunks into clean prompt text and structured source list."""
         context_blocks = []
         sources = []
 
         for idx, hit in enumerate(hits):
             payload = hit.get("payload", {})
             title = payload.get("title", f"Document {idx+1}")
-            page = payload.get("page", 1)
+            page = payload.get("page") or payload.get("record_num", 1)
             content = payload.get("content", "")
-            url = payload.get("apply_url", "")
+            url = payload.get("apply_url", "/dashboard")
             category = payload.get("category", "")
             score = hit.get("score", 0.0)
 
             context_blocks.append(
-                f"--- SOURCE [{idx+1}]: {title} (Page {page}) ---\n"
+                f"--- SOURCE [{idx+1}]: {title} ---\n"
                 f"{content}\n"
-                f"Official Link: {url}\n"
             )
 
             sources.append({
@@ -70,7 +68,7 @@ class RAGService:
         context_text: str,
         history: List[Dict[str, str]] = None
     ) -> List[Dict[str, str]]:
-        system_content = SYSTEM_PROMPT_TEMPLATE.format(context_text=context_text)
+        system_content = DISHA_SYSTEM_PROMPT_TEMPLATE.format(context_text=context_text)
         messages = [{"role": "system", "content": system_content}]
 
         # Append last 4 history turns for multi-turn conversational context
@@ -89,23 +87,18 @@ class RAGService:
         self,
         query: str,
         history: List[Dict[str, str]] = None,
-        top_k: int = 6
+        top_k: int = 5
     ) -> Dict[str, Any]:
         """
-        End-to-End RAG execution:
-        1. Hybrid retrieval (Dense + BM25 + RRF)
-        2. Context construction
-        3. NVIDIA Nemotron-3.5-super-vl generation
-        4. Structured source citation output
+        Executes Disha AI friendly RAG:
+        1. Hybrid retrieval (Dense Vector + BM25) from 120 PM Internship records
+        2. Injects student guidance instructions
+        3. Generates concise, welcoming answer with NVIDIA Nemotron
         """
-        # Retrieve context
         hits = hybrid_retriever.retrieve(query, top_k=top_k)
         context_text, sources = self._format_context(hits)
-
-        # Build messages
         messages = self._build_messages(query, context_text, history)
 
-        # Generate response using NVIDIA Nemotron
         answer = nvidia_llm.generate_response(messages)
 
         return {
@@ -119,20 +112,14 @@ class RAGService:
         self,
         query: str,
         history: List[Dict[str, str]] = None,
-        top_k: int = 6
+        top_k: int = 5
     ) -> Generator[str, None, None]:
-        """
-        Streams response tokens as Server-Sent Events (SSE).
-        Emits metadata first, then tokens, then [DONE].
-        """
         hits = hybrid_retriever.retrieve(query, top_k=top_k)
         context_text, sources = self._format_context(hits)
         messages = self._build_messages(query, context_text, history)
 
-        # Emit sources first
         yield f"event: sources\ndata: {json.dumps(sources)}\n\n"
 
-        # Stream LLM tokens
         for token in nvidia_llm.stream_response(messages):
             yield f"event: token\ndata: {json.dumps({'text': token})}\n\n"
 
