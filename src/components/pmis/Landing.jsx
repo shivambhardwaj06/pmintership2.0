@@ -7,6 +7,8 @@ import StateDashboard from "./StateDashboard";
 import TopFeaturedInternships from "./TopFeaturedInternships";
 import ExploreInternships from "./ExploreInternships";
 import StudentDashboard from "./StudentDashboard";
+import DontFallInTrap from "./DontFallInTrap";
+import FindYourPath from "./FindYourPath";
 import AuthModal from "./AuthModal";
 import Footer from "./Footer";
 import { applyTheme, getTheme } from "@/lib/theme";
@@ -69,7 +71,7 @@ export default function Landing() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [activeView]);
 
-  // Handle URL hash changes (e.g. #explore, #dashboard, #home)
+  // Handle URL hash changes (e.g. #explore, #dashboard, #home, #dont-fall-in-trap, #find-your-path)
   useEffect(() => {
     const handleHash = () => {
       const hash = window.location.hash;
@@ -77,6 +79,16 @@ export default function Landing() {
         setActiveView("explore");
       } else if (hash === "#dashboard" || hash === "#student-dashboard") {
         setActiveView("dashboard");
+      } else if (hash === "#dont-fall-in-trap" || hash === "#dont-fall-on-the-trap") {
+        setActiveView("home");
+        setTimeout(() => {
+          document.getElementById("dont-fall-in-trap")?.scrollIntoView({ behavior: "smooth" });
+        }, 150);
+      } else if (hash === "#find-your-path") {
+        setActiveView("home");
+        setTimeout(() => {
+          document.getElementById("find-your-path")?.scrollIntoView({ behavior: "smooth" });
+        }, 150);
       } else if (hash === "#home") {
         setActiveView("home");
       }
@@ -85,6 +97,19 @@ export default function Landing() {
     window.addEventListener("hashchange", handleHash);
     return () => window.removeEventListener("hashchange", handleHash);
   }, []);
+
+  const scrollToSection = (sectionId) => {
+    if (activeView !== "home") {
+      setActiveView("home");
+      setTimeout(() => {
+        const el = document.getElementById(sectionId);
+        if (el) el.scrollIntoView({ behavior: "smooth" });
+      }, 150);
+    } else {
+      const el = document.getElementById(sectionId);
+      if (el) el.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   const handleAuthSuccess = (authenticatedUser) => {
     setUser(authenticatedUser);
@@ -171,6 +196,7 @@ export default function Landing() {
         onOpenAuth={() => openAuthWithMode("login")}
         activeView={activeView}
         onSetView={setActiveView}
+        onNavigateToSection={scrollToSection}
         onLogout={handleLogout}
       />
 
@@ -200,11 +226,25 @@ export default function Landing() {
               onExploreAll={() => setActiveView("explore")}
               onApplyClick={handleApplyFromLanding}
             />
+            {/* "Don't Fall in the Trap": Daily Job Announcements & Opportunities Stream */}
+            <DontFallInTrap
+              user={user}
+              onRequireAuth={() => openAuthWithMode("login")}
+            />
+            {/* "Find Your Path": AI-Powered Personalized Career Roadmap */}
+            <FindYourPath
+              user={user}
+              onRequireAuth={() => openAuthWithMode("login")}
+              onNavigateToExplore={() => setActiveView("explore")}
+            />
           </div>
         )}
       </main>
 
-      <Footer onSetView={setActiveView} />
+      <Footer
+        onSetView={setActiveView}
+        onNavigateToSection={scrollToSection}
+      />
 
       {/* Global Auth Modal matching official MCA PMIS design */}
       <AuthModal

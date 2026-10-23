@@ -21,6 +21,8 @@ import {
   Sparkles,
   Sun,
   Moon,
+  TrendingUp,
+  Compass,
 } from "lucide-react";
 import mca from "@/assets/MCA.svg";
 import pmLogo from "@/assets/pm_internship_logo_eng.svg";
@@ -98,7 +100,7 @@ function Dropdown({ item, Icon, open, onToggle }) {
   );
 }
 
-function MobileMenu({ onClose, user, onOpenAuth, onSetView, onLogout, theme }) {
+function MobileMenu({ onClose, user, onOpenAuth, onSetView, onNavigateToSection, onLogout, theme }) {
   const [openIdx, setOpenIdx] = useState(-1);
   return (
     <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Menu">
@@ -157,6 +159,26 @@ function MobileMenu({ onClose, user, onOpenAuth, onSetView, onLogout, theme }) {
             className="flex w-full items-center gap-2 rounded-xl bg-orange-500/15 px-3 py-2 text-xs font-extrabold text-orange-700 dark:text-orange-300"
           >
             <LayoutDashboard className="h-4 w-4 text-orange-600" /> Student Dashboard
+          </button>
+          <button
+            onClick={() => {
+              if (onNavigateToSection) onNavigateToSection("dont-fall-in-trap");
+              else onSetView("home");
+              onClose();
+            }}
+            className="flex w-full items-center gap-2 rounded-xl bg-amber-500/15 px-3 py-2 text-xs font-extrabold text-amber-700 dark:text-amber-300"
+          >
+            <TrendingUp className="h-4 w-4 text-amber-500" /> Don't Fall on the Trap
+          </button>
+          <button
+            onClick={() => {
+              if (onNavigateToSection) onNavigateToSection("find-your-path");
+              else onSetView("home");
+              onClose();
+            }}
+            className="flex w-full items-center gap-2 rounded-xl bg-indigo-500/15 px-3 py-2 text-xs font-extrabold text-indigo-700 dark:text-indigo-300"
+          >
+            <Compass className="h-4 w-4 text-indigo-500" /> Find Your Path (Roadmap)
           </button>
         </div>
 
@@ -244,7 +266,7 @@ function MobileMenu({ onClose, user, onOpenAuth, onSetView, onLogout, theme }) {
   );
 }
 
-export default function Header({ user, onOpenAuth, onSetView, activeView = "home", onLogout }) {
+export default function Header({ user, onOpenAuth, onSetView, onNavigateToSection, activeView = "home", onLogout }) {
   const [openIdx, setOpenIdx] = useState(-1);
   const [mobile, setMobile] = useState(false);
   const [theme, setTheme] = useState("light");
@@ -403,6 +425,35 @@ export default function Header({ user, onOpenAuth, onSetView, activeView = "home
               <span>Student Dashboard</span>
             </button>
 
+            {/* 4. Don't Fall in Trap */}
+            <button
+              onClick={() => {
+                if (onNavigateToSection) onNavigateToSection("dont-fall-in-trap");
+                else onSetView("home");
+              }}
+              className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all duration-200 cursor-pointer text-amber-300 hover:text-white hover:bg-amber-500/20 hover:scale-105"
+              title="Daily Corporate Job Announcements & Hiring Highlights"
+            >
+              <TrendingUp className="h-3.5 w-3.5 text-amber-400" />
+              <span>Don't Fall in Trap</span>
+            </button>
+
+            {/* 5. Find Your Path (AI Roadmap) */}
+            <button
+              onClick={() => {
+                if (onNavigateToSection) onNavigateToSection("find-your-path");
+                else onSetView("home");
+              }}
+              className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all duration-200 cursor-pointer text-indigo-300 hover:text-white hover:bg-indigo-500/20 hover:scale-105"
+              title="AI-Powered Personalized Career Roadmap"
+            >
+              <Compass className="h-3.5 w-3.5 text-indigo-400" />
+              <span>Find Your Path</span>
+              <span className="rounded-full bg-indigo-500/30 text-indigo-200 text-[9px] font-black px-1.5 py-0.2 border border-indigo-400/40">
+                AI
+              </span>
+            </button>
+
             {/* Subtle Divider */}
             <span className="h-4 w-px bg-slate-700/80 mx-1.5" />
 
@@ -445,6 +496,7 @@ export default function Header({ user, onOpenAuth, onSetView, activeView = "home
           user={user}
           onOpenAuth={onOpenAuth}
           onSetView={onSetView}
+          onNavigateToSection={onNavigateToSection}
           onLogout={onLogout}
           theme={theme}
         />

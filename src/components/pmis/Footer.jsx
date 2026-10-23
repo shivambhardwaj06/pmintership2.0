@@ -294,6 +294,30 @@ export default function Footer({ onSetView }) {
               </li>
               <li>
                 <button
+                  onClick={() => navigateToView("home", "dont-fall-in-trap")}
+                  className="group flex items-center gap-2 text-slate-300 hover:text-amber-400 transition-colors cursor-pointer"
+                >
+                  <ChevronRight className="h-3.5 w-3.5 text-slate-500 group-hover:text-amber-400 group-hover:translate-x-1 transition-all" />
+                  <span>Don't Fall in Trap</span>
+                  <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-extrabold text-amber-400 border border-amber-500/30">
+                    Daily Hiring
+                  </span>
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => navigateToView("home", "find-your-path")}
+                  className="group flex items-center gap-2 text-slate-300 hover:text-indigo-400 transition-colors cursor-pointer"
+                >
+                  <ChevronRight className="h-3.5 w-3.5 text-slate-500 group-hover:text-indigo-400 group-hover:translate-x-1 transition-all" />
+                  <span>Find Your Path</span>
+                  <span className="rounded-full bg-indigo-500/20 px-2 py-0.5 text-[10px] font-extrabold text-indigo-400 border border-indigo-500/30">
+                    AI Roadmap
+                  </span>
+                </button>
+              </li>
+              <li>
+                <button
                   onClick={() => navigateToView("home", "top-featured-internships")}
                   className="group flex items-center gap-2 text-slate-300 hover:text-orange-400 transition-colors cursor-pointer"
                 >
