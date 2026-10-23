@@ -2,7 +2,6 @@ const API = "https://pminternship.mca.gov.in/mca-api/files/get-file-by-path?path
 const CDN = "https://pminternship.mca.gov.in/mca-api/files/cdn?path=partner-companies/";
 
 export const NAV = [
-  { label: "Home", href: "https://pminternship.mca.gov.in/" },
   {
     label: "Guidelines",
     groups: [
