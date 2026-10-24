@@ -655,7 +655,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
                     type="text"
                     value={googleName}
                     onChange={(e) => setGoogleName(e.target.value)}
-                    placeholder="e.g. Shivam Bhardwaj"
+                    placeholder="e.g. Rahul Sharma"
                     className="w-full rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 pl-10 pr-4 py-2.5 text-sm font-semibold text-slate-900 dark:text-white outline-none transition focus:border-primary shadow-xs"
                     required
                   />

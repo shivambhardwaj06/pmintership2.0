@@ -51,12 +51,14 @@ class ResumeService:
                     detail=f"Page limit exceeded: Your resume has {num_pages} pages. Please upload a 1-page resume (Industry corporate standard for PM Internship applications)."
                 )
 
-            # Extract text from page 1
+            # Extract text from page 1, preserving line breaks
             extracted_text = ""
             for page in reader.pages:
-                extracted_text += page.extract_text() or ""
+                extracted_text += (page.extract_text() or "") + "\n"
 
-            clean_text = re.sub(r"\s+", " ", extracted_text).strip()
+            # Clean horizontal whitespace but keep newline structure for accurate parsing
+            clean_lines = [re.sub(r"[ \t]+", " ", line).strip() for line in extracted_text.splitlines() if line.strip()]
+            clean_text = "\n".join(clean_lines)
             return num_pages, clean_text
         except HTTPException:
             raise
@@ -95,31 +97,47 @@ class ResumeService:
         local_url = f"/static/resumes/{unique_name}"
         return local_url
 
-    def analyze_resume_with_ai(self, resume_text: str) -> Dict[str, Any]:
+    def analyze_resume_with_ai(self, resume_text: str, filename: str = "") -> Dict[str, Any]:
         """
         Evaluates the 1-page student resume using AI recruiter models (NVIDIA Nemotron).
         Extracts verified full candidate profile (name, email, phone, college, degree, branch, location),
         skills, layout analysis, target role matching from PMIS sectors, and step-by-step roadmap.
         """
-        prompt = f"""You are a professional resume parser and corporate recruiter auditor for the Prime Minister's Internship Scheme (PMIS).
-Carefully read the candidate's resume and extract their profile information accurately.
-Return ONLY a valid JSON object matching the exact structure below. Do NOT output markdown code blocks (e.g. no ```json).
+        # Quick extract candidate name from filename (e.g. Ritik_Sharma_Resume.pdf -> Ritik Sharma)
+        cand_from_file = ""
+        if filename:
+            base = re.sub(r"\.pdf$", "", filename, flags=re.I)
+            base = re.sub(r"[\b_]?(resume|cv|biodata|pmis|placement|profile|latest)[\b_]?", " ", base, flags=re.I)
+            base = re.sub(r"[_\-]+", " ", base).strip()
+            parts = [w for w in base.split() if w.isalpha() and len(w) > 1 and w.lower() not in ["new", "my", "final", "updated", "doc", "pdf"]]
+            if 1 <= len(parts) <= 4:
+                cand_from_file = " ".join(w.capitalize() for w in parts)
+
+        prompt = f"""You are a professional resume parser and corporate recruiter reviewer for the Prime Minister's Internship Scheme (PMIS).
+Carefully read the candidate's real resume text and extract their EXACT candidate profile information.
+DO NOT use placeholder names like "Candidate" or "Shivam Bhardwaj" if a different name appears on the resume!
+If the candidate's name is in the resume or filename ({filename}), extract it precisely.
 
 RESUME CONTENT:
 {resume_text[:3500]}
 
+FILENAME:
+{filename}
+
+Return ONLY a valid JSON object matching the exact structure below. Do NOT output markdown code blocks (e.g. no ```json).
+
 JSON FORMAT:
 {{
-  "candidate_name": "Exact Full Name from resume",
-  "email": "Candidate email address",
-  "phone": "Candidate phone number",
-  "college": "Candidate College / University name",
-  "degree": "Degree qualification (e.g. B.Tech in Computer Science and Engineering)",
+  "candidate_name": "{cand_from_file or 'Exact Full Name from resume'}",
+  "email": "Candidate email address from resume",
+  "phone": "Candidate phone number from resume",
+  "college": "Candidate College / University name from resume",
+  "degree": "Degree qualification from resume (e.g. B.Tech in CSE, B.Com, BCA)",
   "detected_branch": "Candidate exact academic branch (e.g. Computer Science & Engineering, Mechanical Engineering, Civil Engineering, Commerce / Finance, etc.)",
-  "location": "City, State or Country",
-  "resume_score": 92,
+  "location": "City, State or Country from resume",
+  "resume_score": 94,
   "grade": "Grade A: High Shortlist Potential",
-  "career_summary": "Crisp 1-2 sentence professional summary of candidate strengths",
+  "career_summary": "Crisp 1-2 sentence professional summary of candidate strengths based on their real projects",
   "layout_review": {{
     "page_length": "1 Page Strict Compliance (Verified)",
     "ats_score": "95 / 100 (ATS Friendly)",
@@ -132,6 +150,7 @@ JSON FORMAT:
     "soft_skills": ["Communication", "Problem Solving"],
     "all_extracted": ["Skill1", "Skill2", "Tool1", "Tool2"]
   }},
+  "extracted_skills": ["Skill1", "Skill2", "Tool1", "Tool2"],
   "target_roles": [
     {{
       "role": "Role Title matching branch",
@@ -165,6 +184,11 @@ JSON FORMAT:
                     all_s = parsed.get("skills_breakdown", {}).get("all_extracted") or parsed.get("skills_breakdown", {}).get("technical_skills", [])
                     parsed["extracted_skills"] = all_s
                 
+                # If parsed name is generic placeholder, use cand_from_file
+                if not parsed.get("candidate_name") or parsed.get("candidate_name") in ["Candidate", "Exact Full Name from resume", "Student Candidate"]:
+                    if cand_from_file:
+                        parsed["candidate_name"] = cand_from_file
+
                 # Verify that target_roles is present and populated
                 if parsed.get("target_roles") and len(parsed["target_roles"]) > 0:
                     return parsed
@@ -172,9 +196,9 @@ JSON FORMAT:
             logger.error(f"Error analyzing resume with AI LLM: {e}")
 
         # Dynamic, Branch-Aware Heuristic Analysis
-        return self._generate_dynamic_analysis(resume_text)
+        return self._generate_dynamic_analysis(resume_text, filename)
 
-    def _generate_dynamic_analysis(self, resume_text: str) -> Dict[str, Any]:
+    def _generate_dynamic_analysis(self, resume_text: str, filename: str = "") -> Dict[str, Any]:
         """
         Dynamic domain-specific fallback analysis that inspects candidate resume text,
         accurately identifies their branch (Mechanical, Civil, Finance, IT, Electrical, Pharma),
@@ -502,10 +526,30 @@ JSON FORMAT:
 
         all_skills = list(dict.fromkeys(detected_tech + detected_tools + detected_soft))
 
-        # Detect candidate name from first few lines
-        first_lines = [line.strip() for line in resume_text[:300].split("\n") if len(line.strip()) > 3]
-        candidate_name = first_lines[0] if first_lines and not any(kw in first_lines[0].lower() for kw in ["resume", "curriculum", "page", "phone", "email", "summary", "profile"]) else "Candidate"
-        if len(candidate_name.split()) > 4 or len(candidate_name) > 35:
+        # 1. First attempt: extract from filename (e.g. Ritik_Sharma_Resume.pdf -> Ritik Sharma)
+        candidate_name = ""
+        if filename:
+            base = re.sub(r"\.pdf$", "", filename, flags=re.I)
+            base = re.sub(r"[\b_]?(resume|cv|biodata|pmis|placement|profile|latest)[\b_]?", " ", base, flags=re.I)
+            base = re.sub(r"[_\-]+", " ", base).strip()
+            parts = [w for w in base.split() if w.isalpha() and len(w) > 1 and w.lower() not in ["new", "my", "final", "updated", "doc", "pdf"]]
+            if 1 <= len(parts) <= 4:
+                candidate_name = " ".join(w.capitalize() for w in parts)
+
+        # 2. Second attempt: search first 5 non-empty lines of resume text
+        if not candidate_name:
+            for line in resume_text.splitlines()[:6]:
+                l_clean = line.strip()
+                if not l_clean or len(l_clean) < 3 or len(l_clean) > 35:
+                    continue
+                if any(kw in l_clean.lower() for kw in ["resume", "curriculum", "page", "phone", "email", "@", "summary", "profile", "contact", "http", "github", "linkedin"]):
+                    continue
+                words = l_clean.split()
+                if 1 <= len(words) <= 4 and all(w.replace(".", "").isalpha() for w in words):
+                    candidate_name = l_clean.title()
+                    break
+
+        if not candidate_name:
             candidate_name = "Candidate"
 
         # Regex heuristics for contact & education details
@@ -524,7 +568,7 @@ JSON FORMAT:
 
         # College detection
         college = ""
-        for line in resume_text.split("\n"):
+        for line in resume_text.splitlines():
             line_str = line.strip()
             if any(term in line_str.lower() for term in ["university", "institute of technology", "college of engineering", "autonomous institute", "iit", "nit", "iiit"]):
                 if len(line_str) < 60:

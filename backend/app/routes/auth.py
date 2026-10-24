@@ -477,23 +477,36 @@ async def upload_and_analyze_resume(
     cloudinary_url = resume_service.upload_to_cloudinary_or_storage(file_bytes, file.filename)
 
     # 3. Analyze with AI Recruiter Engine
-    analysis = resume_service.analyze_resume_with_ai(resume_text)
+    analysis = resume_service.analyze_resume_with_ai(resume_text, file.filename)
 
-    # 4. Update user profile in persistent database
+    # 4. Update or Create user profile in persistent database
     user = get_user_by_identifier(user_id)
-    if user:
+    cand_name = analysis.get("candidate_name")
+    clean_name = cand_name.strip() if cand_name and cand_name.strip() and cand_name not in ["Candidate", "Student Candidate", "Full Name"] else ""
+
+    if not user:
+        user = {
+            "user_id": user_id,
+            "name": clean_name or "Candidate",
+            "email": analysis.get("email") or f"{user_id.lower()}@pmis.gov.in",
+            "phone": analysis.get("phone") or "",
+            "branch": analysis.get("detected_branch") or "Computer Science & Engineering",
+            "degree": analysis.get("degree") or "B.Tech / B.E.",
+            "college": analysis.get("college") or "Engineering & Technology Institute",
+            "state": analysis.get("location") or "National",
+            "career_goals": analysis.get("career_summary") or "Seeking a corporate internship opportunity.",
+            "skills": analysis.get("extracted_skills", []),
+            "resume_name": file.filename,
+            "cloudinary_url": cloudinary_url
+        }
+        save_user(user)
+    else:
         user["resume_name"] = file.filename
         user["cloudinary_url"] = cloudinary_url
 
-        # Sync candidate name from verified resume
-        cand_name = analysis.get("candidate_name")
-        if cand_name and cand_name.strip() and cand_name not in ["Candidate", "Student Candidate", "Full Name"]:
-            # If user name is default/generic or candidate uploaded their resume, use extracted real name
-            current_name = user.get("name", "").lower()
-            if "candidate" in current_name or "guest" in current_name or not user.get("name"):
-                user["name"] = cand_name.strip()
-            elif cand_name.strip():
-                user["name"] = cand_name.strip()
+        # Sync candidate real name from verified resume
+        if clean_name:
+            user["name"] = clean_name
 
         # Update academic branch detected by AI
         if analysis.get("detected_branch"):
@@ -515,16 +528,14 @@ async def upload_and_analyze_resume(
         if analysis.get("location"):
             user["state"] = analysis["location"]
 
-        # Update phone if found and missing
-        if analysis.get("phone") and not user.get("phone"):
+        # Update phone if found
+        if analysis.get("phone"):
             user["phone"] = analysis["phone"]
 
-        # Merge extracted skills into profile without duplicates
-        existing_skills = list(user.get("skills", []))
-        for sk in analysis.get("extracted_skills", []):
-            if sk and sk not in existing_skills:
-                existing_skills.append(sk)
-        user["skills"] = existing_skills
+        # Update skills directly from resume extraction
+        extracted_skills = analysis.get("extracted_skills", [])
+        if extracted_skills:
+            user["skills"] = extracted_skills
 
         save_user(user)
 

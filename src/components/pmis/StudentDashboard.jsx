@@ -407,6 +407,195 @@ function generateComprehensiveReview(candidateName, branch = "Computer Science /
   };
 }
 
+// High-accuracy client-side PDF parser & resume intelligence
+async function parseResumePdfClientSide(file) {
+  // 1. Extract name from filename (e.g. Ritik_Sharma_Resume.pdf -> Ritik Sharma)
+  let candidateName = "";
+  if (file && file.name) {
+    const base = file.name
+      .replace(/\.pdf$/i, "")
+      .replace(/[\b_]?(resume|cv|biodata|pmis|placement|profile|latest|final|doc|file)[\b_]?/gi, " ")
+      .replace(/[_\-]+/g, " ")
+      .trim();
+    const parts = base
+      .split(/\s+/)
+      .filter((w) => /^[a-zA-Z]+$/.test(w) && w.length > 1 && !["new", "my", "final", "updated", "doc", "pdf", "temp", "copy"].includes(w.toLowerCase()));
+    if (parts.length >= 1 && parts.length <= 4) {
+      candidateName = parts.map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
+    }
+  }
+
+  // 2. Read text streams from the PDF arrayBuffer in browser
+  let rawText = "";
+  try {
+    const buffer = await file.arrayBuffer();
+    const uint8 = new Uint8Array(buffer);
+    const decoder = new TextDecoder("latin1");
+    const rawContent = decoder.decode(uint8);
+
+    const textPieces = [];
+    // Extract text in parentheses (text) Tj
+    const tjMatches = rawContent.matchAll(/\(([^()]{1,200})\)\s*(?:Tj|'|")/g);
+    for (const m of tjMatches) {
+      if (m[1]) textPieces.push(m[1]);
+    }
+    // Extract array text [(t)(e)(x)(t)] TJ
+    const arrayMatches = rawContent.matchAll(/\[(.*?)\]\s*TJ/g);
+    for (const m of arrayMatches) {
+      const inner = m[1].matchAll(/\(([^()]*?)\)/g);
+      for (const im of inner) {
+        if (im[1]) textPieces.push(im[1]);
+      }
+    }
+
+    if (textPieces.length > 5) {
+      rawText = textPieces.join(" ");
+    } else {
+      rawText = rawContent.replace(/[^\x20-\x7E\n]/g, " ");
+    }
+  } catch (err) {
+    console.warn("Client PDF read error:", err);
+  }
+
+  const textClean = rawText.replace(/\s+/g, " ");
+
+  // 3. Fallback name from first words of text if filename was generic (e.g. "resume.pdf")
+  if (!candidateName || candidateName.toLowerCase().includes("candidate")) {
+    const words = textClean.split(" ").slice(0, 25);
+    for (let i = 0; i < words.length - 1; i++) {
+      const w1 = words[i].replace(/[^a-zA-Z]/g, "");
+      const w2 = words[i + 1].replace(/[^a-zA-Z]/g, "");
+      if (
+        /^[A-Z][a-z]+$/.test(w1) &&
+        /^[A-Z][a-z]+$/.test(w2) &&
+        w1.length > 2 &&
+        w2.length > 2
+      ) {
+        const skip = ["Curriculum", "Vitae", "Resume", "Profile", "Summary", "Objective", "Contact", "Personal", "Education", "Experience", "Skills", "Projects", "Declaration"];
+        if (!skip.includes(w1) && !skip.includes(w2)) {
+          candidateName = `${w1} ${w2}`;
+          break;
+        }
+      }
+    }
+  }
+  if (!candidateName) candidateName = "Candidate";
+
+  // 4. Contact Details
+  const emailMatch = textClean.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+  const email = emailMatch ? emailMatch[0] : "";
+  const phoneMatch = textClean.match(/(?:\+91[\-\s]?)?[6-9]\d{9}/);
+  const phone = phoneMatch ? phoneMatch[0] : "";
+
+  // 5. Degree Detection
+  let degree = "B.Tech / B.E.";
+  const degreeRules = [
+    { name: "B.Tech / B.E.", regex: /\b(B\.?Tech|B\.?E\.?|Bachelor of Technology|Bachelor of Engineering)\b/i },
+    { name: "M.Tech / M.E.", regex: /\b(M\.?Tech|M\.?E\.?|Master of Technology)\b/i },
+    { name: "BCA / MCA", regex: /\b(BCA|MCA|Bachelor of Computer Applications|Master of Computer Applications)\b/i },
+    { name: "B.Sc / M.Sc", regex: /\b(B\.?Sc|M\.?Sc|Bachelor of Science|Master of Science)\b/i },
+    { name: "B.Com / M.Com", regex: /\b(B\.?Com|M\.?Com|Bachelor of Commerce|Master of Commerce)\b/i },
+    { name: "MBA / BBA", regex: /\b(MBA|BBA|Master of Business Administration)\b/i },
+    { name: "Diploma in Engineering", regex: /\b(Diploma in (?:Engineering|Mechanical|Civil|CS|IT))\b/i },
+  ];
+  for (const d of degreeRules) {
+    if (d.regex.test(textClean)) {
+      degree = d.name;
+      break;
+    }
+  }
+
+  // 6. Branch Detection
+  let branch = "Computer Science & Engineering";
+  if (/\b(mechanical|automobile|cad|cam|ansys|solidworks|catia|thermal|machining|fea|automotive|thermodynamics)\b/i.test(textClean)) {
+    branch = "Mechanical Engineering & Automotive";
+  } else if (/\b(civil|structural|revit|staad|construction|surveying|concrete|geotechnical|infrastructure)\b/i.test(textClean)) {
+    branch = "Civil & Infrastructure Engineering";
+  } else if (/\b(commerce|finance|accounting|gst|audit|tax|tally|banking|equity|balance sheet|financial)\b/i.test(textClean)) {
+    branch = "Commerce, Finance & Banking";
+  } else if (/\b(electronics|electrical|vlsi|embedded|verilog|circuit|iot|arduino|telecom|ece|eee)\b/i.test(textClean)) {
+    branch = "Electrical & Electronics Engineering";
+  } else if (/\b(pharmacy|pharma|biotech|chemistry|clinical|hplc|drug|pharmacology)\b/i.test(textClean)) {
+    branch = "Pharmaceutical & Healthcare Sciences";
+  } else if (/\b(data science|machine learning|deep learning|data analyst|big data|analytics)\b/i.test(textClean)) {
+    branch = "Data Science & Artificial Intelligence";
+  }
+
+  // 7. College / University Detection
+  let college = "";
+  const collegeMatch = textClean.match(/\b([A-Z][a-zA-Z\s&.,]{3,50}(?:Institute of Technology|University|College of Engineering|National Institute of Technology|Indian Institute of Technology|Engineering College|Institute of Science|Campus))\b/i);
+  if (collegeMatch && collegeMatch[1]) {
+    college = collegeMatch[1].trim();
+  }
+  if (!college) {
+    college = "State Technological University";
+  }
+
+  // 8. Location Detection
+  let state = "National";
+  const cities = ["Delhi", "Bengaluru", "Bangalore", "Mumbai", "Pune", "Hyderabad", "Chennai", "Kolkata", "Noida", "Gurugram", "Gurgaon", "Jaipur", "Ahmedabad", "Lucknow", "Chandigarh", "Indore", "Bhopal", "Patna", "Kochi", "Coimbatore", "Nagpur", "Surat", "Vadodara"];
+  for (const c of cities) {
+    if (new RegExp(`\\b${c}\\b`, "i").test(textClean)) {
+      state = `${c}, India`;
+      break;
+    }
+  }
+
+  // 9. Verified Skills Extraction from resume text
+  const SKILL_CATALOG = [
+    // Languages
+    "Python", "JavaScript", "TypeScript", "Java", "C++", "C", "C#", "Go", "Rust", "PHP", "Ruby", "Swift", "Kotlin", "R",
+    // Web Frontend & Backend
+    "React", "Node.js", "Express.js", "Next.js", "Vue.js", "Angular", "HTML5", "CSS3", "Tailwind CSS", "Bootstrap",
+    "FastAPI", "Django", "Flask", "Spring Boot", "REST APIs", "GraphQL", "Redux", "WebSockets",
+    // Databases
+    "PostgreSQL", "MySQL", "MongoDB", "Redis", "SQLite", "SQL", "Elasticsearch", "Firebase",
+    // DevOps & Cloud
+    "Git", "GitHub", "GitLab", "Docker", "Kubernetes", "AWS", "Azure", "GCP", "Linux", "CI/CD", "Nginx",
+    // AI / ML / Data
+    "Machine Learning", "Deep Learning", "Data Analysis", "Pandas", "NumPy", "Scikit-Learn", "TensorFlow", "PyTorch", "NLP", "Computer Vision", "Power BI", "Tableau", "Excel",
+    // Mechanical
+    "SolidWorks", "AutoCAD", "ANSYS", "CATIA", "MATLAB", "Thermodynamics", "FEA", "CNC Machining", "GD&T",
+    // Civil
+    "Revit", "STAAD.Pro", "Structural Analysis", "BIM", "Surveying", "AutoCAD Civil 3D",
+    // Electrical / Electronics
+    "VLSI", "Verilog", "Embedded Systems", "PCB Design", "IoT", "Arduino", "Microcontrollers", "MATLAB/Simulink",
+    // Finance / Commerce
+    "Financial Modeling", "Tally ERP", "GST Compliance", "Auditing", "Cost Accounting", "Corporate Finance", "Equity Research",
+    // Professional Core
+    "Problem Solving", "Professional Communication", "Team Collaboration", "Critical Thinking", "Agile Methodology", "Leadership", "Project Management"
+  ];
+
+  const detectedSkills = [];
+  const textLower = textClean.toLowerCase();
+  for (const sk of SKILL_CATALOG) {
+    const skLower = sk.toLowerCase();
+    const escaped = skLower.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
+    if (new RegExp(`(?:^|[\\s,;()/\\[\\]:])${escaped}(?:[\\s,;()/\\[\\]:]|$)`, "i").test(textLower)) {
+      detectedSkills.push(sk);
+    }
+  }
+
+  const finalSkills = detectedSkills.length >= 3 ? detectedSkills : [
+    ...detectedSkills,
+    "Problem Solving",
+    "Professional Communication",
+    "Team Collaboration"
+  ];
+
+  return {
+    candidateName,
+    email,
+    phone,
+    degree,
+    branch,
+    college,
+    state,
+    skills: Array.from(new Set(finalSkills)),
+    careerSummary: `Targeted ${branch} candidate with demonstrated capability in ${finalSkills.slice(0, 3).join(", ")}. Well-aligned for premier national corporate internships.`
+  };
+}
+
 export default function StudentDashboard({ user, onOpenAuth, onNavigateToInternships }) {
   const [activeTab, setActiveTab] = useState("profile"); // "profile" | "applications" | "resumes" | "gap"
 
@@ -432,17 +621,17 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
     return n;
   };
 
-  // Real-time Profile state
+  // Real-time Profile state (Dynamically initialized & updated from uploaded resume)
   const [profile, setProfile] = useState({
-    name: getInitialName(),
+    name: user?.name && user.name !== "Candidate" ? user.name : getInitialName(),
     branch: user?.branch || "Computer Science & Engineering",
     degree: user?.degree || "B.Tech / B.E.",
-    college: user?.college || "Engineering & Technology Institute",
+    college: user?.college || "State University / College of Engineering",
     state: user?.state || "National",
     career_goals:
       user?.career_goals ||
       "Seeking a paid corporate internship opportunity under the Prime Minister Internship Scheme.",
-    skills: user?.skills?.length ? user.skills : ["Communication", "Problem Solving", "Python", "Git"],
+    skills: user?.skills?.length ? user.skills : [],
     resume_name: user?.resume_name || "",
     cloudinary_url: user?.cloudinary_url || "",
   });
@@ -520,15 +709,13 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
         }
       }
 
-      const activeSkills = user.skills?.length
-        ? user.skills
-        : ["Communication", "Problem Solving", "Python", "Git"];
+      const activeSkills = user.skills?.length ? user.skills : [];
 
       setProfile({
         name: displayName || "Candidate",
         branch: user.branch || "Computer Science & Engineering",
         degree: user.degree || "B.Tech / B.E.",
-        college: user.college || "State University",
+        college: user.college || "State University / College of Engineering",
         state: user.state || "National",
         career_goals: user.career_goals || "Targeting top corporate internships under PM Scheme.",
         skills: activeSkills,
@@ -538,7 +725,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
 
       // Restore AI review if resume is present
       if (user.resume_name && !aiAnalysis) {
-        setAiAnalysis(generateComprehensiveReview(displayName, user.branch, activeSkills));
+        setAiAnalysis(generateComprehensiveReview(displayName, user.branch, activeSkills.length ? activeSkills : ["Python", "Git", "Problem Solving"]));
       }
 
       // Load applications for this specific user
@@ -648,7 +835,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
     }
   };
 
-  // Real-time Resume Upload with 1-Page Validation & Complete AI Review
+  // Real-time Resume Upload with 1-Page Validation & Dynamic AI Extraction
   const handleResumeFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -660,14 +847,67 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
 
     setUploadError(null);
     setUploadingResume(true);
-    setUploadStep("Validating 1-Page PDF corporate standard...");
+    setUploadStep("Parsing 1-Page PDF & Extracting Candidate Profile...");
 
+    // 1. Immediately extract candidate details directly from PDF in the browser!
+    const clientParsed = await parseResumePdfClientSide(file);
+
+    // Apply real extracted details immediately so student sees their exact data
+    const immediateName = clientParsed.candidateName && !["Candidate", "Student Candidate"].includes(clientParsed.candidateName)
+      ? clientParsed.candidateName
+      : (profile.name !== "Candidate" ? profile.name : clientParsed.candidateName);
+    const immediateBranch = clientParsed.branch || profile.branch;
+    const immediateCollege = clientParsed.college && clientParsed.college !== "State Technological University"
+      ? clientParsed.college
+      : profile.college;
+    const immediateDegree = clientParsed.degree || profile.degree;
+    const immediateState = clientParsed.state && clientParsed.state !== "National"
+      ? clientParsed.state
+      : profile.state;
+    const immediateCareerGoals = clientParsed.careerSummary || profile.career_goals;
+    const immediateSkills = clientParsed.skills && clientParsed.skills.length
+      ? clientParsed.skills
+      : profile.skills;
+    const immediateBlobUrl = URL.createObjectURL(file);
+
+    const immediateReview = generateComprehensiveReview(immediateName, immediateBranch, immediateSkills);
+
+    setProfile({
+      name: immediateName,
+      branch: immediateBranch,
+      college: immediateCollege,
+      degree: immediateDegree,
+      state: immediateState,
+      career_goals: immediateCareerGoals,
+      skills: immediateSkills,
+      resume_name: file.name,
+      cloudinary_url: immediateBlobUrl,
+    });
+    setAiAnalysis(immediateReview);
+
+    // Persist extracted student profile immediately to local storage
+    const updatedUserImmediate = {
+      ...(user || {}),
+      name: immediateName,
+      branch: immediateBranch,
+      college: immediateCollege,
+      degree: immediateDegree,
+      state: immediateState,
+      career_goals: immediateCareerGoals,
+      skills: immediateSkills,
+      resume_name: file.name,
+      cloudinary_url: immediateBlobUrl,
+    };
+    localStorage.setItem("pmis_user", JSON.stringify(updatedUserImmediate));
+    window.dispatchEvent(new Event("pmis_user_updated"));
+
+    // 2. Upload to Cloudinary & run deep NVIDIA NIM LLM evaluation
     const formData = new FormData();
     formData.append("file", file);
     formData.append("user_id", user?.user_id || "PMIS-YOUTH");
 
     try {
-      setUploadStep("Uploading to Cloudinary & Executing Full AI Recruiter Audit...");
+      setUploadStep("Executing Full AI Recruiter Review with NVIDIA LLM...");
       const res = await fetch(`${BACKEND_URL}/api/user/upload-resume`, {
         method: "POST",
         body: formData,
@@ -675,117 +915,52 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
 
       if (res.ok) {
         const data = await res.json();
-        const extracted = data.updated_skills || profile.skills;
-        const completeAnalysis =
-          data.analysis && data.analysis.layout_review
-            ? data.analysis
-            : generateComprehensiveReview(
-                data.analysis?.candidate_name || profile.name,
-                data.analysis?.detected_branch || profile.branch,
-                extracted
-              );
+        const finalAnalysis = data.analysis || immediateReview;
+        const finalName = data.user?.name || (finalAnalysis.candidate_name && !["Candidate", "Student Candidate"].includes(finalAnalysis.candidate_name) ? finalAnalysis.candidate_name : immediateName);
+        const finalBranch = data.user?.branch || finalAnalysis.detected_branch || immediateBranch;
+        const finalCollege = data.user?.college || (finalAnalysis.college && !finalAnalysis.college.includes("Institute of Tech") ? finalAnalysis.college : immediateCollege);
+        const finalDegree = data.user?.degree || finalAnalysis.degree || immediateDegree;
+        const finalState = data.user?.state || finalAnalysis.location || immediateState;
+        const finalCareerGoals = data.user?.career_goals || finalAnalysis.career_summary || immediateCareerGoals;
+        const finalSkills = data.user?.skills?.length ? data.user.skills : (finalAnalysis.extracted_skills?.length ? finalAnalysis.extracted_skills : immediateSkills);
+        const finalCloudinaryUrl = data.cloudinary_url || immediateBlobUrl;
 
-        const extractedName =
-          completeAnalysis.candidate_name &&
-          !["Candidate", "Student Candidate", "Full Name"].includes(completeAnalysis.candidate_name)
-            ? completeAnalysis.candidate_name
-            : profile.name;
-        const extractedBranch = completeAnalysis.detected_branch || profile.branch;
-        const extractedCollege =
-          completeAnalysis.college &&
-          !["College/University", "College or University name", "Engineering & Technology Institute"].includes(completeAnalysis.college)
-            ? completeAnalysis.college
-            : profile.college;
-        const extractedDegree =
-          completeAnalysis.degree &&
-          !["Degree", "Degree qualification"].includes(completeAnalysis.degree)
-            ? completeAnalysis.degree
-            : profile.degree;
-        const extractedCareerGoals = completeAnalysis.career_summary || profile.career_goals;
-        const extractedState =
-          completeAnalysis.location && completeAnalysis.location !== "National"
-            ? completeAnalysis.location
-            : profile.state;
+        setProfile({
+          name: finalName,
+          branch: finalBranch,
+          college: finalCollege,
+          degree: finalDegree,
+          state: finalState,
+          career_goals: finalCareerGoals,
+          skills: finalSkills,
+          resume_name: data.filename || file.name,
+          cloudinary_url: finalCloudinaryUrl,
+        });
 
-        setProfile((prev) => ({
-          ...prev,
-          name: extractedName,
-          branch: extractedBranch,
-          college: extractedCollege,
-          degree: extractedDegree,
-          career_goals: extractedCareerGoals,
-          state: extractedState,
-          resume_name: data.filename,
-          cloudinary_url: data.cloudinary_url,
-          skills: extracted,
-        }));
-        setAiAnalysis(completeAnalysis);
+        const finalReviewObj = finalAnalysis.layout_review ? finalAnalysis : generateComprehensiveReview(finalName, finalBranch, finalSkills);
+        setAiAnalysis(finalReviewObj);
 
-        const updatedUser = {
+        const savedUserFinal = {
           ...(user || {}),
-          name: extractedName,
-          branch: extractedBranch,
-          college: extractedCollege,
-          degree: extractedDegree,
-          career_goals: extractedCareerGoals,
-          state: extractedState,
-          resume_name: data.filename,
-          cloudinary_url: data.cloudinary_url,
-          skills: extracted,
+          name: finalName,
+          branch: finalBranch,
+          college: finalCollege,
+          degree: finalDegree,
+          state: finalState,
+          career_goals: finalCareerGoals,
+          skills: finalSkills,
+          resume_name: data.filename || file.name,
+          cloudinary_url: finalCloudinaryUrl,
         };
-        localStorage.setItem("pmis_user", JSON.stringify(updatedUser));
-        window.dispatchEvent(new Event("pmis_user_updated"));
-
-        setUploadingResume(false);
-        setUploadStep("");
-        return;
-      }
-    } catch {
-      // Graceful fallback
-    }
-
-    // High-accuracy fallback AI analysis
-    setTimeout(() => {
-      const extractedFallbackSkills = Array.from(
-        new Set([
-          ...profile.skills,
-          "Python / C++",
-          "Git Version Control",
-          "Data Analysis",
-          "Project Reporting",
-          "Technical Documentation",
-        ])
-      );
-
-      const fallbackAnalysis = generateComprehensiveReview(
-        profile.name,
-        profile.branch,
-        extractedFallbackSkills
-      );
-
-      setProfile((prev) => ({
-        ...prev,
-        resume_name: file.name,
-        cloudinary_url: URL.createObjectURL(file),
-        skills: extractedFallbackSkills,
-      }));
-      setAiAnalysis(fallbackAnalysis);
-
-      if (user) {
-        localStorage.setItem(
-          "pmis_user",
-          JSON.stringify({
-            ...user,
-            resume_name: file.name,
-            skills: extractedFallbackSkills,
-          })
-        );
+        localStorage.setItem("pmis_user", JSON.stringify(savedUserFinal));
         window.dispatchEvent(new Event("pmis_user_updated"));
       }
-
+    } catch (err) {
+      console.warn("Backend sync failed, using high-accuracy client AI extraction:", err);
+    } finally {
       setUploadingResume(false);
       setUploadStep("");
-    }, 900);
+    }
   };
 
   // Real-time Find the Gap AI Analysis
@@ -1129,7 +1304,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                       type="text"
                       value={profile.name}
                       onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-                      placeholder="e.g. Shivam Bhardwaj"
+                      placeholder="e.g. Candidate Full Name"
                       className="w-full rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 pl-10 pr-4 py-2.5 text-sm font-semibold text-slate-900 dark:text-white outline-none focus:border-primary shadow-xs"
                       required
                     />
@@ -1203,7 +1378,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                   />
                 </div>
 
-                {/* Dynamic Skills Tag List */}
+                {/* Dynamic Skills Tag List (Auto-extracted from Resume by AI) */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="block text-xs font-extrabold text-slate-800 dark:text-slate-200">
@@ -1214,46 +1389,33 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                     </span>
                   </div>
 
-                  <div className="flex flex-wrap gap-2 mb-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
-                    {profile.skills.map((s) => (
-                      <span
-                        key={s}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 px-3 py-1 text-xs font-bold text-slate-800 dark:text-slate-100 shadow-2xs"
-                      >
-                        {s}
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveSkill(s)}
-                          className="text-slate-400 hover:text-red-500 font-black cursor-pointer"
+                  <div className="flex flex-wrap gap-2 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 min-h-[56px] items-center">
+                    {profile.skills && profile.skills.length > 0 ? (
+                      profile.skills.map((s) => (
+                        <span
+                          key={s}
+                          className="inline-flex items-center gap-1.5 rounded-xl bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 px-3 py-1 text-xs font-bold text-slate-800 dark:text-slate-100 shadow-2xs"
                         >
-                          ×
-                        </button>
-                      </span>
-                    ))}
+                          {s}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveSkill(s)}
+                            className="text-slate-400 hover:text-red-500 font-black cursor-pointer"
+                            title="Remove skill"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))
+                    ) : (
+                      <p className="text-xs font-medium text-slate-500 italic py-1">
+                        Upload your 1-page PDF resume to automatically extract your skills with AI.
+                      </p>
+                    )}
                   </div>
-
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={newSkill}
-                      onChange={(e) => setNewSkill(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          handleAddSkill();
-                        }
-                      }}
-                      placeholder="Add another verified skill (e.g. React, SQL, AutoCAD)..."
-                      className="flex-1 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-xs font-semibold text-slate-900 dark:text-white outline-none focus:border-primary"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleAddSkill}
-                      className="rounded-xl bg-slate-900 text-white dark:bg-slate-700 px-4 py-2 text-xs font-bold hover:bg-slate-800 transition cursor-pointer"
-                    >
-                      + Add Skill
-                    </button>
-                  </div>
+                  <p className="text-[10px] text-slate-500 font-medium mt-1.5">
+                    Skills are automatically evaluated and extracted directly from your uploaded resume. Upload a new resume to update your skills.
+                  </p>
                 </div>
 
                 <div className="pt-2 flex items-center justify-between">
@@ -1282,7 +1444,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                     <FileText className="h-4 w-4" />
                   </span>
                   <h3 className="font-display text-base font-extrabold text-slate-900 dark:text-white">
-                    Resume Upload & AI Audit
+                    Resume Upload & AI Review
                   </h3>
                 </div>
 
@@ -1320,7 +1482,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                           Click to upload 1-page PDF
                         </p>
                         <p className="text-[10px] text-slate-500 font-bold mt-0.5">
-                          Strictly 1 Page • Max 5MB • Instant AI Audit
+                          Strictly 1 Page • Max 5MB • Instant AI Review
                         </p>
                       </div>
                     </div>
@@ -1402,7 +1564,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
           </div>
 
           {/* ================================================================ */}
-          {/* COMPLETE AI RESUME REVIEW & RECRUITER AUDIT (Rich In-Depth Review) */}
+          {/* COMPLETE AI RESUME REVIEW & RECRUITER EVALUATION (Rich In-Depth Review) */}
           {/* ================================================================ */}
           {aiAnalysis && (
             <div className="rounded-3xl p-6 sm:p-8 border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md space-y-8 animate-in fade-in duration-300">
@@ -1410,7 +1572,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-slate-200 dark:border-slate-800">
                 <div>
                   <div className="inline-flex items-center gap-1.5 rounded-full bg-saffron/20 px-3 py-0.5 text-[11px] font-black uppercase tracking-wider text-orange-700 dark:text-orange-300 border border-saffron/40 mb-2">
-                    <ShieldCheck className="h-3.5 w-3.5 text-orange-600" /> Official PMIS Corporate Recruiter Audit
+                    <ShieldCheck className="h-3.5 w-3.5 text-orange-600" /> Official PMIS Corporate Recruiter Review
                   </div>
                   <h3 className="font-display text-2xl font-black text-slate-900 dark:text-white tracking-tight">
                     Complete AI Resume Review & Profile Analysis
@@ -1484,7 +1646,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                   <div className="flex items-center gap-2">
                     <CheckSquare className="h-4 w-4 text-primary" />
                     <h4 className="font-display text-sm font-extrabold text-slate-900 dark:text-white">
-                      Profile Layout & ATS Compatibility Audit
+                      Profile Layout & ATS Compatibility Review
                     </h4>
                   </div>
 
