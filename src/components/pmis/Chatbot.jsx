@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { X, Send, User, Minus, ExternalLink, Sparkles, BookOpen, Compass, ArrowRight } from "lucide-react";
+import { X, Send, User, Minus, ExternalLink, Sparkles } from "lucide-react";
 import mascot from "@/assets/chatbot-mascot.png";
 
 function Mascot({ className = "h-full w-full" }) {
@@ -338,25 +338,6 @@ export default function Chatbot({ onNavigateTab }) {
                 }`}
               >
                 <FormattedContent text={m.text} />
-
-                {/* Sources & Citations */}
-                {m.sources && m.sources.length > 0 && (
-                  <div className="mt-2.5 pt-2 border-t border-border/60">
-                    <div className="flex flex-wrap gap-1">
-                      {m.sources.map((s, sIdx) => (
-                        <span
-                          key={sIdx}
-                          className="inline-flex items-center gap-1 rounded bg-muted px-2 py-0.5 text-[10px] text-muted-foreground border border-border"
-                        >
-                          <BookOpen className="h-2.5 w-2.5 text-primary" />
-                          <span className="font-semibold text-foreground truncate max-w-[150px]">
-                            {s.title}
-                          </span>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           ))}
