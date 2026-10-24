@@ -219,7 +219,7 @@ export default function DontFallInTrap({ user, onRequireAuth, onNavigateToExplor
   return (
     <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950/60 pb-20">
       {/* Hero Header Banner */}
-      <div className="relative border-b border-slate-200 dark:border-slate-800 bg-gradient-to-b from-orange-500/10 via-amber-500/5 to-transparent pt-12 pb-16 px-4">
+      <div className="relative bg-gradient-to-b from-orange-500/10 via-amber-500/5 to-transparent pt-12 pb-16 px-4">
         <div className="mx-auto max-w-6xl text-center">
           <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-orange-500/15 via-red-500/15 to-amber-500/15 px-4 py-1.5 text-xs font-black uppercase tracking-wider text-orange-600 dark:text-orange-400 border border-orange-500/30 mb-4 shadow-xs">
             <Flame className="h-4 w-4 text-orange-500 fill-orange-500 animate-pulse" />
