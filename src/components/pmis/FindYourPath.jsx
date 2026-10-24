@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import {
   Compass,
   Sparkles,
@@ -163,6 +163,7 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
   const [isLoading, setIsLoading] = useState(false);
   const [generationStep, setGenerationStep] = useState("");
   const [errorMsg, setErrorMsg] = useState(null);
+  const roadmapResultRef = useRef(null);
 
   // User milestone completion tracker in localStorage
   const [completedMilestones, setCompletedMilestones] = useState(() => {
@@ -366,6 +367,9 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
     } finally {
       setIsLoading(false);
       setGenerationStep("");
+      setTimeout(() => {
+        roadmapResultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 150);
     }
   };
 
@@ -420,7 +424,6 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
                         onClick={() => {
                           setSelectedRole(r.title);
                           setCustomRoleInput("");
-                          if (user) handleGenerateRoadmap(r.title);
                         }}
                         className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition cursor-pointer border ${
                           isSelected
@@ -448,6 +451,12 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
                         setSearchQuery(e.target.value);
                         setIsSearchingRole(true);
                       }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          setIsSearchingRole(false);
+                        }
+                      }}
                       placeholder="Or search among official PMIS roles (e.g. VLSI, Financial Analyst, Civil Site...)"
                       className="w-full rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 pl-10 pr-4 py-3 text-xs sm:text-sm font-bold text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
                     />
@@ -466,7 +475,6 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
                             setSelectedRole(roleName);
                             setCustomRoleInput(roleName);
                             setIsSearchingRole(false);
-                            if (user) handleGenerateRoadmap(roleName);
                           }}
                           className="w-full text-left rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 hover:text-indigo-600 dark:hover:text-indigo-400 transition cursor-pointer flex items-center justify-between"
                         >
@@ -564,7 +572,7 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
 
         {/* Roadmap Display Section */}
         {roadmap && (
-          <div className="relative">
+          <div ref={roadmapResultRef} className="relative">
             {/* Header Meta Card */}
             <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-gradient-to-br from-indigo-50/70 via-white to-purple-50/50 dark:from-slate-900/95 dark:via-slate-900/80 dark:to-slate-950 p-6 sm:p-8 shadow-lg mb-8">
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-slate-200 dark:border-slate-800">
