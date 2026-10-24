@@ -151,6 +151,16 @@ const FALLBACK_ROADMAPS = {
   },
 };
 
+function getWeekRanges(paceId) {
+  if (paceId === "8-week") {
+    return ["Weeks 1 - 2", "Weeks 3 - 4", "Weeks 5 - 6", "Weeks 7 - 8"];
+  } else if (paceId === "16-week") {
+    return ["Weeks 1 - 4", "Weeks 5 - 8", "Weeks 9 - 12", "Weeks 13 - 16"];
+  } else {
+    return ["Weeks 1 - 3", "Weeks 4 - 7", "Weeks 8 - 10", "Weeks 11 - 12"];
+  }
+}
+
 export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore }) {
   const [selectedRole, setSelectedRole] = useState("Software Development Intern");
   const [customRoleInput, setCustomRoleInput] = useState("");
@@ -159,7 +169,8 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
   const [isSearchingRole, setIsSearchingRole] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const [roadmap, setRoadmap] = useState(FALLBACK_ROADMAPS.software);
+  // Start as null so previously generated/default roadmap is hidden until user generates plan
+  const [roadmap, setRoadmap] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [generationStep, setGenerationStep] = useState("");
   const [errorMsg, setErrorMsg] = useState(null);
@@ -250,6 +261,8 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
 
       const academicObj = ACADEMIC_LEVELS.find((a) => a.id === selectedAcademic);
       const paceObj = PACES.find((p) => p.id === selectedPace);
+      const weekRanges = getWeekRanges(selectedPace);
+      const totalWeeks = selectedPace === "8-week" ? 8 : selectedPace === "16-week" ? 16 : 12;
 
       const response = await fetch(`${BACKEND_URL}/api/career/roadmap`, {
         method: "POST",
@@ -268,6 +281,14 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
 
       const data = await response.json();
       if (data && data.phases && data.phases.length > 0) {
+        // Enforce the chosen timeline weeks and pace metadata
+        data.phases.forEach((p, idx) => {
+          if (weekRanges[idx]) {
+            p.weeks = weekRanges[idx];
+          }
+        });
+        data.pace = paceObj?.label || data.pace;
+        data.estimated_hours_per_week = paceObj?.hours || data.estimated_hours_per_week;
         setRoadmap(data);
         setSelectedRole(target);
         setCustomRoleInput("");
@@ -276,14 +297,18 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
       }
     } catch (err) {
       console.warn("AI Career Roadmap API failed or offline, using robust domain template:", err);
-      // Construct dynamic fallback
+      const paceObj = PACES.find((p) => p.id === selectedPace);
+      const weekRanges = getWeekRanges(selectedPace);
+      const totalWeeks = selectedPace === "8-week" ? 8 : selectedPace === "16-week" ? 16 : 12;
+
+      // Construct dynamic fallback with exact user-selected pace
       const fallback = {
         target_role: target,
         target_sector: "PM Internship Corporate Sector",
         academic_level: ACADEMIC_LEVELS.find((a) => a.id === selectedAcademic)?.label,
-        pace: PACES.find((p) => p.id === selectedPace)?.label,
-        estimated_hours_per_week: PACES.find((p) => p.id === selectedPace)?.hours || "10-12 hrs/week",
-        summary: `Custom career roadmap specifically mapped for ${target}. Master foundational tools, construct verifiable production portfolio projects, and optimize your ATS profile for PM Internship Scheme corporate selections.`,
+        pace: paceObj?.label || "12-Week Comprehensive",
+        estimated_hours_per_week: paceObj?.hours || "10-12 hrs/week",
+        summary: `Custom ${totalWeeks}-week career roadmap (${paceObj?.hours || "10-12 hrs/wk"}) specifically mapped for ${target}. Master foundational tools, construct verifiable production portfolio projects, and optimize your ATS profile for PM Internship Scheme corporate selections.`,
         key_competencies_mastered: [
           `${target} Core Competencies`,
           "Industry-standard Tool Stack",
@@ -295,7 +320,7 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
           {
             phase_number: 1,
             title: "Phase 1: Core Foundation & Tool Stack Mastery",
-            weeks: "Weeks 1 - 3",
+            weeks: weekRanges[0],
             goal: `Master core tools, standards, and domain workflows for ${target}.`,
             milestones: [
               `Set up the production development / analytical environment tailored to ${target}.`,
@@ -312,7 +337,7 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
           {
             phase_number: 2,
             title: "Phase 2: Production Portfolio Projects",
-            weeks: "Weeks 4 - 7",
+            weeks: weekRanges[1],
             goal: "Build 2 end-to-end, high-impact projects that demonstrate end-to-end execution.",
             milestones: [
               `Project 1: Develop a comprehensive prototype solving a real-world problem in ${target}.`,
@@ -329,7 +354,7 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
           {
             phase_number: 3,
             title: "Phase 3: Industry Rigor & Quality Standards",
-            weeks: "Weeks 8 - 10",
+            weeks: weekRanges[2],
             goal: "Apply automated verification, enterprise quality benchmarks, and industry compliance.",
             milestones: [
               "Conduct code reviews or peer audits against enterprise best practices.",
@@ -346,7 +371,7 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
           {
             phase_number: 4,
             title: "Phase 4: ATS Resume & Corporate Interview Mastery",
-            weeks: "Weeks 11 - 12",
+            weeks: weekRanges[3],
             goal: "Align your resume with PMIS top corporate evaluators and excel in interview rounds.",
             milestones: [
               `Target resume bullet points to mirror exact competencies of ${target}.`,
@@ -424,6 +449,7 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
                         onClick={() => {
                           setSelectedRole(r.title);
                           setCustomRoleInput("");
+                          setRoadmap(null);
                         }}
                         className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition cursor-pointer border ${
                           isSelected
@@ -450,6 +476,7 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
                         setCustomRoleInput(e.target.value);
                         setSearchQuery(e.target.value);
                         setIsSearchingRole(true);
+                        setRoadmap(null);
                       }}
                       onKeyDown={(e) => {
                         if (e.key === "Enter") {
@@ -475,6 +502,7 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
                             setSelectedRole(roleName);
                             setCustomRoleInput(roleName);
                             setIsSearchingRole(false);
+                            setRoadmap(null);
                           }}
                           className="w-full text-left rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 hover:text-indigo-600 dark:hover:text-indigo-400 transition cursor-pointer flex items-center justify-between"
                         >
@@ -508,7 +536,10 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
                     return (
                       <button
                         key={lvl.id}
-                        onClick={() => setSelectedAcademic(lvl.id)}
+                        onClick={() => {
+                          setSelectedAcademic(lvl.id);
+                          setRoadmap(null);
+                        }}
                         className={`text-left rounded-xl px-3.5 py-2 text-xs font-bold border transition cursor-pointer flex items-center justify-between ${
                           isSelected
                             ? "bg-purple-50 dark:bg-purple-950/50 border-purple-500 text-purple-900 dark:text-purple-200 shadow-xs"
@@ -533,7 +564,10 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
                     return (
                       <button
                         key={p.id}
-                        onClick={() => setSelectedPace(p.id)}
+                        onClick={() => {
+                          setSelectedPace(p.id);
+                          setRoadmap(null);
+                        }}
                         className={`rounded-xl p-2.5 text-center border transition cursor-pointer ${
                           isSelected
                             ? "bg-orange-50 dark:bg-orange-950/50 border-orange-500 text-orange-900 dark:text-orange-200 shadow-xs"
@@ -569,6 +603,36 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
             </div>
           </div>
         </div>
+
+        {/* Placeholder before generation */}
+        {!roadmap && !isLoading && (
+          <div className="rounded-3xl border-2 border-dashed border-indigo-200 dark:border-indigo-900/60 bg-gradient-to-br from-indigo-50/40 via-purple-50/20 to-transparent dark:from-slate-900/40 dark:via-indigo-950/20 dark:to-transparent p-10 sm:p-14 text-center mb-8">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-100 dark:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 mb-4 shadow-sm">
+              <Compass className="h-8 w-8 animate-spin-slow" />
+            </div>
+            <h3 className="font-display text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+              Ready to Generate Your Personalized Roadmap
+            </h3>
+            <p className="mt-2 text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-400 max-w-lg mx-auto leading-relaxed">
+              Select your <strong>Target Job / Role</strong>, <strong>Academic Stage</strong>, and <strong>Roadmap Timeline & Pace</strong> ({PACES.find((p) => p.id === selectedPace)?.label || "Timeline"}) above, then click <strong>&quot;Generate AI Career Roadmap&quot;</strong> to generate your step-by-step curriculum.
+            </p>
+          </div>
+        )}
+
+        {/* Loading State Skeleton */}
+        {isLoading && (
+          <div className="rounded-3xl border-2 border-indigo-200 dark:border-indigo-900/60 bg-white/80 dark:bg-slate-900/80 p-10 text-center animate-pulse space-y-4 mb-8">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-100 dark:bg-indigo-900/60 text-indigo-600">
+              <Sparkles className="h-7 w-7 animate-spin" />
+            </div>
+            <h4 className="font-display text-lg font-black text-slate-900 dark:text-white">
+              AI is Architecting Your {PACES.find((p) => p.id === selectedPace)?.label || "Custom"} Roadmap...
+            </h4>
+            <p className="text-xs font-semibold text-indigo-600 dark:text-indigo-400">
+              {generationStep || "Analyzing role competencies and PMIS corporate hiring benchmarks..."}
+            </p>
+          </div>
+        )}
 
         {/* Roadmap Display Section */}
         {roadmap && (

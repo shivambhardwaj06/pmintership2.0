@@ -174,14 +174,36 @@ DOMAIN_ROADMAP_TEMPLATES = {
 }
 
 
+def get_weeks_for_pace(pace: str) -> List[str]:
+    """Dynamically returns week ranges corresponding to selected roadmap pace."""
+    p = (pace or "").lower()
+    if "8" in p:
+        return ["Weeks 1 - 2", "Weeks 3 - 4", "Weeks 5 - 6", "Weeks 7 - 8"]
+    elif "16" in p:
+        return ["Weeks 1 - 4", "Weeks 5 - 8", "Weeks 9 - 12", "Weeks 13 - 16"]
+    else:
+        return ["Weeks 1 - 3", "Weeks 4 - 7", "Weeks 8 - 10", "Weeks 11 - 12"]
+
+
 def _get_fallback_roadmap(role: str, sector: str, pace: str) -> Dict[str, Any]:
-    """Generates an accurate, highly structured career roadmap based on domain keywords."""
+    """Generates an accurate, highly structured career roadmap based on domain keywords and pace."""
     r_lower = role.lower()
     template_key = "software"
     if any(k in r_lower for k in ["mech", "auto", "design", "cad", "manufacturing", "thermal"]):
         template_key = "mechanical"
 
     tmpl = DOMAIN_ROADMAP_TEMPLATES[template_key]
+    week_ranges = get_weeks_for_pace(pace)
+    p_lower = (pace or "").lower()
+    hours = "14-16 hrs/week" if "8" in p_lower else ("6-8 hrs/week" if "16" in p_lower else "10-12 hrs/week")
+    total_weeks = 8 if "8" in p_lower else (16 if "16" in p_lower else 12)
+
+    phases = []
+    for idx, p in enumerate(tmpl["phases"]):
+        p_copy = dict(p)
+        if idx < len(week_ranges):
+            p_copy["weeks"] = week_ranges[idx]
+        phases.append(p_copy)
 
     return {
         "status": "success",
@@ -189,14 +211,14 @@ def _get_fallback_roadmap(role: str, sector: str, pace: str) -> Dict[str, Any]:
         "target_sector": sector or "National Enterprise Sector",
         "pace": pace,
         "role_badge": tmpl["role_badge"],
-        "estimated_hours_per_week": tmpl["estimated_hours_per_week"],
-        "roadmap_overview": f"A targeted, progressive roadmap designed to take you from foundational concepts to an ATS-cleared, industry-ready candidate for {role} under PM Internship Scheme.",
-        "phases": tmpl["phases"],
+        "estimated_hours_per_week": hours,
+        "roadmap_overview": f"A targeted, progressive {total_weeks}-week roadmap ({hours}) designed to take you from foundational concepts to an ATS-cleared, industry-ready candidate for {role} under PM Internship Scheme.",
+        "phases": phases,
         "key_competencies_mastered": [
-            "Domain-specific industry tool stack",
-            "Production-grade portfolio projects with live links",
-            "Quality assurance & industry standard compliance",
-            "Structured corporate interview answering (STAR method)"
+            f"{role} Core Competencies",
+            "Industry-standard Tool Stack",
+            "Production Portfolio Projects with Live Demos",
+            "ATS Resume Optimization & STAR Interview Mastery"
         ]
     }
 
@@ -205,16 +227,28 @@ def _get_fallback_roadmap(role: str, sector: str, pace: str) -> Dict[str, Any]:
 def generate_career_roadmap(payload: CareerRoadmapRequest):
     """
     Generates a personalized, step-by-step 4-phase Career Roadmap
-    customized to the candidate's chosen target job using AI.
+    customized to the candidate's chosen target job and timeline pace using AI.
     """
     target = payload.target_role.strip()
     if not target:
         raise HTTPException(status_code=400, detail="Target role is required.")
 
+    week_ranges = get_weeks_for_pace(payload.pace)
+    p_lower = (payload.pace or "").lower()
+    total_weeks = 8 if "8" in p_lower else (16 if "16" in p_lower else 12)
+    hours = "14-16 hrs/week" if "8" in p_lower else ("6-8 hrs/week" if "16" in p_lower else "10-12 hrs/week")
+
     # Try generating dynamic AI roadmap with NVIDIA Nemotron
     prompt = f"""You are an elite corporate career counselor and technical mentor for the Prime Minister's Internship Scheme (PMIS).
-Create a comprehensive, highly actionable 4-phase Career Roadmap for a student targeting the role: '{target}' in sector: '{payload.target_sector}'.
-Candidate level: {payload.academic_level}. Learning pace: {payload.pace}. Current skills: {', '.join(payload.current_skills) if payload.current_skills else 'Beginner/Intermediate'}.
+Create a comprehensive, highly actionable 4-phase Career Roadmap spanning exactly {total_weeks} weeks for a student targeting the role: '{target}' in sector: '{payload.target_sector}'.
+Candidate level: {payload.academic_level}. Learning pace: {payload.pace} ({hours}). Current skills: {', '.join(payload.current_skills) if payload.current_skills else 'Beginner/Intermediate'}.
+
+CRITICAL DURATION REQUIREMENT:
+The 4 phases must strictly cover the following exact week durations for this {total_weeks}-week curriculum:
+- Phase 1: {week_ranges[0]}
+- Phase 2: {week_ranges[1]}
+- Phase 3: {week_ranges[2]}
+- Phase 4: {week_ranges[3]}
 
 Return ONLY a valid JSON object matching the exact format:
 {{
@@ -222,13 +256,13 @@ Return ONLY a valid JSON object matching the exact format:
   "target_sector": "{payload.target_sector}",
   "pace": "{payload.pace}",
   "role_badge": "Category domain badge",
-  "estimated_hours_per_week": "10-12 hrs/week",
-  "roadmap_overview": "Crisp 2-sentence executive summary of this learning journey.",
+  "estimated_hours_per_week": "{hours}",
+  "roadmap_overview": "Crisp 2-sentence executive summary of this {total_weeks}-week learning journey.",
   "phases": [
     {{
       "phase_number": 1,
       "title": "Phase 1: Foundation & Core Tools",
-      "weeks": "Weeks 1 - 3",
+      "weeks": "{week_ranges[0]}",
       "goal": "Core objective for this phase.",
       "milestones": ["Milestone 1 with specific tools", "Milestone 2", "Milestone 3", "Milestone 4"],
       "recommended_tools": ["Tool1", "Tool2", "Tool3"],
@@ -239,7 +273,7 @@ Return ONLY a valid JSON object matching the exact format:
     {{
       "phase_number": 2,
       "title": "Phase 2: Production Projects & Architecture",
-      "weeks": "Weeks 4 - 7",
+      "weeks": "{week_ranges[1]}",
       "goal": "Core objective for this phase.",
       "milestones": ["Milestone 1 with project names", "Milestone 2", "Milestone 3", "Milestone 4"],
       "recommended_tools": ["Tool1", "Tool2", "Tool3"],
@@ -250,7 +284,7 @@ Return ONLY a valid JSON object matching the exact format:
     {{
       "phase_number": 3,
       "title": "Phase 3: Industry Testing & Real-world Practice",
-      "weeks": "Weeks 8 - 10",
+      "weeks": "{week_ranges[2]}",
       "goal": "Core objective for this phase.",
       "milestones": ["Milestone 1", "Milestone 2", "Milestone 3", "Milestone 4"],
       "recommended_tools": ["Tool1", "Tool2", "Tool3"],
@@ -261,7 +295,7 @@ Return ONLY a valid JSON object matching the exact format:
     {{
       "phase_number": 4,
       "title": "Phase 4: ATS Resume & Interview Mastery",
-      "weeks": "Weeks 11 - 12",
+      "weeks": "{week_ranges[3]}",
       "goal": "Core objective for this phase.",
       "milestones": ["Milestone 1", "Milestone 2", "Milestone 3", "Milestone 4"],
       "recommended_tools": ["Tool1", "Tool2", "Tool3"],
@@ -289,6 +323,10 @@ Return ONLY a valid JSON object matching the exact format:
             parsed = json.loads(cleaned[start:end+1])
             if parsed.get("phases") and len(parsed["phases"]) >= 4:
                 parsed["status"] = "success"
+                parsed["pace"] = payload.pace
+                parsed["estimated_hours_per_week"] = hours
+                for idx, phase in enumerate(parsed["phases"][:4]):
+                    phase["weeks"] = week_ranges[idx]
                 return parsed
     except Exception as e:
         logger.warning(f"AI Roadmap LLM call exception: {e}")
