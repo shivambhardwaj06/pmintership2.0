@@ -43,3 +43,7 @@ qdrant_storage/
 backend/qdrant_storage/
 backend/static/
 
+# Junk / Archival
+junk/
+
+
