@@ -3,6 +3,8 @@ import AccessibilityBar from "./AccessibilityBar";
 import Header from "./Header";
 import NoticeBar from "./NoticeBar";
 import BannerCarousel from "./BannerCarousel";
+import StudentDashboardShowcase from "./StudentDashboardShowcase";
+import FeaturedCompaniesMarquee from "./FeaturedCompaniesMarquee";
 import StateDashboard from "./StateDashboard";
 import TopFeaturedInternships from "./TopFeaturedInternships";
 import ExploreInternships from "./ExploreInternships";
@@ -258,8 +260,33 @@ export default function Landing() {
           /* HOME PAGE */
           <div>
             <NoticeBar />
-            <BannerCarousel onExploreClick={() => setActiveView("explore")} />
+            {/* 1. TOP 5-SLIDE SLOW SLIDESHOW BANNER */}
+            <BannerCarousel
+              onExploreClick={() => setActiveView("explore")}
+              onOpenAuth={(mode) => openAuthWithMode(mode)}
+            />
+
+            {/* 2. ALL STUDENT DASHBOARD FEATURES & RESUME ANALYSIS GLIMPSE (REQUIRES LOGIN/REGISTER ON CLICK) */}
+            <StudentDashboardShowcase
+              user={user}
+              onOpenAuth={(mode) => openAuthWithMode(mode)}
+              onNavigateToDashboard={(tab) => {
+                if (tab) window.location.hash = tab;
+                setActiveView("dashboard");
+              }}
+            />
+
+            {/* 3. MOVING BLOCK OF FEATURED COMPANIES (MARQUEE WITH LOGOS & NAMES) */}
+            <FeaturedCompaniesMarquee
+              onSelectCompany={() => {
+                setActiveView("explore");
+              }}
+            />
+
+            {/* 4. STATE-WISE VACANCY DASHBOARD */}
             <StateDashboard />
+
+            {/* 5. TOP FEATURED INTERNSHIPS */}
             <TopFeaturedInternships
               user={user}
               onExploreAll={() => setActiveView("explore")}
