@@ -17,6 +17,7 @@ import {
   ChevronRight,
   PhoneCall,
   Sparkles,
+  Building2,
 } from "lucide-react";
 import mca from "@/assets/MCA.svg";
 import pmLogo from "@/assets/pm_internship_logo_eng.svg";
@@ -38,7 +39,12 @@ function MobileMenu({ onClose, user, onOpenAuth, onSetView, onLogout, activeView
     };
   }, [onClose]);
 
-  const handleNavigate = (viewId, authRequired) => {
+  const handleNavigate = (viewId, authRequired, href) => {
+    if (href) {
+      window.location.href = href;
+      onClose();
+      return;
+    }
     if (authRequired && !user) {
       onOpenAuth();
       onClose();
@@ -78,6 +84,16 @@ function MobileMenu({ onClose, user, onOpenAuth, onSetView, onLogout, activeView
           authRequired: true,
           badge: "AI Powered",
           activeBg: "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-500/25",
+        },
+        {
+          id: "recruiter",
+          label: "Recruiter Portal",
+          subtitle: "Corporate Partner Candidate Review",
+          icon: Building2,
+          color: "text-orange-500",
+          href: "/recruiter",
+          badge: "Corporate",
+          activeBg: "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md shadow-orange-500/25",
         },
       ],
     },
@@ -230,7 +246,7 @@ function MobileMenu({ onClose, user, onOpenAuth, onSetView, onLogout, activeView
                   return (
                     <button
                       key={item.id}
-                      onClick={() => handleNavigate(item.id, item.authRequired)}
+                      onClick={() => handleNavigate(item.id, item.authRequired, item.href)}
                       className={`group flex w-full items-center justify-between rounded-xl p-2.5 sm:p-3 transition-all cursor-pointer ${
                         isActive
                           ? item.activeBg
@@ -562,6 +578,19 @@ export default function Header({ user, onOpenAuth, onSetView, activeView = "home
               <Headphones className="h-3.5 w-3.5 text-rose-400 shrink-0" />
               <span>Support</span>
             </button>
+
+            {/* Divider */}
+            <span className="h-4 w-px bg-slate-700/80 mx-1 shrink-0" />
+
+            {/* Corporate Recruiter Portal Link */}
+            <a
+              href="/recruiter"
+              className="shrink-0 whitespace-nowrap flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-black text-amber-300 hover:text-white bg-amber-500/10 hover:bg-amber-500/25 border border-amber-500/30 transition cursor-pointer"
+              title="Corporate Recruiter Portal: Manage Opportunities & Candidate Resumes"
+            >
+              <Building2 className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+              <span>Recruiter Portal</span>
+            </a>
           </div>
         </div>
       </div>

@@ -89,13 +89,13 @@ class ResumeService:
             except Exception as e:
                 logger.error(f"Cloudinary upload failed ({e}), saving to local static storage.")
 
-        # Fallback to local server static storage
+        # Fallback to local server CDN static storage
         unique_name = f"{uuid.uuid4().hex[:8]}_{re.sub(r'[^a-zA-Z0-9._-]', '_', filename)}"
         dest = STATIC_RESUMES_DIR / unique_name
         with open(dest, "wb") as f:
             f.write(file_bytes)
 
-        local_url = f"/static/resumes/{unique_name}"
+        local_url = f"/cdn/resumes/{unique_name}"
         return local_url
 
     def get_top_database_job_matches(

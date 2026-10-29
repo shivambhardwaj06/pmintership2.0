@@ -34,6 +34,7 @@ import {
   HelpCircle,
   RefreshCw,
   Plus,
+  Calendar,
 } from "lucide-react";
 import CompanyLogo from "./CompanyLogo";
 import rawInternships from "@/data/internships.json";
@@ -764,6 +765,30 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
 
   // Real-time Applications (starts clean, synced with user)
   const [applications, setApplications] = useState([]);
+  const [syncingApps, setSyncingApps] = useState(false);
+
+  const syncApplicationsFromBackend = async () => {
+    if (!user?.user_id) return;
+    setSyncingApps(true);
+    try {
+      const token = localStorage.getItem("pmis_access_token") || "";
+      const res = await fetch(`${BACKEND_URL}/api/user/applications?user_id=${user.user_id}`, {
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.applications) {
+          setApplications(data.applications);
+          const appStorageKey = `pmis_applications_${user.user_id}`;
+          localStorage.setItem(appStorageKey, JSON.stringify(data.applications));
+        }
+      }
+    } catch (err) {
+      console.warn("Sync applications failed:", err);
+    } finally {
+      setSyncingApps(false);
+    }
+  };
 
   // URL Hash handling for direct deep-linking (e.g. #resumes, #applications)
   useEffect(() => {
@@ -1112,6 +1137,18 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
             internship_id: job.id,
             company: job.company,
             title: job.title,
+            sector: job.sector || "Corporate",
+            location: job.location || "Pan-India",
+            stipend: job.stipend || "₹5,000 / month",
+            candidate_name: profile.name && !profile.name.toLowerCase().includes("candidate") ? profile.name : (user.name || "Youth Candidate"),
+            candidate_email: user.email,
+            candidate_mobile: user.mobile,
+            college: profile.college,
+            degree: profile.degree,
+            branch: profile.branch,
+            skills: profile.skills,
+            resume_url: profile.cloudinary_url,
+            resume_name: profile.resume_name,
             notes: "Applied via Student Dashboard",
           }),
         });
@@ -2305,16 +2342,28 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                 Your Real-Time Applications ({applications.length})
               </h2>
               <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 mt-0.5">
-                Track candidate review and interview status across partner corporate organizations.
+                Track candidate review and interview status updated by corporate recruiters in MongoDB.
               </p>
             </div>
 
-            <button
-              onClick={onNavigateToInternships}
-              className="rounded-xl bg-primary text-primary-foreground px-4 py-2 text-xs font-extrabold shadow-sm hover:bg-primary/90 transition w-fit cursor-pointer"
-            >
-              + Apply for More Roles
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={syncApplicationsFromBackend}
+                disabled={syncingApps}
+                className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                title="Sync real-time recruiter status updates"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${syncingApps ? "animate-spin" : ""}`} />
+                <span>Sync Status</span>
+              </button>
+
+              <button
+                onClick={onNavigateToInternships}
+                className="rounded-xl bg-primary text-primary-foreground px-4 py-2 text-xs font-extrabold shadow-sm hover:bg-primary/90 transition w-fit cursor-pointer"
+              >
+                + Apply for More Roles
+              </button>
+            </div>
           </div>
 
           {applications.length === 0 ? (
@@ -2335,48 +2384,100 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
             </div>
           ) : (
             <div className="space-y-4">
-              {applications.map((app) => (
-                <div
-                  key={app.id || app.application_id}
-                  className="rounded-2xl border-2 border-slate-200 dark:border-slate-800 p-5 bg-white dark:bg-slate-900 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs"
-                >
-                  <div className="flex items-start gap-4">
-                    <CompanyLogo name={app.company} className="h-12 w-12 shrink-0" />
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-black uppercase text-orange-600">
-                          {app.sector || "Corporate"}
-                        </span>
-                        <span className="text-slate-400">•</span>
-                        <span className="text-[10px] font-bold text-slate-500">
-                          App ID: {app.id || app.application_id}
-                        </span>
-                      </div>
-                      <h4 className="font-display text-base font-bold text-slate-900 dark:text-white">
-                        {app.title}
-                      </h4>
-                      <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">
-                        {app.company} • {app.location || "Pan-India"} • {app.stipend || "₹5,000/mo"}
-                      </p>
-                    </div>
-                  </div>
+              {applications.map((app) => {
+                const s = (app.status || "").toLowerCase();
+                let badgeClass = "bg-blue-100 text-blue-900 border-blue-300 font-bold";
+                if (s.includes("select") || s.includes("offer")) {
+                  badgeClass = "bg-emerald-100 text-emerald-900 border-emerald-300 font-black";
+                } else if (s.includes("shortlist") || s.includes("interview")) {
+                  badgeClass = "bg-indigo-100 text-indigo-900 border-indigo-300 font-black";
+                } else if (s.includes("under review")) {
+                  badgeClass = "bg-amber-100 text-amber-900 border-amber-300 font-black";
+                } else if (s.includes("not selected") || s.includes("reject")) {
+                  badgeClass = "bg-slate-100 text-slate-700 border-slate-300 font-semibold";
+                }
 
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <span
-                        className={`inline-block rounded-full px-3 py-1 text-xs font-extrabold border ${
-                          app.badgeColor || "bg-blue-100 text-blue-900 border-blue-300"
-                        }`}
-                      >
-                        {app.status || "Application Submitted"}
-                      </span>
-                      <p className="text-[10px] text-slate-400 font-semibold mt-1">
-                        Submitted: {app.date || app.applied_date || "2026-10-23"}
-                      </p>
+                return (
+                  <div
+                    key={app.id || app.application_id}
+                    className="rounded-2xl border-2 border-slate-200 dark:border-slate-800 p-5 bg-white dark:bg-slate-900 space-y-3 shadow-xs"
+                  >
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div className="flex items-start gap-4">
+                        <CompanyLogo name={app.company} className="h-12 w-12 shrink-0" />
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-black uppercase text-orange-600">
+                              {app.sector || "Corporate"}
+                            </span>
+                            <span className="text-slate-400">•</span>
+                            <span className="text-[10px] font-bold text-slate-500">
+                              App ID: {app.id || app.application_id}
+                            </span>
+                          </div>
+                          <h4 className="font-display text-base font-bold text-slate-900 dark:text-white">
+                            {app.title}
+                          </h4>
+                          <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                            {app.company} • {app.location || "Pan-India"} • {app.stipend || "₹5,000/mo"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-4">
+                        <div className="text-left md:text-right">
+                          <span className={`inline-block rounded-full px-3 py-1 text-xs border ${badgeClass}`}>
+                            {app.status || "Application Submitted"}
+                          </span>
+                          <p className="text-[10px] text-slate-400 font-semibold mt-1">
+                            Submitted: {app.date || app.applied_date || "2026-10-23"}
+                          </p>
+                        </div>
+                      </div>
                     </div>
+
+                    {/* Recruiter Feedback Notes */}
+                    {app.recruiter_notes && (
+                      <div className="rounded-xl bg-slate-50 dark:bg-slate-800/60 p-3 border border-slate-200 dark:border-slate-700/70 text-xs text-slate-700 dark:text-slate-300">
+                        <span className="font-extrabold text-slate-900 dark:text-white mr-1.5">
+                          💬 Corporate Recruiter Feedback:
+                        </span>
+                        <span>{app.recruiter_notes}</span>
+                      </div>
+                    )}
+
+                    {/* Interview Schedule Box */}
+                    {(app.interview_date || app.meeting_link) && (
+                      <div className="rounded-xl bg-indigo-50/80 dark:bg-indigo-950/40 p-3 border border-indigo-200 dark:border-indigo-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 text-xs font-extrabold text-indigo-900 dark:text-indigo-200">
+                          <Calendar className="h-4 w-4 text-indigo-600 shrink-0" />
+                          <span>Interview Scheduled: {app.interview_date || "Coming Up"}</span>
+                        </div>
+                        {app.meeting_link && (
+                          <a
+                            href={app.meeting_link}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 text-xs font-black shadow-xs transition w-fit"
+                          >
+                            <Video className="h-3.5 w-3.5" />
+                            <span>Join Interview Meeting</span>
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Offer Released Celebratory Box */}
+                    {s.includes("offer") || s.includes("select") ? (
+                      <div className="rounded-xl bg-emerald-50/80 dark:bg-emerald-950/40 p-3 border border-emerald-200 dark:border-emerald-800 flex items-center gap-2.5 text-xs font-black text-emerald-900 dark:text-emerald-200">
+                        <Award className="h-4 w-4 text-emerald-600 shrink-0" />
+                        <span>Congratulations! You have received an official corporate internship offer. Check your registered email for onboarding paperwork.</span>
+                      </div>
+                    ) : null}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

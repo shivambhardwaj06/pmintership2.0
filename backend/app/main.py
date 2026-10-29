@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
-from app.routes import chat, health, internships, auth, announcements, career_path
+from app.routes import chat, health, internships, auth, announcements, career_path, recruiter
 from app.document_parser import get_structured_internship_chunks
 from app.embeddings import embedding_service
 from app.vector_store import vector_store
@@ -81,13 +81,15 @@ app.include_router(internships.router)
 app.include_router(auth.router)
 app.include_router(announcements.router)
 app.include_router(career_path.router)
+app.include_router(recruiter.router)
 
-# Mount static folder for uploaded resumes
+# Mount static and CDN folder for candidate resumes
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 static_dir = Path(__file__).parent.parent / "static"
 static_dir.mkdir(parents=True, exist_ok=True)
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+app.mount("/cdn", StaticFiles(directory=str(static_dir)), name="cdn")
 
 
 @app.get("/")

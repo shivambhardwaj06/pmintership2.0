@@ -317,6 +317,18 @@ export default function Footer({ onSetView }) {
                 </button>
               </li>
               <li>
+                <a
+                  href="/recruiter"
+                  className="group flex items-center gap-2 text-amber-300 hover:text-white transition-colors cursor-pointer"
+                >
+                  <ChevronRight className="h-3.5 w-3.5 text-amber-400 group-hover:translate-x-1 transition-all" />
+                  <span className="font-bold">Corporate Recruiter Portal</span>
+                  <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-black text-amber-300 border border-amber-500/30">
+                    /recruiter
+                  </span>
+                </a>
+              </li>
+              <li>
                 <button
                   onClick={() => navigateToView("faqs")}
                   className="group flex items-center gap-2 text-slate-300 hover:text-sky-400 transition-colors cursor-pointer"

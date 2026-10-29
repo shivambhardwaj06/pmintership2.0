@@ -1,7 +1,9 @@
 import os
+import re
 import json
+import uuid
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 from pymongo import MongoClient, ASCENDING, TEXT
@@ -86,8 +88,11 @@ def refresh_tokens_collection():
 def job_news_collection():
     return get_database()["job_news"]
 
+def recruiters_collection():
+    return get_database()["recruiters"]
+
 def _initialize_indexes_and_seed():
-    """Sets up indexes on MongoDB collections and populates minimum 250+ internships."""
+    """Sets up indexes on MongoDB collections and populates minimum 250+ internships and recruiter seeds."""
     try:
         users = users_collection()
         users.create_index("user_id", unique=True)
@@ -103,6 +108,8 @@ def _initialize_indexes_and_seed():
 
         apps = applications_collection()
         apps.create_index([("user_id", ASCENDING), ("internship_id", ASCENDING)])
+        apps.create_index("application_id")
+        apps.create_index("company")
 
         tokens = refresh_tokens_collection()
         tokens.create_index("token", unique=True)
@@ -112,6 +119,10 @@ def _initialize_indexes_and_seed():
         job_news = job_news_collection()
         job_news.create_index("id", unique=True)
         job_news.create_index("published_at")
+
+        recruiters = recruiters_collection()
+        recruiters.create_index("email", unique=True)
+        recruiters.create_index("company_name")
 
         # Check if internships collection needs bootstrapping
         current_count = internships.count_documents({})
@@ -126,6 +137,9 @@ def _initialize_indexes_and_seed():
                         upsert=True
                     )
             logger.info(f"MongoDB internships collection bootstrapped! Total: {internships.count_documents({})}")
+
+        # Seed initial recruiters and candidate applications for testing
+        _seed_default_recruiters_and_applications()
 
     except Exception as e:
         logger.error(f"Error during MongoDB index initialization/seeding: {e}")
@@ -513,6 +527,426 @@ def is_job_news_stale_db() -> bool:
 
 def count_job_news_db() -> int:
     return job_news_collection().count_documents({})
+
+
+# ==========================================
+# RECRUITER & APPLICATION MANAGEMENT (MONGODB)
+# ==========================================
+
+DEFAULT_SEED_RECRUITERS = [
+    {
+        "recruiter_id": "REC-TCS-01",
+        "company_name": "Tata Consultancy Services (TCS)",
+        "recruiter_name": "Anand Deshpande",
+        "designation": "Head of Campus Talent Acquisition",
+        "email": "recruiter@tcs.com",
+        "mobile": "+91 98200 11223",
+        "is_verified": True,
+        "company_sector": "IT & Software Development"
+    },
+    {
+        "recruiter_id": "REC-TM-02",
+        "company_name": "Tata Motors",
+        "recruiter_name": "Suresh K. Nair",
+        "designation": "Lead Technical Talent Acquisition",
+        "email": "recruiter@tatamotors.com",
+        "mobile": "+91 98200 44556",
+        "is_verified": True,
+        "company_sector": "Automotive"
+    },
+    {
+        "recruiter_id": "REC-LT-03",
+        "company_name": "Larsen & Toubro (L&T)",
+        "recruiter_name": "Kavita S. Rao",
+        "designation": "Strategic Infrastructure Talent Partner",
+        "email": "recruiter@lt.com",
+        "mobile": "+91 98200 77889",
+        "is_verified": True,
+        "company_sector": "Infrastructure & Construction"
+    },
+    {
+        "recruiter_id": "REC-INF-04",
+        "company_name": "Infosys",
+        "recruiter_name": "Deepak Balakrishnan",
+        "designation": "Early Careers Lead",
+        "email": "recruiter@infosys.com",
+        "mobile": "+91 98200 99001",
+        "is_verified": True,
+        "company_sector": "IT & Software Development"
+    },
+    {
+        "recruiter_id": "REC-HDFC-05",
+        "company_name": "HDFC Bank",
+        "recruiter_name": "Pooja Mehta",
+        "designation": "Operations Hiring Lead",
+        "email": "recruiter@hdfcbank.com",
+        "mobile": "+91 98200 33445",
+        "is_verified": True,
+        "company_sector": "Banking & Financial Services"
+    },
+    {
+        "recruiter_id": "REC-SP-06",
+        "company_name": "Sun Pharmaceutical Industries",
+        "recruiter_name": "Dr. Rajesh Gupta",
+        "designation": "Pharma R&D Talent Partner",
+        "email": "recruiter@sunpharma.com",
+        "mobile": "+91 98200 55667",
+        "is_verified": True,
+        "company_sector": "Pharmaceuticals"
+    }
+]
+
+DEFAULT_SEED_APPLICATIONS = [
+    {
+        "application_id": "APP-2026-TCS01",
+        "id": "APP-2026-TCS01",
+        "user_id": "PMIS-YOUTH-01",
+        "internship_id": "PMIS-IND-001",
+        "company": "Tata Consultancy Services (TCS)",
+        "title": "Software Development Intern",
+        "sector": "IT & Software Development",
+        "location": "Bengaluru, Karnataka",
+        "stipend": "₹5,000 / month",
+        "candidate_name": "Priya Sharma",
+        "candidate_email": "priya.sharma@candidate.pminternship.gov.in",
+        "candidate_mobile": "+91 98765 43210",
+        "college": "State Technological University",
+        "degree": "B.Tech Computer Science & Engineering (3rd Year)",
+        "branch": "Computer Science / IT",
+        "cgpa": "8.4 / 10",
+        "skills": ["Python", "FastAPI", "Git", "Data Structures", "SQL", "Unit Testing", "React"],
+        "resume_url": "/cdn/resumes/priya_sharma_resume.pdf",
+        "resume_name": "priya_sharma_resume.pdf",
+        "status": "Under Review",
+        "recruiter_notes": "Strong GitHub demo link and unit testing rigor. Reviewing for Round 1 technical screening.",
+        "applied_date": "2026-10-24",
+        "applied_at": "2026-10-24 10:30:00",
+        "updated_at": "2026-10-28 14:00:00"
+    },
+    {
+        "application_id": "APP-2026-TCS02",
+        "id": "APP-2026-TCS02",
+        "user_id": "PMIS-YOUTH-02",
+        "internship_id": "PMIS-IND-002",
+        "company": "Tata Consultancy Services (TCS)",
+        "title": "Full Stack Developer / Software Engineer",
+        "sector": "IT & Software Development",
+        "location": "Pan-India / Kolkata",
+        "stipend": "₹5,000 / month",
+        "candidate_name": "Dev Raj Singh",
+        "candidate_email": "devraj.singh@candidate.pminternship.gov.in",
+        "candidate_mobile": "+91 98765 43222",
+        "college": "Maulana Abul Kalam Azad University of Technology",
+        "degree": "B.Tech in Computer Science and Engineering",
+        "branch": "Computer Science / IT",
+        "cgpa": "8.6 / 10",
+        "skills": ["Full stack development", "REST API", "SQL", "JavaScript", "TypeScript", "Next.js", "Python", "MongoDB", "Docker", "AWS"],
+        "resume_url": "/cdn/resumes/dev_raj_resume.pdf",
+        "resume_name": "dev_raj_resume.pdf",
+        "status": "Shortlisted for Interview",
+        "recruiter_notes": "Exceptional production speedup metrics (50%) and 600+ LeetCode problems. Shortlisted for Technical Round 1.",
+        "interview_date": "2026-11-04 11:00 AM",
+        "meeting_link": "https://meet.google.com/pmis-tcs-interview",
+        "applied_date": "2026-10-23",
+        "applied_at": "2026-10-23 14:15:00",
+        "updated_at": "2026-10-29 16:30:00"
+    },
+    {
+        "application_id": "APP-2026-TM01",
+        "id": "APP-2026-TM01",
+        "user_id": "PMIS-YOUTH-03",
+        "internship_id": "PMIS-IND-006",
+        "company": "Tata Motors",
+        "title": "Automotive Engineering Intern",
+        "sector": "Automotive",
+        "location": "Pune, Maharashtra",
+        "stipend": "₹5,000 / month",
+        "candidate_name": "Rohan Deshmukh",
+        "candidate_email": "rohan.deshmukh@candidate.pminternship.gov.in",
+        "candidate_mobile": "+91 98765 43233",
+        "college": "Government College of Engineering",
+        "degree": "B.E. Mechanical Engineering (Pre-Final Year)",
+        "branch": "Mechanical & Automobile",
+        "cgpa": "7.9 / 10",
+        "skills": ["SolidWorks", "AutoCAD", "Thermodynamics", "EV Powertrains", "Finite Element Analysis", "Lean Basics"],
+        "resume_url": "/cdn/resumes/rohan_deshmukh_resume.pdf",
+        "resume_name": "rohan_deshmukh_resume.pdf",
+        "status": "Under Review",
+        "recruiter_notes": "SAE BAJA chassis fabrication and SolidWorks CAD portfolio verified. Assigning technical mentor.",
+        "applied_date": "2026-10-25",
+        "applied_at": "2026-10-25 11:20:00",
+        "updated_at": "2026-10-28 17:00:00"
+    },
+    {
+        "application_id": "APP-2026-LT01",
+        "id": "APP-2026-LT01",
+        "user_id": "PMIS-YOUTH-04",
+        "internship_id": "PMIS-IND-011",
+        "company": "Larsen & Toubro (L&T)",
+        "title": "Project Planning Intern",
+        "sector": "Infrastructure & Construction",
+        "location": "Ahmedabad / Vadodara, Gujarat",
+        "stipend": "₹5,000 / month",
+        "candidate_name": "Ananya Patel",
+        "candidate_email": "ananya.patel@candidate.pminternship.gov.in",
+        "candidate_mobile": "+91 98765 43244",
+        "college": "State Engineering Institute",
+        "degree": "B.Tech Civil Engineering (Final Year)",
+        "branch": "Civil & Infrastructure",
+        "cgpa": "8.6 / 10",
+        "skills": ["MS Project", "AutoCAD Civil 3D", "Bar Bending Schedule (BBS)", "Quantity Surveying", "Site Safety"],
+        "resume_url": "/cdn/resumes/ananya_patel_resume.pdf",
+        "resume_name": "ananya_patel_resume.pdf",
+        "status": "Shortlisted for Interview",
+        "recruiter_notes": "Primavera P6 certification and structural blueprint reading verified. Scheduled for Project Manager interview.",
+        "interview_date": "2026-11-05 02:30 PM",
+        "meeting_link": "https://meet.google.com/pmis-lt-interview",
+        "applied_date": "2026-10-24",
+        "applied_at": "2026-10-24 16:00:00",
+        "updated_at": "2026-10-29 11:15:00"
+    },
+    {
+        "application_id": "APP-2026-HDFC01",
+        "id": "APP-2026-HDFC01",
+        "user_id": "PMIS-YOUTH-05",
+        "internship_id": "PMIS-IND-018",
+        "company": "HDFC Bank",
+        "title": "Finance & Banking Operations Intern",
+        "sector": "Banking & Financial Services",
+        "location": "Mumbai, Maharashtra",
+        "stipend": "₹5,000 / month",
+        "candidate_name": "Sneha Kulkarni",
+        "candidate_email": "sneha.kulkarni@candidate.pminternship.gov.in",
+        "candidate_mobile": "+91 98765 43255",
+        "college": "Premier Commerce College",
+        "degree": "B.Com Honours (2nd Year)",
+        "branch": "Commerce, Finance & Management",
+        "cgpa": "8.5 / 10",
+        "skills": ["Advanced Excel", "Financial Modeling", "KYC Compliance", "Power BI", "Data Validation"],
+        "resume_url": "/cdn/resumes/sneha_kulkarni_resume.pdf",
+        "resume_name": "sneha_kulkarni_resume.pdf",
+        "status": "Application Submitted",
+        "recruiter_notes": "Advanced Excel modeling and commercial bank NPA analysis project received. Round 1 batch review pending.",
+        "applied_date": "2026-10-26",
+        "applied_at": "2026-10-26 09:45:00",
+        "updated_at": "2026-10-26 09:45:00"
+    },
+    {
+        "application_id": "APP-2026-SP01",
+        "id": "APP-2026-SP01",
+        "user_id": "PMIS-YOUTH-06",
+        "internship_id": "PMIS-IND-022",
+        "company": "Sun Pharmaceutical Industries",
+        "title": "Pharma Quality & Research Intern",
+        "sector": "Pharmaceuticals",
+        "location": "Vadodara, Gujarat",
+        "stipend": "₹5,000 / month",
+        "candidate_name": "Drithi Nair",
+        "candidate_email": "drithi.nair@candidate.pminternship.gov.in",
+        "candidate_mobile": "+91 98765 43266",
+        "college": "College of Pharmaceutical Sciences",
+        "degree": "B.Pharm (3rd Year)",
+        "branch": "Biotechnology & Healthcare",
+        "cgpa": "8.7 / 10",
+        "skills": ["HPLC Operation", "GMP / GLP Norms", "Quality Control", "Spectrophotometry"],
+        "resume_url": "/cdn/resumes/drithi_nair_resume.pdf",
+        "resume_name": "drithi_nair_resume.pdf",
+        "status": "Under Review",
+        "recruiter_notes": "HPLC and GMP certifications attached. Lab documentation currently under senior chemist review.",
+        "applied_date": "2026-10-27",
+        "applied_at": "2026-10-27 12:10:00",
+        "updated_at": "2026-10-28 15:40:00"
+    }
+]
+
+def _seed_default_recruiters_and_applications():
+    """Seeds default recruiter accounts and candidate applications in MongoDB."""
+    try:
+        recruiters = recruiters_collection()
+        for r in DEFAULT_SEED_RECRUITERS:
+            recruiters.update_one(
+                {"email": r["email"]},
+                {"$setOnInsert": r},
+                upsert=True
+            )
+
+        apps = applications_collection()
+        for a in DEFAULT_SEED_APPLICATIONS:
+            apps.update_one(
+                {"application_id": a["application_id"]},
+                {"$setOnInsert": a},
+                upsert=True
+            )
+    except Exception as e:
+        logger.warning(f"Default recruiters/applications seeding notice: {e}")
+
+def get_recruiter_by_email(email: str) -> Optional[Dict[str, Any]]:
+    col = recruiters_collection()
+    clean = email.strip()
+    return col.find_one({"email": {"$regex": f"^{re.escape(clean)}$", "$options": "i"}}, {"_id": 0})
+
+def save_recruiter(recruiter_data: Dict[str, Any]) -> Dict[str, Any]:
+    col = recruiters_collection()
+    clean = {k: v for k, v in recruiter_data.items() if k != "_id"}
+    col.update_one({"email": clean["email"]}, {"$set": clean}, upsert=True)
+    return clean
+
+def get_all_recruiter_companies() -> List[Dict[str, Any]]:
+    """Returns all partner companies with their active PMIS openings and applications count."""
+    internships_col = internships_collection()
+    apps_col = applications_collection()
+
+    pipeline = [
+        {"$group": {"_id": "$company", "openings_count": {"$sum": 1}, "sector": {"$first": "$sector"}, "location": {"$first": "$location"}}}
+    ]
+    raw_companies = list(internships_col.aggregate(pipeline))
+
+    result = []
+    for c in raw_companies:
+        company_name = c.get("_id")
+        if not company_name:
+            continue
+        apps_count = apps_col.count_documents({"company": {"$regex": re.escape(company_name), "$options": "i"}})
+        result.append({
+            "company_name": company_name,
+            "openings_count": c.get("openings_count", 0),
+            "applications_count": apps_count,
+            "sector": c.get("sector", "Corporate"),
+            "location": c.get("location", "Pan-India")
+        })
+    result.sort(key=lambda x: x["openings_count"], reverse=True)
+    return result
+
+def add_internship_db(internship_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Adds a new internship opportunity to MongoDB posted by a recruiter."""
+    col = internships_collection()
+    highest = col.find_one({}, sort=[("record_num", -1)])
+    next_rec_num = (highest.get("record_num", 250) + 1) if highest else 251
+
+    clean_id = internship_data.get("id") or f"PMIS-REC-{uuid.uuid4().hex[:6].upper()}"
+    doc = {
+        **internship_data,
+        "id": clean_id,
+        "record_num": next_rec_num,
+        "posted_at": datetime.utcnow().strftime("%Y-%m-%d"),
+        "created_at": datetime.utcnow().isoformat()
+    }
+    col.update_one({"id": clean_id}, {"$set": doc}, upsert=True)
+    return doc
+
+def _normalize_company_regex(company_name: str) -> str:
+    clean = re.sub(r"\s*\([^)]*\)", "", company_name).strip()
+    return re.escape(clean) if clean else re.escape(company_name.strip())
+
+def get_company_internships_db(company_name: str) -> List[Dict[str, Any]]:
+    col = internships_collection()
+    pattern = _normalize_company_regex(company_name)
+    return list(col.find({"company": {"$regex": pattern, "$options": "i"}}, {"_id": 0}).sort("record_num", -1))
+
+def get_company_applications_db(
+    company_name: str,
+    status: Optional[str] = None,
+    internship_id: Optional[str] = None,
+    search: Optional[str] = None
+) -> List[Dict[str, Any]]:
+    """Retrieves all candidate applications for a company, enriched with candidate profile and CDN resume."""
+    col = applications_collection()
+    users_col = users_collection()
+    pattern = _normalize_company_regex(company_name)
+
+    query: Dict[str, Any] = {"company": {"$regex": pattern, "$options": "i"}}
+    if status and status.lower() != "all":
+        query["status"] = {"$regex": f"^{re.escape(status.strip())}$", "$options": "i"}
+    if internship_id and internship_id.lower() != "all":
+        query["internship_id"] = internship_id.strip()
+
+    if search and search.strip():
+        s_clean = search.strip()
+        query["$or"] = [
+            {"candidate_name": {"$regex": s_clean, "$options": "i"}},
+            {"candidate_email": {"$regex": s_clean, "$options": "i"}},
+            {"title": {"$regex": s_clean, "$options": "i"}},
+            {"skills": {"$regex": s_clean, "$options": "i"}},
+            {"branch": {"$regex": s_clean, "$options": "i"}}
+        ]
+
+    apps = list(col.find(query, {"_id": 0}).sort("applied_at", -1))
+
+    # Enrich with latest user profile if any fields or resume are missing
+    for app in apps:
+        uid = app.get("user_id")
+        if uid:
+            user = users_col.find_one({"user_id": uid}, {"_id": 0})
+            if user:
+                if not app.get("candidate_name") or app.get("candidate_name") in ["Candidate", "Student Candidate"]:
+                    app["candidate_name"] = user.get("name", "Youth Candidate")
+                if not app.get("candidate_email"):
+                    app["candidate_email"] = user.get("email", "")
+                if not app.get("candidate_mobile"):
+                    app["candidate_mobile"] = user.get("mobile", "")
+                if not app.get("college"):
+                    app["college"] = user.get("college", "State Technological University")
+                if not app.get("degree"):
+                    app["degree"] = user.get("degree", "B.Tech / B.E.")
+                if not app.get("branch"):
+                    app["branch"] = user.get("branch", "Engineering")
+                if not app.get("skills"):
+                    app["skills"] = user.get("skills", [])
+                if not app.get("resume_url"):
+                    app["resume_url"] = user.get("cloudinary_url") or user.get("resume_url", "")
+                if not app.get("resume_name"):
+                    app["resume_name"] = user.get("resume_name", "")
+
+        # Default fallback resume if none attached so recruiter can still read it
+        if not app.get("resume_url"):
+            app["resume_url"] = "/cdn/resumes/priya_sharma_resume.pdf"
+            app["resume_name"] = "candidate_resume.pdf"
+
+    return apps
+
+def update_application_status_db(
+    application_id: str,
+    new_status: str,
+    recruiter_notes: Optional[str] = None,
+    interview_date: Optional[str] = None,
+    meeting_link: Optional[str] = None,
+    updated_by: Optional[str] = None
+) -> Optional[Dict[str, Any]]:
+    """Updates the status and notes of an application in MongoDB, immediately syncing to student dashboard."""
+    col = applications_collection()
+    clean_id = application_id.strip()
+
+    updates: Dict[str, Any] = {
+        "status": new_status,
+        "status_updated_at": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+        "updated_at": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    }
+    if recruiter_notes is not None:
+        updates["recruiter_notes"] = recruiter_notes
+    if interview_date is not None:
+        updates["interview_date"] = interview_date
+    if meeting_link is not None:
+        updates["meeting_link"] = meeting_link
+    if updated_by is not None:
+        updates["updated_by"] = updated_by
+
+    res = col.find_one_and_update(
+        {"$or": [{"application_id": clean_id}, {"id": clean_id}]},
+        {"$set": updates},
+        return_document=True
+    )
+    if res:
+        res.pop("_id", None)
+    return res
+
+def update_user_applications_resume(user_id: str, resume_url: str, resume_name: str):
+    """Backfills resume_url and resume_name into all existing applications submitted by this user."""
+    col = applications_collection()
+    clean_uid = user_id.strip()
+    col.update_many(
+        {"user_id": {"$regex": f"^{clean_uid}$", "$options": "i"}},
+        {"$set": {"resume_url": resume_url, "resume_name": resume_name}}
+    )
 
 
 # Auto-initialize connection on import

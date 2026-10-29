@@ -19,6 +19,7 @@ from app.db import (
     update_user_profile,
     get_user_applications,
     add_user_application,
+    update_user_applications_resume,
     save_refresh_token,
     find_valid_refresh_token,
     revoke_refresh_token,
@@ -394,6 +395,18 @@ class ApplyRequest(BaseModel):
     company: str
     title: str
     notes: Optional[str] = ""
+    candidate_name: Optional[str] = None
+    candidate_email: Optional[str] = None
+    candidate_mobile: Optional[str] = None
+    college: Optional[str] = None
+    degree: Optional[str] = None
+    branch: Optional[str] = None
+    skills: Optional[List[str]] = None
+    resume_url: Optional[str] = None
+    resume_name: Optional[str] = None
+    sector: Optional[str] = None
+    location: Optional[str] = None
+    stipend: Optional[str] = None
 
 
 # =========================================================================
@@ -823,6 +836,7 @@ async def upload_and_analyze_resume(
             updates["branch"] = analysis["detected_branch"]
 
         update_user_profile(user["user_id"], updates)
+        update_user_applications_resume(user["user_id"], cloudinary_url, file.filename)
 
     return {
         "status": "success",
@@ -847,15 +861,40 @@ def get_applications(user_id: str):
 
 @router.post("/user/apply")
 def apply_internship(user_id: str, payload: ApplyRequest):
-    """Submits an internship application and persists directly in MongoDB."""
+    """Submits an internship application, enriches candidate information and persists directly in MongoDB."""
+    user = get_user_by_identifier(user_id) or {}
+    cand_name = payload.candidate_name or user.get("name") or "Youth Candidate"
+    cand_email = payload.candidate_email or user.get("email") or f"{user_id}@candidate.pminternship.gov.in"
+    cand_mobile = payload.candidate_mobile or user.get("mobile") or ""
+    cand_college = payload.college or user.get("college") or "State Technological University"
+    cand_degree = payload.degree or user.get("degree") or "B.Tech / B.E."
+    cand_branch = payload.branch or user.get("branch") or "Engineering"
+    cand_skills = payload.skills if payload.skills is not None else user.get("skills", [])
+    cand_resume = payload.resume_url or user.get("cloudinary_url") or user.get("resume_url") or "/cdn/resumes/priya_sharma_resume.pdf"
+    cand_resume_name = payload.resume_name or user.get("resume_name") or "candidate_resume.pdf"
+
     new_app = {
         "application_id": f"APP-2026-{uuid.uuid4().hex[:6].upper()}",
+        "id": f"APP-2026-{uuid.uuid4().hex[:6].upper()}",
         "internship_id": payload.internship_id,
         "company": payload.company,
         "title": payload.title,
+        "sector": payload.sector or "Corporate",
+        "location": payload.location or "Pan-India",
+        "stipend": payload.stipend or "₹5,000 / month",
+        "candidate_name": cand_name,
+        "candidate_email": cand_email,
+        "candidate_mobile": cand_mobile,
+        "college": cand_college,
+        "degree": cand_degree,
+        "branch": cand_branch,
+        "skills": cand_skills,
+        "resume_url": cand_resume,
+        "resume_name": cand_resume_name,
         "applied_date": datetime.utcnow().strftime("%Y-%m-%d"),
         "applied_at": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
         "status": "Application Submitted",
+        "recruiter_notes": "",
         "notes": payload.notes or "Applied via PM Internship Scheme Portal"
     }
     updated_apps = add_user_application(user_id, new_app)
