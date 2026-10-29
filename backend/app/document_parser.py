@@ -91,7 +91,7 @@ def build_scheme_guidance_chunks() -> List[Dict[str, Any]]:
                 "2. Register / Login: Click 'Login / Register' on top right. Register using your 10-digit mobile number or Google Account.\n"
                 "3. Student Dashboard: Once logged in, visit the Dashboard to update your Academic Branch, Career Goals, and upload your Resume.\n"
                 "4. Past Selected Resumes: Visit the 'See Past Selected Resumes' tab in the dashboard to review anonymized sample resumes that succeeded in top corporate selections.\n"
-                "5. Find the Gap: Use our AI Skill Gap Analyzer to match your current resume against sector requirements and get instant learning recommendations."
+                "5. Top Database Jobs: Review the top matching internships matched directly from our database based on your verified skills."
             )
         },
         {

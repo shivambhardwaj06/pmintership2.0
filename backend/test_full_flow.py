@@ -89,21 +89,7 @@ def test_full_portal_flow():
         assert multi_res.status_code == 400, "Multi-page resume should be strictly rejected!"
         print(f"[PASS] Strict 1-Page Limit enforced! Rejected multi-page PDF: '{multi_res.json()['detail']}'")
 
-        print("\n6. Testing Real-Time AI Gap Analysis")
-        gap_res = client.post("/api/user/analyze-gap", json={
-            "target_internship_id": "PMIS-001",
-            "user_skills": ["Python", "FastAPI", "React"],
-            "user_branch": "Computer Science & Engineering",
-            "resume_summary": "Aspiring full-stack engineer"
-        })
-        assert gap_res.status_code == 200
-        gap_data = gap_res.json()["analysis"]
-        print(f"[PASS] AI Gap Analysis for role '{gap_data['target_role']}':")
-        print(f"  Match Percentage: {gap_data['match_percentage']}% ({gap_data['match_verdict']})")
-        print(f"  Matched Skills: {gap_data['matched_skills']}")
-        print(f"  Missing Skills: {gap_data['missing_skills']}")
-
-        print("\n7. Testing Branch-Filtered Shortlisted Resumes (9 Academic Disciplines)")
+        print("\n6. Testing Branch-Filtered Shortlisted Resumes (9 Academic Disciplines)")
         branches_to_check = [
             "Computer Science / IT",
             "Mechanical & Automobile",
@@ -137,15 +123,15 @@ def test_full_portal_flow():
         assert len(apps_list.json()["applications"]) >= 1
         print(f"[PASS] Candidate now has {len(apps_list.json()['applications'])} tracked application(s)")
 
-        print("\n9. Testing Disha AI Guidance Chatbot")
+        print("\n8. Testing Disha AI Guidance Chatbot")
         chat_res = client.post("/api/chat", json={
-            "message": "How do I find the gap in my skills?",
+            "message": "How do I audit my resume and find internships?",
             "history": [],
             "top_k": 3
         })
         assert chat_res.status_code == 200
         chat_answer = chat_res.json()["answer"]
-        assert "Disha" in chat_answer or "Find the Gap" in chat_answer or "Dashboard" in chat_answer
+        assert "Disha" in chat_answer or "resume" in chat_answer.lower() or "Dashboard" in chat_answer
         clean_preview = chat_answer[:120].encode("ascii", "ignore").decode("ascii")
         print("[PASS] Disha AI Answer received successfully!")
         print(f"  Preview: {clean_preview}...")

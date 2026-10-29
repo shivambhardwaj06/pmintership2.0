@@ -13,7 +13,6 @@ from pydantic import BaseModel, Field
 
 from app.config import settings
 from app.services.resume_service import resume_service
-from app.services.gap_analyzer_service import gap_analyzer
 from app.db import (
     get_user_by_identifier,
     save_user,
@@ -395,13 +394,6 @@ class ApplyRequest(BaseModel):
     company: str
     title: str
     notes: Optional[str] = ""
-
-
-class GapAnalysisRequest(BaseModel):
-    target_internship_id: str
-    user_skills: List[str] = []
-    user_branch: Optional[str] = ""
-    resume_summary: Optional[str] = ""
 
 
 # =========================================================================
@@ -839,35 +831,6 @@ async def upload_and_analyze_resume(
         "file_name": file.filename,
         "analysis": analysis,
         "updated_skills": user.get("skills", []) if user else analysis.get("extracted_skills", [])
-    }
-
-
-# =========================================================================
-# REAL-TIME SKILL GAP ANALYZER
-# =========================================================================
-
-@router.post("/user/analyze-gap")
-def analyze_skill_gap(payload: GapAnalysisRequest):
-    """
-    Real-time AI Skill Gap Analyzer:
-    Matches student skills against the exact requirements of a selected PM internship role
-    using AI Recruiter Engine.
-    """
-    result = gap_analyzer.analyze_gap(
-        target_internship_id=payload.target_internship_id,
-        user_skills=payload.user_skills,
-        user_branch=payload.user_branch or "",
-        resume_summary=payload.resume_summary or ""
-    )
-    if not isinstance(result, dict):
-        result = {}
-    verdict = result.get("match_verdict") or result.get("match_status") or "Assessment Completed"
-    result["match_status"] = verdict
-    result["match_verdict"] = verdict
-    return {
-        "status": "success",
-        "analysis": result,
-        "gap_analysis": result
     }
 
 

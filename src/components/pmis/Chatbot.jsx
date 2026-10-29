@@ -21,7 +21,7 @@ const BACKEND_URL = RAW_BACKEND_URL.replace(/\/+$/, "");
 
 // Exact 3 default questions requested by user:
 const QUICK_PROMPTS = [
-  "Find the gap",
+  "Audit my resume & match jobs",
   "See past selected resume",
   "Ask about an internship",
 ];
@@ -30,14 +30,14 @@ const QUICK_PROMPTS = [
 function getDishaGroundedReply(text) {
   const t = text.toLowerCase();
 
-  if (t.includes("find the gap") || t.includes("gap") || t.includes("skill")) {
+  if (t.includes("audit") || t.includes("match") || t.includes("resume") || t.includes("ats")) {
     return {
       answer:
-        "Namaste! **Find the Gap** compares your current academic skills with corporate hiring standards across our 24 sectors.\n\n" +
-        "• **How to use it:** Open your **Student Dashboard** -> Click the **'Find the Gap'** tab -> Pick your dream sector (e.g. IT, Automotive, Finance).\n" +
-        "• It will instantly show which skills you have and what project skills you need to build to get selected!\n\n" +
-        "👉 *Navigate to your Student Dashboard to test your profile now!*",
-      sources: [{ title: "Student Dashboard • Find the Gap", url: "#dashboard" }],
+        "Namaste! Our **AI Resume Recruiter Engine** audits your 1-page corporate resume and matches top roles directly from MongoDB.\n\n" +
+        "• **How to use it:** Open your **Student Dashboard** -> Upload your 1-page PDF resume.\n" +
+        "• It will instantly evaluate ATS compliance, extract your verified skills, and return your **Top 5 Database Matched Roles** from 260 official openings!\n\n" +
+        "👉 *Navigate to your Student Dashboard to audit your resume now!*",
+      sources: [{ title: "Student Dashboard • Resume Audit", url: "#dashboard" }],
     };
   }
 

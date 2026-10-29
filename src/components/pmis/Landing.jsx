@@ -86,11 +86,9 @@ export default function Landing() {
       } else if (
         hash === "#dashboard" ||
         hash === "#student-dashboard" ||
-        hash === "#gap" ||
-        hash === "#find-the-gap" ||
-        hash === "#skill-gap" ||
         hash === "#resumes" ||
-        hash === "#applications"
+        hash === "#applications" ||
+        hash === "#profile"
       ) {
         setActiveView("dashboard");
       } else if (hash === "#trap" || hash === "#dont-fall-in-trap" || hash === "#dont-fall-on-the-trap") {

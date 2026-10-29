@@ -66,21 +66,21 @@ export default function StudentDashboardShowcase({ user, onOpenAuth, onNavigateT
       accentBorder: "group-hover:border-emerald-500",
     },
     {
-      id: "gap-analyzer",
-      tab: "gap",
-      icon: Layers,
-      badge: "AI Recruiter Engine",
-      badgeColor: "bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-300 border-orange-300",
-      title: "Real-time AI Skill Gap Analyzer",
+      id: "disha-ai",
+      tab: "profile",
+      icon: Sparkles,
+      badge: "24/7 PMIS Assistant",
+      badgeColor: "bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-300",
+      title: "Disha AI Guidance Assistant",
       description:
-        "Select any corporate role (TCS, Tata Motors, L&T, HDFC Bank) and see exactly what skills you have vs what is missing.",
+        "Instant bilingual guidance on PM Internship Scheme eligibility, corporate allowances, sector options, and selection criteria.",
       bullets: [
-        "Side-by-Side Skill Breakdown",
-        "Free Verified Course Roadmaps",
-        "1-Click Skill Profile Update",
+        "24/7 Scheme Information",
+        "Bilingual Hindi & English",
+        "Instant Eligibility Check",
       ],
-      ctaText: "Find the Gap",
-      accentBorder: "group-hover:border-orange-500",
+      ctaText: "Ask Disha AI",
+      accentBorder: "group-hover:border-indigo-500",
     },
     {
       id: "shortlisted-resumes",
@@ -131,7 +131,7 @@ export default function StudentDashboardShowcase({ user, onOpenAuth, onNavigateT
             Everything You Need to Get Shortlisted
           </h2>
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium max-w-2xl">
-            Register for free to unlock the complete corporate preparation suite: AI 1-page resume analysis, database job matching, real-time skill gap analysis, and verified shortlisted resumes.
+            Register for free to unlock the complete corporate preparation suite: AI 1-page resume analysis, top 5 database job matching, and verified shortlisted resumes.
           </p>
         </div>
 
@@ -210,11 +210,11 @@ export default function StudentDashboardShowcase({ user, onOpenAuth, onNavigateT
               </button>
 
               <button
-                onClick={() => handleAction("gap", "register")}
+                onClick={() => handleAction("resumes", "register")}
                 className="inline-flex items-center gap-2 rounded-xl bg-white/10 hover:bg-white/15 text-white font-extrabold px-5 py-3 text-xs sm:text-sm border border-white/20 transition cursor-pointer"
               >
-                <Layers className="h-4 w-4 text-orange-400" />
-                <span>Compare Against PMIS Roles</span>
+                <Award className="h-4 w-4 text-orange-400" />
+                <span>View Shortlisted Resumes</span>
               </button>
             </div>
 
