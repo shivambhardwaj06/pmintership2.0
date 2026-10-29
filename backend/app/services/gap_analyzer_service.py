@@ -4,20 +4,14 @@ import re
 from pathlib import Path
 from typing import Dict, Any, List
 from app.llm_client import nvidia_llm
+from app.db import get_internship_by_id_db
 
 logger = logging.getLogger(__name__)
 
-DATA_FILE = Path(__file__).parent.parent.parent / "data" / "pm_internships_120.json"
-
 
 def get_internship_by_id(rec_id: str) -> Dict[str, Any]:
-    if DATA_FILE.exists():
-        with open(DATA_FILE, "r", encoding="utf-8") as f:
-            records = json.load(f)
-            for r in records:
-                if r["id"].lower() == rec_id.lower() or str(r.get("record_num")) == str(rec_id):
-                    return r
-    return {}
+    record = get_internship_by_id_db(rec_id)
+    return record or {}
 
 
 class GapAnalyzerService:

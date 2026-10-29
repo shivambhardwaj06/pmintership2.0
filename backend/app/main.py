@@ -33,6 +33,10 @@ async def lifespan(app: FastAPI):
         # Initialize BM25 for hybrid search
         hybrid_retriever.initialize_bm25(chunks)
 
+        # MongoDB & Knowledge Base Status
+        from app.db import is_live_mongodb, count_internships_db
+        logger.info(f"MongoDB Status: Live={is_live_mongodb()} | Total Internships in MongoDB={count_internships_db()}")
+
         # Ensure collection exists
         vector_store.ensure_collection(vector_size=1024)
 
@@ -99,11 +103,15 @@ def root():
             "internships": "GET /api/internships",
             "auth_register": "POST /api/auth/register",
             "auth_login": "POST /api/auth/login",
+            "auth_refresh": "POST /api/auth/refresh",
+            "auth_me": "GET /api/auth/me",
+            "auth_logout": "POST /api/auth/logout",
             "auth_google": "POST /api/auth/google",
             "user_profile": "GET /api/user/profile",
             "user_applications": "GET /api/user/applications",
             "selected_resumes": "GET /api/resumes/selected",
-            "stats": "GET /api/stats"
+            "stats": "GET /api/stats",
+            "mongodb_total_internships": count_internships_db()
         }
     }
 

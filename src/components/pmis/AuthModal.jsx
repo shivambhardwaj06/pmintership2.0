@@ -56,6 +56,20 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
       if (res.ok) {
         const user = data.user;
         localStorage.setItem("pmis_user", JSON.stringify(user));
+        if (data.access_token || data.token) {
+          localStorage.setItem("pmis_access_token", data.access_token || data.token);
+        }
+        if (data.refresh_token) {
+          localStorage.setItem("pmis_refresh_token", data.refresh_token);
+        }
+        window.dispatchEvent(new Event("pmis_user_updated"));
+        if (data.access_token || data.token) {
+          localStorage.setItem("pmis_access_token", data.access_token || data.token);
+        }
+        if (data.refresh_token) {
+          localStorage.setItem("pmis_refresh_token", data.refresh_token);
+        }
+        window.dispatchEvent(new Event("pmis_user_updated"));
         setStatusMessage({ type: "success", text: `Welcome back, ${user.name}!` });
         setTimeout(() => {
           onAuthSuccess?.(user);
@@ -146,6 +160,13 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
       if (res.ok) {
         const user = data.user;
         localStorage.setItem("pmis_user", JSON.stringify(user));
+        if (data.access_token || data.token) {
+          localStorage.setItem("pmis_access_token", data.access_token || data.token);
+        }
+        if (data.refresh_token) {
+          localStorage.setItem("pmis_refresh_token", data.refresh_token);
+        }
+        window.dispatchEvent(new Event("pmis_user_updated"));
 
         // Save to local cache
         const localAccounts = JSON.parse(localStorage.getItem("pmis_accounts") || "{}");
@@ -241,6 +262,12 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
       if (res.ok && data.user) {
         const user = data.user;
         localStorage.setItem("pmis_user", JSON.stringify(user));
+        if (data.access_token || data.token) {
+          localStorage.setItem("pmis_access_token", data.access_token || data.token);
+        }
+        if (data.refresh_token) {
+          localStorage.setItem("pmis_refresh_token", data.refresh_token);
+        }
         window.dispatchEvent(new Event("pmis_user_updated"));
         setStatusMessage({
           type: "success",

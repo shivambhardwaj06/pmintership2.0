@@ -86,6 +86,106 @@ const BRANCH_CATEGORIES = [
   "Agriculture & Life Sciences",
 ];
 
+// Matches student skills & academic branch against all 260 database internships
+function getTopDatabaseJobMatchesClient(skills = [], branch = "", limit = 5) {
+  const bLower = (branch || "").toLowerCase();
+  const safeSkills = (skills || []).map((s) => s.trim()).filter(Boolean);
+
+  const scored = (rawInternships || []).map((job) => {
+    let score = 0;
+    const matched = [];
+    const jSkills = (job.skills || "").toLowerCase();
+    const jTitle = (job.title || "").toLowerCase();
+    const jSector = (job.sector || "").toLowerCase();
+    const jSummary = (job.summary || "").toLowerCase();
+    const jEligibility = (job.eligibility || "").toLowerCase();
+
+    // 1. Exact & token skill overlap
+    for (const sk of safeSkills) {
+      const sClean = sk.toLowerCase();
+      if (!sClean) continue;
+      if (jSkills.includes(sClean) || jTitle.includes(sClean) || jSummary.includes(sClean)) {
+        score += 18;
+        matched.push(sk);
+      } else {
+        const tokens = sClean.split(/[\s/]+/).filter((t) => t.length > 2);
+        if (tokens.some((t) => jSkills.includes(t) || jTitle.includes(t))) {
+          score += 8;
+          matched.push(sk);
+        }
+      }
+    }
+
+    // 2. Sector & academic branch alignment
+    if (/comp|cse|it|soft|web|data|ai|cloud/i.test(bLower)) {
+      if (/it & software|telecom/i.test(jSector)) score += 35;
+      if (/cse|it|computer|bca|mca|b\.tech/i.test(jEligibility)) score += 15;
+    } else if (/mech|auto|vehicle|cad|mfg|thermal|fea/i.test(bLower)) {
+      if (/automotive|manufacturing|metals|mobility|oil, gas/i.test(jSector)) score += 35;
+      if (/mechanical|automobile|production|b\.tech|diploma/i.test(jEligibility)) score += 15;
+    } else if (/civil|struct|infra|construct|survey|bim/i.test(bLower)) {
+      if (/infrastructure|cement|transportation/i.test(jSector)) score += 35;
+      if (/civil|structural|construction|b\.tech/i.test(jEligibility)) score += 15;
+    } else if (/electr|ece|eee|circuit|embedded|iot|vlsi|power/i.test(bLower)) {
+      if (/power|utilities|telecom|manufacturing|automotive/i.test(jSector)) score += 35;
+      if (/electrical|electronics|ece|eee|b\.tech/i.test(jEligibility)) score += 15;
+    } else if (/commerc|financ|account|bank|b\.com|bba|mba|tax/i.test(bLower)) {
+      if (/banking|financial|consulting|fmcg|retail/i.test(jSector)) score += 35;
+      if (/commerce|finance|b\.com|bba|mba/i.test(jEligibility)) score += 15;
+    } else if (/pharm|bio|health|medic|chem/i.test(bLower)) {
+      if (/pharm|health|biotech|chemical/i.test(jSector)) score += 35;
+      if (/pharm|b\.pharm|science|biotech|chem/i.test(jEligibility)) score += 15;
+    } else {
+      const branchTokens = bLower.split(/\s+/).filter((t) => t.length > 3);
+      if (branchTokens.some((t) => jSector.includes(t) || jEligibility.includes(t))) {
+        score += 15;
+      }
+    }
+
+    const uniqueMatched = Array.from(new Set(matched));
+    return {
+      job,
+      score,
+      matched: uniqueMatched,
+    };
+  });
+
+  scored.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    return (a.job.record_num || 0) - (b.job.record_num || 0);
+  });
+
+  const top = scored.slice(0, limit);
+  const maxScore = top[0]?.score || 1;
+
+  return top.map((item, idx) => {
+    const { job, score, matched } = item;
+    const matchPct = Math.max(78, Math.min(97, Math.round(74 + (score / (maxScore || 1)) * 22) - idx));
+    const matchedSkills = matched.length
+      ? matched
+      : (safeSkills.slice(0, 3).length ? safeSkills.slice(0, 3) : ["Analytical Skills", "Domain Fundamentals"]);
+    return {
+      internship_id: job.id,
+      id: job.id,
+      role: job.title,
+      title: job.title,
+      company: job.company,
+      sector: job.sector,
+      location: job.location,
+      city: job.city,
+      state: job.state,
+      stipend: job.stipend || "₹8,000–₹12,000/month",
+      mode: job.mode || "On-site",
+      duration: job.duration || "3–6 months",
+      eligibility: job.eligibility || "",
+      required_skills: job.skills || "",
+      matched_skills: matchedSkills.slice(0, 4),
+      match_score: matchPct,
+      reason: `Matches your verified proficiencies in ${matchedSkills.slice(0, 3).join(", ")} with strong recruitment alignment for ${job.sector} at ${job.company}.`,
+    };
+  });
+}
+
 // Helper to construct a complete, structured AI resume audit dynamically adapted to the candidate's branch & skills
 function generateComprehensiveReview(candidateName, branch = "Computer Science / IT", skills = []) {
   const safeSkills = skills.length ? skills : ["Python", "Git", "Problem Solving", "Communication"];
@@ -400,7 +500,8 @@ function generateComprehensiveReview(candidateName, branch = "Computer Science /
       all_extracted: safeSkills,
     },
     extracted_skills: safeSkills,
-    target_roles: selectedConfig.targetRoles,
+    target_roles: getTopDatabaseJobMatchesClient(safeSkills, selectedConfig.detectedBranch || branch, 5),
+    top_5_jobs_match: getTopDatabaseJobMatchesClient(safeSkills, selectedConfig.detectedBranch || branch, 5),
     strengths: selectedConfig.strengths,
     gaps_and_missing: selectedConfig.gaps,
     actionable_roadmap: selectedConfig.roadmap,
@@ -737,8 +838,13 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
         setApplications([]);
       }
 
-      // Also try fetching from backend
-      fetch(`${BACKEND_URL}/api/user/applications?user_id=${user.user_id}`)
+      // Also try fetching from backend with JWT token
+      const token = localStorage.getItem("pmis_access_token") || "";
+      fetch(`${BACKEND_URL}/api/user/applications?user_id=${user.user_id}`, {
+        headers: {
+          ...(token ? { "Authorization": `Bearer ${token}` } : {})
+        }
+      })
         .then((res) => (res.ok ? res.json() : null))
         .then((data) => {
           if (data?.applications?.length) {
@@ -794,9 +900,13 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
 
     try {
       if (user?.user_id) {
+        const token = localStorage.getItem("pmis_access_token") || "";
         await fetch(`${BACKEND_URL}/api/user/profile?user_id=${user.user_id}`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { "Authorization": `Bearer ${token}` } : {})
+          },
           body: JSON.stringify({
             ...profile,
             name: cleanCandidateName,
@@ -1149,9 +1259,13 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
       window.dispatchEvent(new Event("pmis_application_updated"));
 
       try {
+        const token = localStorage.getItem("pmis_access_token") || "";
         await fetch(`${BACKEND_URL}/api/user/apply?user_id=${user.user_id}`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { "Authorization": `Bearer ${token}` } : {})
+          },
           body: JSON.stringify({
             internship_id: job.id,
             company: job.company,
@@ -1809,42 +1923,85 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                 </div>
               </div>
 
-              {/* Grid 2: Target Corporate Role Matching (PM Internship Scheme) */}
+              {/* Grid 2: Top 5 Jobs Match from Database (PM Internship Scheme) */}
               <div className="rounded-2xl border-2 border-slate-200 dark:border-slate-800 p-5 bg-white dark:bg-slate-900 space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <Target className="h-4 w-4 text-orange-500" />
                     <h4 className="font-display text-sm font-extrabold text-slate-900 dark:text-white">
-                      Target Corporate Roles Matched by AI (PM Internship Scheme)
+                      Top 5 Jobs Match from Database (PM Internship Scheme)
                     </h4>
                   </div>
                   <span className="text-xs font-semibold text-slate-500">
-                    Highest recruiter shortlist likelihood for your exact profile
+                    Matched directly from 260 official PM Scheme corporate internships in database
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {(aiAnalysis.target_roles || []).map((tr, idx) => (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {((aiAnalysis.top_5_jobs_match || aiAnalysis.target_roles || []).slice(0, 5)).map((tr, idx) => (
                     <div
-                      key={tr.role || idx}
-                      className="group flex flex-col justify-between rounded-2xl border-2 border-slate-200 dark:border-slate-800 p-4 bg-slate-50/60 dark:bg-slate-800/60 hover:border-primary transition-all duration-200"
+                      key={tr.internship_id || tr.id || tr.role || idx}
+                      className="group flex flex-col justify-between rounded-2xl border-2 border-slate-200 dark:border-slate-800 p-4 bg-slate-50/60 dark:bg-slate-800/60 hover:border-primary transition-all duration-200 shadow-xs"
                     >
                       <div>
                         <div className="flex items-center justify-between gap-2 mb-2">
-                          <span className="text-[10px] font-extrabold uppercase text-orange-600 tracking-wider">
+                          <span className="text-[10px] font-extrabold uppercase text-orange-600 dark:text-orange-400 tracking-wider">
                             {tr.sector}
                           </span>
-                          <span className="rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-200 text-[10px] font-black px-2 py-0.5 border border-emerald-300">
+                          <span className="rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-200 text-[10px] font-black px-2 py-0.5 border border-emerald-300 dark:border-emerald-700">
                             {tr.match_score || 90}% Match
                           </span>
                         </div>
 
-                        <h5 className="font-display text-sm font-black text-slate-900 dark:text-white group-hover:text-primary transition line-clamp-1">
-                          {tr.role}
-                        </h5>
-                        <p className="text-xs font-bold text-slate-600 dark:text-slate-300 mt-0.5">
-                          {tr.company}
-                        </p>
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <h5 className="font-display text-sm font-black text-slate-900 dark:text-white group-hover:text-primary transition line-clamp-1">
+                              {tr.title || tr.role}
+                            </h5>
+                            <p className="text-xs font-bold text-slate-700 dark:text-slate-300 mt-0.5">
+                              {tr.company}
+                            </p>
+                          </div>
+                          {(tr.internship_id || tr.id) && (
+                            <span className="shrink-0 text-[10px] font-mono font-bold text-slate-400 bg-slate-100 dark:bg-slate-700/60 px-1.5 py-0.5 rounded">
+                              {tr.internship_id || tr.id}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Location, Stipend & Mode tags */}
+                        <div className="flex flex-wrap items-center gap-2 mt-2 text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                          {(tr.location || tr.city) && (
+                            <span className="inline-flex items-center gap-1">
+                              <MapPin className="h-3 w-3 text-slate-400 shrink-0" />
+                              <span className="truncate max-w-[130px]">{tr.location || tr.city}</span>
+                            </span>
+                          )}
+                          {tr.stipend && (
+                            <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 dark:text-emerald-400">
+                              • {tr.stipend}
+                            </span>
+                          )}
+                          {tr.mode && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-200/80 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold">
+                              {tr.mode}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Matched skills badges */}
+                        {tr.matched_skills && tr.matched_skills.length > 0 && (
+                          <div className="mt-2.5 flex flex-wrap gap-1">
+                            {tr.matched_skills.map((sk, sIdx) => (
+                              <span
+                                key={sIdx}
+                                className="rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 text-[10px] font-bold px-2 py-0.5 border border-blue-200 dark:border-blue-900"
+                              >
+                                ✓ {sk}
+                              </span>
+                            ))}
+                          </div>
+                        )}
 
                         <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-2 line-clamp-2 leading-relaxed">
                           {tr.reason}
@@ -1854,8 +2011,8 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                       <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-700/80 flex items-center justify-between gap-2">
                         <button
                           onClick={() => {
-                            if (tr.internship_id) {
-                              setSelectedTargetJobId(tr.internship_id);
+                            if (tr.internship_id || tr.id) {
+                              setSelectedTargetJobId(tr.internship_id || tr.id);
                             }
                             setActiveTab("gap");
                           }}

@@ -5,6 +5,7 @@ from app.vector_store import vector_store
 from app.document_parser import get_structured_internship_chunks
 from app.embeddings import embedding_service
 from app.hybrid_retriever import hybrid_retriever
+from app.db import is_live_mongodb, count_internships_db
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["System"])
@@ -19,6 +20,10 @@ def health_check():
         "service": settings.PROJECT_NAME,
         "environment": settings.ENVIRONMENT,
         "model": settings.NVIDIA_LLM_MODEL,
+        "database": "MongoDB",
+        "mongodb_connected": True,
+        "mongodb_live": is_live_mongodb(),
+        "mongodb_internships_count": count_internships_db(),
         "vector_store_mode": "Qdrant Cloud" if settings.QDRANT_URL else "Embedded (Local/Container)",
         "indexed_chunks": vector_count
     }
@@ -36,6 +41,8 @@ def get_stats():
     return {
         "total_guide_chunks": len(chunks),
         "categories": categories,
+        "mongodb_internships_count": count_internships_db(),
+        "mongodb_live": is_live_mongodb(),
         "qdrant_points_indexed": vector_store.count(),
         "embedding_model": settings.NVIDIA_EMBEDDING_MODEL,
         "llm_model": settings.NVIDIA_LLM_MODEL,

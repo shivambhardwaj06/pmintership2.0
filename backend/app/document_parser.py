@@ -2,16 +2,14 @@ import json
 import logging
 from pathlib import Path
 from typing import List, Dict, Any
-
-DATA_DIR = Path(__file__).parent.parent / "data"
-PMIS_120_FILE = DATA_DIR / "pm_internships_120.json"
+from app.db import get_all_internships_list
 
 logger = logging.getLogger(__name__)
 
 
 def get_structured_internship_chunks() -> List[Dict[str, Any]]:
     """
-    Parses and returns structured, enriched chunks for all 120 PM Internship records
+    Parses and returns structured, enriched chunks for all 250+ PM Internship records directly from MongoDB
     plus core scheme guidelines, portal navigation, and student guidance.
     """
     chunks: List[Dict[str, Any]] = []
@@ -19,34 +17,32 @@ def get_structured_internship_chunks() -> List[Dict[str, Any]]:
     # 1. Core Scheme Overview & Portal Navigation Chunks
     chunks.extend(build_scheme_guidance_chunks())
 
-    # 2. Ingest all 120 PM Internship records from the new dataset
-    if PMIS_120_FILE.exists():
-        try:
-            with open(PMIS_120_FILE, "r", encoding="utf-8") as f:
-                records = json.load(f)
-                for rec in records:
-                    chunks.append({
-                        "id": rec["id"],
-                        "title": f"{rec['company']} — {rec['title']} ({rec['id']})",
-                        "category": "pm_internship_listing",
-                        "sector": rec["sector"],
-                        "company": rec["company"],
-                        "branches": [rec["sector"], rec["eligibility"]],
-                        "eligibility": rec["eligibility"],
-                        "skills": rec["skills"],
-                        "stipend": rec["stipend"],
-                        "duration": rec["duration"],
-                        "mode": rec["mode"],
-                        "location": rec["location"],
-                        "city": rec["city"],
-                        "state": rec["state"],
-                        "deadline": rec["deadline"],
-                        "apply_url": "/dashboard",
-                        "content": rec["content"]
-                    })
-            logger.info(f"Loaded {len(records)} official internship records from {PMIS_120_FILE.name}")
-        except Exception as e:
-            logger.error(f"Error loading {PMIS_120_FILE}: {e}")
+    # 2. Ingest all PM Internship records directly from MongoDB database
+    try:
+        records = get_all_internships_list()
+        for rec in records:
+            chunks.append({
+                "id": rec["id"],
+                "title": f"{rec['company']} — {rec['title']} ({rec['id']})",
+                "category": "pm_internship_listing",
+                "sector": rec["sector"],
+                "company": rec["company"],
+                "branches": [rec["sector"], rec["eligibility"]],
+                "eligibility": rec["eligibility"],
+                "skills": rec["skills"],
+                "stipend": rec["stipend"],
+                "duration": rec["duration"],
+                "mode": rec["mode"],
+                "location": rec["location"],
+                "city": rec["city"],
+                "state": rec["state"],
+                "deadline": rec["deadline"],
+                "apply_url": "/dashboard",
+                "content": rec["content"]
+            })
+        logger.info(f"Loaded {len(records)} official internship records directly from MongoDB database.")
+    except Exception as e:
+        logger.error(f"Error loading internships from MongoDB: {e}")
 
     return chunks
 

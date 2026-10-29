@@ -37,8 +37,20 @@ class Settings(BaseSettings):
     CLOUDINARY_API_KEY: Optional[str] = os.getenv("CLOUDINARY_API_KEY", "")
     CLOUDINARY_API_SECRET: Optional[str] = os.getenv("CLOUDINARY_API_SECRET", "")
 
+    # MongoDB Database Settings
+    MONGODB_URI: str = os.getenv("MONGODB_URI", os.getenv("MONGO_URI", "mongodb://localhost:27017"))
+    MONGODB_DB_NAME: str = os.getenv("MONGODB_DB_NAME", "pmis_db")
+
+    # JWT Authentication & Session Security
+    JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "pmis_jwt_secret_key_super_secure_2026_dev_prod")
+    JWT_REFRESH_SECRET_KEY: str = os.getenv("JWT_REFRESH_SECRET_KEY", "pmis_jwt_refresh_secret_key_super_secure_2026_dev_prod")
+    JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "HS256")
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
+    REFRESH_TOKEN_EXPIRE_DAYS: int = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "30"))
+
     # Google OAuth 2.0
     GOOGLE_CLIENT_ID: Optional[str] = os.getenv("GOOGLE_CLIENT_ID", "")
+    GOOGLE_CLIENT_SECRET: Optional[str] = os.getenv("GOOGLE_CLIENT_SECRET", "")
 
     # RAG Settings
     TOP_K_RETRIEVAL: int = 5

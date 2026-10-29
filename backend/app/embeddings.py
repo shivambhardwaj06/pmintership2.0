@@ -3,7 +3,7 @@ import json
 import logging
 import math
 import re
-from typing import List, Optional
+from typing import List
 import httpx
 from app.config import settings
 
