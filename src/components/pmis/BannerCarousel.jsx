@@ -41,9 +41,9 @@ export default function BannerCarousel({ onExploreClick, onOpenAuth }) {
     },
     {
       type: "custom",
-      alt: "AI 1-Page Resume Analysis & Top 5 Database Job Matches",
-      tag: "New AI Recruiter Engine",
-      title: "AI 1-Page Resume Audit & Top 5 Database Job Matches",
+      alt: "AI 1-Page Resume Audit & Top 5 Database Matching",
+      tag: "AI Recruiter Engine 2.0",
+      title: "AI 1-Page Resume Audit & Top 5 Database Jobs",
       subtitle: "Instant ATS compliance score, branch alignment, and verified matching across 260 official PM Scheme positions.",
       linkAction: () => {
         if (onOpenAuth) onOpenAuth("register");
@@ -96,61 +96,109 @@ export default function BannerCarousel({ onExploreClick, onOpenAuth }) {
               onClick={slide.linkAction}
             >
               {slide.type === "image" ? (
-                <div className="relative w-full h-[180px] sm:h-[260px] md:h-[340px] lg:h-[400px] overflow-hidden bg-slate-950">
+                <div className="relative w-full h-[150px] sm:h-[190px] md:h-[240px] lg:h-[280px] overflow-hidden flex items-center justify-center bg-slate-950">
+                  {/* Ambient blurred backdrop matching exact banner colors */}
+                  <img
+                    src={slide.src}
+                    alt=""
+                    aria-hidden="true"
+                    className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-45 scale-125 select-none pointer-events-none"
+                  />
+                  {/* Soft edge darkening to seamlessly blend into container */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20 pointer-events-none" />
+
+                  {/* Main crisp banner: 100% visible, fully contained, NO CROPPING */}
                   <img
                     src={slide.src}
                     alt={slide.alt}
-                    className="block w-full h-full object-cover object-center"
+                    className="relative z-10 max-h-full max-w-full w-auto h-auto object-contain object-center drop-shadow-xl select-none transition-transform duration-700 group-hover:scale-[1.01]"
                     loading={i === 0 ? "eager" : "lazy"}
                   />
+
                   {/* Subtle glass tag on top-left of each slide */}
-                  <div className="absolute top-3 left-3 sm:top-5 sm:left-5 inline-flex items-center gap-1.5 rounded-full bg-black/60 backdrop-blur-md px-3 py-1 text-[10px] sm:text-xs font-bold text-white border border-white/20 shadow-md">
+                  <div className="absolute top-2.5 left-2.5 sm:top-4 sm:left-4 z-20 inline-flex items-center gap-1.5 rounded-full bg-black/60 backdrop-blur-md px-2.5 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-xs font-bold text-white border border-white/20 shadow-md">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
                     <span>{slide.tag}</span>
                   </div>
                 </div>
               ) : (
                 /* Slide 5: Custom AI Resume & Job Matching Spotlight Banner */
-                <div className="relative w-full h-[180px] sm:h-[260px] md:h-[340px] lg:h-[400px] overflow-hidden bg-gradient-to-r from-slate-950 via-primary/90 to-slate-900 text-white flex items-center px-6 sm:px-12 lg:px-16">
+                <div className="relative w-full h-[150px] sm:h-[190px] md:h-[240px] lg:h-[280px] overflow-hidden bg-gradient-to-r from-slate-950 via-[#0B2545] to-slate-900 text-white flex items-center justify-between px-5 sm:px-10 lg:px-14">
                   {/* Background decoration */}
-                  <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]" />
-                  <div className="absolute -right-20 -bottom-20 w-80 h-80 rounded-full bg-saffron/20 blur-3xl pointer-events-none" />
-                  <div className="absolute -left-20 -top-20 w-80 h-80 rounded-full bg-indigo-500/20 blur-3xl pointer-events-none" />
+                  <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]" />
+                  <div className="absolute -right-16 -bottom-16 w-72 h-72 rounded-full bg-saffron/20 blur-3xl pointer-events-none" />
+                  <div className="absolute -left-16 -top-16 w-72 h-72 rounded-full bg-emerald-500/15 blur-3xl pointer-events-none" />
 
-                  <div className="relative z-10 max-w-2xl space-y-3 sm:space-y-4">
-                    <div className="inline-flex items-center gap-2 rounded-full bg-saffron/20 border border-saffron/40 px-3 py-1 text-[10px] sm:text-xs font-extrabold text-saffron uppercase tracking-wider">
-                      <Sparkles className="h-3 w-3 animate-spin" />
+                  <div className="relative z-10 max-w-xl space-y-1.5 sm:space-y-2.5">
+                    <div className="inline-flex items-center gap-1.5 rounded-full bg-saffron/20 border border-saffron/40 px-2.5 py-0.5 text-[10px] sm:text-xs font-extrabold text-saffron uppercase tracking-wider">
+                      <Sparkles className="h-3 w-3 text-saffron animate-spin" />
                       <span>{slide.tag}</span>
                     </div>
 
-                    <h2 className="font-display text-xl sm:text-3xl lg:text-4xl font-black text-white leading-tight">
+                    <h2 className="font-display text-base sm:text-2xl lg:text-3xl font-black text-white leading-tight">
                       AI 1-Page Resume Audit &amp;{" "}
                       <span className="text-transparent bg-clip-text bg-gradient-to-r from-saffron to-amber-300">
                         Top 5 Database Jobs
                       </span>
                     </h2>
 
-                    <p className="text-xs sm:text-sm lg:text-base text-slate-300 font-medium line-clamp-2 sm:line-clamp-none max-w-xl">
+                    <p className="text-[11px] sm:text-xs lg:text-sm text-slate-300 font-medium line-clamp-1 sm:line-clamp-2 max-w-lg">
                       {slide.subtitle}
                     </p>
 
-                    <div className="pt-1 sm:pt-2 flex flex-wrap items-center gap-3">
+                    <div className="pt-1 sm:pt-2 flex flex-wrap items-center gap-2.5">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           if (onOpenAuth) onOpenAuth("register");
                           else if (onExploreClick) onExploreClick();
                         }}
-                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-saffron to-amber-500 text-slate-950 font-black px-4 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm shadow-lg hover:brightness-110 transition cursor-pointer"
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-saffron to-amber-500 text-slate-950 font-black px-3.5 sm:px-5 py-1.5 sm:py-2.5 text-xs sm:text-sm shadow-md hover:brightness-110 transition cursor-pointer"
                       >
-                        <FileText className="h-4 w-4" />
+                        <FileText className="h-3.5 w-3.5" />
                         <span>Audit Resume &amp; Apply Now</span>
-                        <ArrowRight className="h-4 w-4" />
+                        <ArrowRight className="h-3.5 w-3.5" />
                       </button>
 
-                      <div className="hidden sm:inline-flex items-center gap-1.5 text-xs text-slate-300 font-semibold bg-white/10 backdrop-blur-md px-3 py-2 rounded-xl border border-white/15">
-                        <ShieldCheck className="h-4 w-4 text-emerald-400" />
+                      <div className="hidden md:inline-flex items-center gap-1 text-[11px] text-slate-300 font-semibold bg-white/10 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-white/15">
+                        <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
                         <span>Strict 1-Page ATS Standard</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Column Visual HUD Card (Hidden on small screens) */}
+                  <div className="relative z-10 hidden sm:flex items-center gap-3 shrink-0">
+                    <div className="rounded-2xl border border-white/15 bg-white/10 backdrop-blur-md p-3.5 sm:p-4 text-center shadow-xl space-y-2">
+                      <div className="flex items-center justify-center gap-2.5">
+                        <div className="relative flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14">
+                          <svg className="h-full w-full -rotate-90" viewBox="0 0 36 36">
+                            <path
+                              className="text-white/10"
+                              strokeWidth="3.5"
+                              stroke="currentColor"
+                              fill="none"
+                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                            />
+                            <path
+                              className="text-emerald-400"
+                              strokeDasharray="96, 100"
+                              strokeWidth="3.5"
+                              strokeLinecap="round"
+                              stroke="currentColor"
+                              fill="none"
+                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                            />
+                          </svg>
+                          <span className="absolute text-xs sm:text-sm font-black text-white">96%</span>
+                        </div>
+                        <div className="text-left">
+                          <div className="text-xs font-black text-emerald-300">Grade A+</div>
+                          <div className="text-[10px] text-slate-300 font-medium">ATS Match</div>
+                        </div>
+                      </div>
+                      <div className="rounded-lg bg-emerald-950/70 border border-emerald-800/80 px-2 py-0.5 text-[10px] font-bold text-emerald-300">
+                        ✓ 1-Page PDF Verified
                       </div>
                     </div>
                   </div>
