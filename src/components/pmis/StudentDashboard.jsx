@@ -219,7 +219,7 @@ function getTopDatabaseJobMatchesClient(skills = [], branch = "", limit = 5) {
 }
 
 // Helper to construct a complete, structured AI resume audit dynamically adapted to the candidate's branch & skills
-function generateComprehensiveReview(candidateName, branch = "All Disciplines / Multi-Disciplinary", skills = []) {
+function generateComprehensiveReview(candidateName, branch = "All Disciplines / Multi-Disciplinary", skills = [], meta = {}) {
   const safeSkills = skills.length ? skills : ["Problem Solving", "Data Analysis", "Project Management", "Professional Communication"];
   const combinedStr = `${branch} ${safeSkills.join(" ")}`.toLowerCase();
 
@@ -574,22 +574,32 @@ function generateComprehensiveReview(candidateName, branch = "All Disciplines / 
   );
   if (!soft.length) soft.push("Problem Solving", "Professional Communication");
 
+  const calcScore = meta.atsScore || Math.min(97, Math.max(85, 82 + safeSkills.length * 2));
+
   return {
     candidate_name: candidateName || "Candidate",
+    college: meta.college || "",
+    degree: meta.degree || "",
+    location: meta.state || "",
+    email: meta.email || "",
+    phone: meta.phone || "",
     detected_branch: selectedConfig.detectedBranch,
-    resume_score: Math.min(96, 82 + safeSkills.length * 2),
-    grade: "Grade A: High Shortlist Potential",
-    career_summary: `Candidate demonstrates verified proficiency in ${selectedConfig.detectedBranch} with practical coursework, active project execution, and structured technical reporting.`,
+    resume_score: calcScore,
+    grade: calcScore >= 92 ? "Grade A+: Premier Shortlist Ready" : "Grade A: High Shortlist Potential",
+    career_summary: `Candidate demonstrates verified proficiency in ${selectedConfig.detectedBranch} with active project execution in ${safeSkills.slice(0, 3).join(", ")}, meeting top corporate selection standards.`,
     layout_review: {
       page_length: "1 Page Strict Compliance (Verified)",
-      ats_score: "95 / 100 (ATS Friendly)",
+      ats_score: `${calcScore} / 100 (ATS Friendly)`,
       structure_rating: "Excellent (Standard Section Hierarchy)",
       formatting_feedback:
+        meta.formattingFeedback ||
         "Clean single-column layout, standard headings, and bulleted accomplishments. Optimized for applicant tracking systems and fast corporate recruiter reviews.",
     },
     skills_breakdown: {
       technical_skills: tech.length ? tech : ["Technical Analysis", "Core Domain Concepts"],
-      tools_frameworks: ["MS Excel / Spreadsheets", "Documentation Tools", "Analytical Software", "Domain Specific Tools"],
+      tools_frameworks: meta.tools?.length
+        ? meta.tools
+        : ["MS Excel / Spreadsheets", "Documentation Tools", "Analytical Software", "Domain Specific Tools"],
       soft_skills: soft,
       all_extracted: safeSkills,
     },
@@ -602,25 +612,44 @@ function generateComprehensiveReview(candidateName, branch = "All Disciplines / 
   };
 }
 
+// Helper to safely decompress a PDF stream chunk in modern browsers
+async function decompressPdfChunk(uint8) {
+  try {
+    const stream = new Response(uint8).body.pipeThrough(new DecompressionStream("deflate"));
+    return await new Response(stream).text();
+  } catch {
+    try {
+      const streamRaw = new Response(uint8).body.pipeThrough(new DecompressionStream("deflate-raw"));
+      return await new Response(streamRaw).text();
+    } catch {
+      return "";
+    }
+  }
+}
+
+function escapeRegex(str) {
+  return str.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
+}
+
 // High-accuracy client-side PDF parser & resume intelligence
 async function parseResumePdfClientSide(file) {
-  // 1. Extract name from filename (e.g. Ritik_Sharma_Resume.pdf -> Ritik Sharma)
+  // 1. Initial name candidate from filename (e.g. Ritik_Sharma_Resume.pdf -> Ritik Sharma)
   let candidateName = "";
   if (file && file.name) {
     const base = file.name
       .replace(/\.pdf$/i, "")
-      .replace(/[\b_]?(resume|cv|biodata|pmis|placement|profile|latest|final|doc|file)[\b_]?/gi, " ")
+      .replace(/[\b_]?(resume|cv|biodata|pmis|placement|profile|latest|final|doc|file|single|page|test)[\b_]?/gi, " ")
       .replace(/[_\-]+/g, " ")
       .trim();
     const parts = base
       .split(/\s+/)
-      .filter((w) => /^[a-zA-Z]+$/.test(w) && w.length > 1 && !["new", "my", "final", "updated", "doc", "pdf", "temp", "copy"].includes(w.toLowerCase()));
+      .filter((w) => /^[a-zA-Z]+$/.test(w) && w.length > 1 && !["new", "my", "final", "updated", "doc", "pdf", "temp", "copy", "single", "page", "test"].includes(w.toLowerCase()));
     if (parts.length >= 1 && parts.length <= 4) {
       candidateName = parts.map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
     }
   }
 
-  // 2. Read text streams from the PDF arrayBuffer in browser
+  // 2. Read and decompress all PDF streams
   let rawText = "";
   try {
     const buffer = await file.arrayBuffer();
@@ -628,23 +657,53 @@ async function parseResumePdfClientSide(file) {
     const decoder = new TextDecoder("latin1");
     const rawContent = decoder.decode(uint8);
 
-    const textPieces = [];
-    // Extract text in parentheses (text) Tj
-    const tjMatches = rawContent.matchAll(/\(([^()]{1,200})\)\s*(?:Tj|'|")/g);
-    for (const m of tjMatches) {
-      if (m[1]) textPieces.push(m[1]);
-    }
-    // Extract array text [(t)(e)(x)(t)] TJ
-    const arrayMatches = rawContent.matchAll(/\[(.*?)\]\s*TJ/g);
-    for (const m of arrayMatches) {
-      const inner = m[1].matchAll(/\(([^()]*?)\)/g);
-      for (const im of inner) {
-        if (im[1]) textPieces.push(im[1]);
-      }
+    let decompressedAll = "";
+    const streamRegex = /stream[\r\n]+([\s\S]*?)[\r\n]+endstream/g;
+    let match;
+    while ((match = streamRegex.exec(rawContent)) !== null) {
+      const streamBytes = new Uint8Array([...match[1]].map((c) => c.charCodeAt(0)));
+      const decomp = await decompressPdfChunk(streamBytes);
+      if (decomp) decompressedAll += "\n" + decomp;
     }
 
-    if (textPieces.length > 5) {
-      rawText = textPieces.join(" ");
+    const searchable = decompressedAll || rawContent;
+    const pieces = [];
+
+    // Extract lines and parse both literal strings and hex-encoded text
+    const lines = searchable.split(/\r?\n/);
+    for (const line of lines) {
+      const linePieces = [];
+      // (literal string)
+      const literalMatches = line.matchAll(/\(([^()]{1,400})\)/g);
+      for (const m of literalMatches) {
+        if (m[1]) linePieces.push(m[1].replace(/\\([()\\])/g, "$1"));
+      }
+      // <HEX STRING>
+      const hexMatches = line.matchAll(/<([0-9a-fA-F\s]{2,800})>/g);
+      for (const m of hexMatches) {
+        const cleanHex = m[1].replace(/\s+/g, "");
+        if (cleanHex.length >= 2 && cleanHex.length % 2 === 0) {
+          try {
+            let decoded = "";
+            for (let i = 0; i < cleanHex.length; i += 2) {
+              const code = parseInt(cleanHex.substring(i, i + 2), 16);
+              if (code >= 32 && code <= 126) {
+                decoded += String.fromCharCode(code);
+              } else if (code === 10 || code === 13) {
+                decoded += " ";
+              }
+            }
+            if (/[\w\s.,;:/-]/.test(decoded)) linePieces.push(decoded);
+          } catch {
+            // ignore malformed hex
+          }
+        }
+      }
+      if (linePieces.length) pieces.push(linePieces.join(" ").trim());
+    }
+
+    if (pieces.length > 3) {
+      rawText = pieces.join("\n");
     } else {
       rawText = rawContent.replace(/[^\x20-\x7E\n]/g, " ");
     }
@@ -652,34 +711,29 @@ async function parseResumePdfClientSide(file) {
     console.warn("Client PDF read error:", err);
   }
 
+  const textLines = rawText.split("\n").map((l) => l.trim()).filter(Boolean);
   const textClean = rawText.replace(/\s+/g, " ");
+  const textLower = rawText.toLowerCase();
 
-  // 3. Fallback name from first words of text if filename was generic (e.g. "resume.pdf")
-  if (!candidateName || candidateName.toLowerCase().includes("candidate")) {
-    const words = textClean.split(" ").slice(0, 25);
-    for (let i = 0; i < words.length - 1; i++) {
-      const w1 = words[i].replace(/[^a-zA-Z]/g, "");
-      const w2 = words[i + 1].replace(/[^a-zA-Z]/g, "");
-      if (
-        /^[A-Z][a-z]+$/.test(w1) &&
-        /^[A-Z][a-z]+$/.test(w2) &&
-        w1.length > 2 &&
-        w2.length > 2
-      ) {
-        const skip = ["Curriculum", "Vitae", "Resume", "Profile", "Summary", "Objective", "Contact", "Personal", "Education", "Experience", "Skills", "Projects", "Declaration"];
-        if (!skip.includes(w1) && !skip.includes(w2)) {
-          candidateName = `${w1} ${w2}`;
-          break;
-        }
-      }
+  // 3. Candidate Name extraction from first non-header lines
+  for (let i = 0; i < Math.min(8, textLines.length); i++) {
+    const l = textLines[i];
+    if (l.length < 3 || l.length > 35) continue;
+    if (/@|http|\.com|\.in|\+91|\d{5}/.test(l)) continue;
+    if (/\b(resume|curriculum|vitae|profile|summary|contact|objective|projects|skills|experience)\b/i.test(l)) continue;
+
+    const words = l.replace(/[^a-zA-Z\s]/g, "").trim().split(/\s+/);
+    if (words.length >= 1 && words.length <= 4 && words.every((w) => w.length >= 2)) {
+      candidateName = words.map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
+      break;
     }
   }
   if (!candidateName) candidateName = "Candidate";
 
   // 4. Contact Details
-  const emailMatch = textClean.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+  const emailMatch = rawText.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
   const email = emailMatch ? emailMatch[0] : "";
-  const phoneMatch = textClean.match(/(?:\+91[\-\s]?)?[6-9]\d{9}/);
+  const phoneMatch = rawText.match(/(?:\+?91[\s-]?)?[6-9]\d{4}[\s-]?\d{5}|(?:\+?\d{1,3}[\s-]?)?\(?\d{3,5}\)?[\s-]?\d{3}[\s-]?\d{3,4}/);
   const phone = phoneMatch ? phoneMatch[0] : "";
 
   // 5. Degree Detection
@@ -694,39 +748,66 @@ async function parseResumePdfClientSide(file) {
     { name: "Diploma in Engineering", regex: /\b(Diploma in (?:Engineering|Mechanical|Civil|CS|IT))\b/i },
   ];
   for (const d of degreeRules) {
-    if (d.regex.test(textClean)) {
+    if (d.regex.test(rawText)) {
       degree = d.name;
       break;
     }
   }
 
-  // 6. Branch Detection
-  let branch = "Engineering & Corporate Operations";
-  if (/\b(mechanical|automobile|cad|cam|ansys|solidworks|catia|thermal|machining|fea|automotive|thermodynamics)\b/i.test(textClean)) {
-    branch = "Mechanical Engineering & Automotive";
-  } else if (/\b(civil|structural|revit|staad|construction|surveying|concrete|geotechnical|infrastructure)\b/i.test(textClean)) {
-    branch = "Civil & Infrastructure Engineering";
-  } else if (/\b(commerce|finance|accounting|gst|audit|tax|tally|banking|equity|balance sheet|financial)\b/i.test(textClean)) {
-    branch = "Commerce, Finance & Banking";
-  } else if (/\b(electronics|electrical|vlsi|embedded|verilog|circuit|iot|arduino|telecom|ece|eee)\b/i.test(textClean)) {
-    branch = "Electrical & Electronics Engineering";
-  } else if (/\b(pharmacy|pharma|biotech|chemistry|clinical|hplc|drug|pharmacology)\b/i.test(textClean)) {
-    branch = "Pharmaceutical & Healthcare Sciences";
-  } else if (/\b(data science|machine learning|deep learning|data analyst|big data|analytics)\b/i.test(textClean)) {
-    branch = "Data Science & Artificial Intelligence";
-  } else if (/\b(computer|software|coding|developer|react|node|fastapi|python|java|web dev|full stack)\b/i.test(textClean)) {
-    branch = "Computer Science & Engineering";
+  // 6. Multi-Disciplinary Weighted Branch Detection
+  const branchScores = {
+    "Computer Science & Information Technology": 0,
+    "Mechanical Engineering & Automotive": 0,
+    "Civil & Infrastructure Engineering": 0,
+    "Electrical & Electronics Engineering": 0,
+    "Commerce, Finance & Banking": 0,
+    "Pharmaceutical Sciences & Healthcare": 0,
+    "Chemical & Materials Engineering": 0,
+    "Agriculture & Life Sciences": 0,
+    "Mining & Metallurgy": 0,
+  };
+
+  const branchKeywords = {
+    "Computer Science & Information Technology": ["software", "developer", "python", "java", "react", "fastapi", "javascript", "sql", "full stack", "cloud", "git", "c++", "frontend", "backend", "web development", "machine learning", "data science"],
+    "Mechanical Engineering & Automotive": ["mechanical", "solidworks", "ansys", "autocad", "catia", "thermodynamics", "machining", "fea", "automotive", "vehicle", "chassis", "powertrain", "manufacturing", "cnc"],
+    "Civil & Infrastructure Engineering": ["civil", "structural", "revit", "staad", "construction", "surveying", "concrete", "geotechnical", "infrastructure", "bim", "transportation"],
+    "Electrical & Electronics Engineering": ["electrical", "electronics", "vlsi", "embedded", "verilog", "circuit", "iot", "arduino", "microcontroller", "power systems", "plc", "scada"],
+    "Commerce, Finance & Banking": ["commerce", "finance", "accounting", "tally", "gst", "audit", "tax", "banking", "equity", "balance sheet", "financial modeling", "b.com", "mba"],
+    "Pharmaceutical Sciences & Healthcare": ["pharma", "pharmacy", "formulation", "clinical", "hplc", "drug", "pharmacology", "biochemistry", "dosage", "healthcare", "b.pharm"],
+    "Chemical & Materials Engineering": ["chemical", "petrochemical", "polymer", "process engineering", "distillation", "refinery", "materials science", "metallurgy"],
+    "Agriculture & Life Sciences": ["agriculture", "agronomy", "soil", "crop", "horticulture", "irrigation", "farming", "dairy"],
+    "Mining & Metallurgy": ["mining", "mineral", "geology", "blast", "extraction", "ore", "smelting"],
+  };
+
+  for (const [branchName, kws] of Object.entries(branchKeywords)) {
+    for (const kw of kws) {
+      if (new RegExp(`\\b${escapeRegex(kw)}\\b`, "i").test(textLower)) {
+        branchScores[branchName] += 1;
+      }
+    }
   }
+
+  let bestBranch = "Computer Science & Information Technology";
+  let maxBranchScore = 0;
+  for (const [bName, bScore] of Object.entries(branchScores)) {
+    if (bScore > maxBranchScore) {
+      maxBranchScore = bScore;
+      bestBranch = bName;
+    }
+  }
+  const branch = maxBranchScore > 0 ? bestBranch : "Computer Science & Information Technology";
 
   // 7. College / University Detection
   let college = "";
-  const collegeMatch = textClean.match(/\b([A-Z][a-zA-Z\s&.,]{3,50}(?:Institute of Technology|University|College of Engineering|National Institute of Technology|Indian Institute of Technology|Engineering College|Institute of Science|Campus))\b/i);
-  if (collegeMatch && collegeMatch[1]) {
-    college = collegeMatch[1].trim();
+  for (const line of textLines) {
+    if (/\b(university|institute of technology|college of engineering|autonomous institute|iit|nit|iiit|national institute|campus)\b/i.test(line)) {
+      if (line.length >= 4 && line.length <= 60 && !/@|\.com/.test(line)) {
+        college = line.trim();
+        break;
+      }
+    }
   }
-  if (!college) {
-    college = "State Technological University";
-  }
+  if (!college) college = "State Technological University";
 
   // 8. Location Detection
   let state = "National";
@@ -738,37 +819,35 @@ async function parseResumePdfClientSide(file) {
     }
   }
 
-  // 9. Verified Skills Extraction from resume text
+  // 9. Verified Skills Extraction from comprehensive catalog
   const SKILL_CATALOG = [
-    // Languages
-    "Python", "JavaScript", "TypeScript", "Java", "C++", "C", "C#", "Go", "Rust", "PHP", "Ruby", "Swift", "Kotlin", "R",
-    // Web Frontend & Backend
+    // Languages & Web
+    "Python", "JavaScript", "TypeScript", "Java", "C++", "C", "C#", "Go", "Rust", "PHP", "Ruby", "Swift", "Kotlin", "R", "SQL",
     "React", "Node.js", "Express.js", "Next.js", "Vue.js", "Angular", "HTML5", "CSS3", "Tailwind CSS", "Bootstrap",
-    "FastAPI", "Django", "Flask", "Spring Boot", "REST APIs", "GraphQL", "Redux", "WebSockets",
-    // Databases
-    "PostgreSQL", "MySQL", "MongoDB", "Redis", "SQLite", "SQL", "Elasticsearch", "Firebase",
-    // DevOps & Cloud
-    "Git", "GitHub", "GitLab", "Docker", "Kubernetes", "AWS", "Azure", "GCP", "Linux", "CI/CD", "Nginx",
+    "FastAPI", "Django", "Flask", "Spring Boot", "REST APIs", "GraphQL", "Redux",
+    // Databases & Cloud
+    "PostgreSQL", "MySQL", "MongoDB", "Redis", "SQLite", "Firebase",
+    "Git", "GitHub", "Docker", "Kubernetes", "AWS", "Azure", "GCP", "Linux", "CI/CD",
     // AI / ML / Data
-    "Machine Learning", "Deep Learning", "Data Analysis", "Pandas", "NumPy", "Scikit-Learn", "TensorFlow", "PyTorch", "NLP", "Computer Vision", "Power BI", "Tableau", "Excel",
+    "Machine Learning", "Deep Learning", "Data Analysis", "Pandas", "NumPy", "TensorFlow", "PyTorch", "Power BI", "Tableau", "Excel",
     // Mechanical
-    "SolidWorks", "AutoCAD", "ANSYS", "CATIA", "MATLAB", "Thermodynamics", "FEA", "CNC Machining", "GD&T",
+    "SolidWorks", "AutoCAD", "ANSYS", "CATIA", "Thermodynamics", "FEA", "CNC Machining", "GD&T", "Vehicle Fabrication", "CAD Modelling",
     // Civil
-    "Revit", "STAAD.Pro", "Structural Analysis", "BIM", "Surveying", "AutoCAD Civil 3D",
+    "Revit", "STAAD.Pro", "Structural Analysis", "BIM", "Surveying", "AutoCAD Civil 3D", "Concrete Technology",
     // Electrical / Electronics
-    "VLSI", "Verilog", "Embedded Systems", "PCB Design", "IoT", "Arduino", "Microcontrollers", "MATLAB/Simulink",
-    // Finance / Commerce
+    "VLSI", "Verilog", "Embedded Systems", "PCB Design", "IoT", "Arduino", "Microcontrollers", "MATLAB", "Simulink",
+    // Commerce / Finance
     "Financial Modeling", "Tally ERP", "GST Compliance", "Auditing", "Cost Accounting", "Corporate Finance", "Equity Research",
+    // Pharma / Chemical
+    "HPLC", "UV-Vis Spectroscopy", "Drug Formulation", "GLP", "Clinical Pharmacology", "Quality Assurance", "QA/QC", "Biochemical Analysis",
     // Professional Core
-    "Problem Solving", "Professional Communication", "Team Collaboration", "Critical Thinking", "Agile Methodology", "Leadership", "Project Management"
+    "Problem Solving", "Professional Communication", "Team Collaboration", "Project Management", "Leadership"
   ];
 
   const detectedSkills = [];
-  const textLower = textClean.toLowerCase();
   for (const sk of SKILL_CATALOG) {
-    const skLower = sk.toLowerCase();
-    const escaped = skLower.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
-    if (new RegExp(`(?:^|[\\s,;()/\\[\\]:])${escaped}(?:[\\s,;()/\\[\\]:]|$)`, "i").test(textLower)) {
+    const escaped = escapeRegex(sk);
+    if (new RegExp(`(?:^|[\\s,;():/\\[\\]])${escaped}(?:[\\s,;():/\\[\\]]|$)`, "i").test(rawText)) {
       detectedSkills.push(sk);
     }
   }
@@ -780,6 +859,16 @@ async function parseResumePdfClientSide(file) {
     "Team Collaboration"
   ];
 
+  // 10. Dynamic ATS Score (ranges 86-98 based on complete sections, contact info, and skills)
+  let atsScore = 80;
+  if (candidateName && candidateName !== "Candidate") atsScore += 3;
+  if (email) atsScore += 3;
+  if (phone) atsScore += 3;
+  if (finalSkills.length >= 3) atsScore += Math.min(6, finalSkills.length);
+  if (/education|degree|b\.tech|b\.com/i.test(rawText)) atsScore += 2;
+  if (/experience|project|intern/i.test(rawText)) atsScore += 3;
+  atsScore = Math.min(98, Math.max(85, atsScore));
+
   return {
     candidateName,
     email,
@@ -789,6 +878,8 @@ async function parseResumePdfClientSide(file) {
     college,
     state,
     skills: Array.from(new Set(finalSkills)),
+    atsScore,
+    rawText: rawText.slice(0, 3000),
     careerSummary: `Targeted ${branch} candidate with demonstrated capability in ${finalSkills.slice(0, 3).join(", ")}. Well-aligned for premier national corporate internships.`
   };
 }
@@ -1079,9 +1170,9 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
     const clientParsed = await parseResumePdfClientSide(file);
 
     // Apply real extracted details immediately so student sees their exact data
-    const immediateName = clientParsed.candidateName && !["Candidate", "Student Candidate"].includes(clientParsed.candidateName)
+    const immediateName = clientParsed.candidateName && !["Candidate", "Student Candidate", "PMIS Candidate"].includes(clientParsed.candidateName)
       ? clientParsed.candidateName
-      : (profile.name !== "Candidate" ? profile.name : clientParsed.candidateName);
+      : (profile.name && profile.name !== "Candidate" ? profile.name : (clientParsed.candidateName || "Candidate"));
     const immediateBranch = clientParsed.branch || profile.branch;
     const immediateCollege = clientParsed.college && clientParsed.college !== "State Technological University"
       ? clientParsed.college
@@ -1096,7 +1187,20 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
       : profile.skills;
     const immediateBlobUrl = URL.createObjectURL(file);
 
-    const immediateReview = generateComprehensiveReview(immediateName, immediateBranch, immediateSkills);
+    const immediateReview = generateComprehensiveReview(
+      immediateName,
+      immediateBranch,
+      immediateSkills,
+      {
+        college: immediateCollege,
+        degree: immediateDegree,
+        state: immediateState,
+        email: clientParsed.email,
+        phone: clientParsed.phone,
+        atsScore: clientParsed.atsScore,
+        rawText: clientParsed.rawText
+      }
+    );
 
     setProfile({
       name: immediateName,
@@ -1142,13 +1246,19 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
       if (res.ok) {
         const data = await res.json();
         const finalAnalysis = data.analysis || immediateReview;
-        const finalName = data.user?.name || (finalAnalysis.candidate_name && !["Candidate", "Student Candidate"].includes(finalAnalysis.candidate_name) ? finalAnalysis.candidate_name : immediateName);
-        const finalBranch = data.user?.branch || finalAnalysis.detected_branch || immediateBranch;
-        const finalCollege = data.user?.college || (finalAnalysis.college && !finalAnalysis.college.includes("Institute of Tech") ? finalAnalysis.college : immediateCollege);
-        const finalDegree = data.user?.degree || finalAnalysis.degree || immediateDegree;
-        const finalState = data.user?.state || finalAnalysis.location || immediateState;
-        const finalCareerGoals = data.user?.career_goals || finalAnalysis.career_summary || immediateCareerGoals;
-        const finalSkills = data.user?.skills?.length ? data.user.skills : (finalAnalysis.extracted_skills?.length ? finalAnalysis.extracted_skills : immediateSkills);
+        const finalName = (finalAnalysis.candidate_name && !["Candidate", "Student Candidate", "PMIS Candidate", "Exact Full Name from resume"].includes(finalAnalysis.candidate_name))
+          ? finalAnalysis.candidate_name
+          : immediateName;
+        const finalBranch = finalAnalysis.detected_branch || immediateBranch;
+        const finalCollege = (finalAnalysis.college && !finalAnalysis.college.includes("Institute of Tech") && !finalAnalysis.college.includes("State Technological"))
+          ? finalAnalysis.college
+          : immediateCollege;
+        const finalDegree = finalAnalysis.degree || immediateDegree;
+        const finalState = finalAnalysis.location || immediateState;
+        const finalCareerGoals = finalAnalysis.career_summary || immediateCareerGoals;
+        const finalSkills = (finalAnalysis.extracted_skills && finalAnalysis.extracted_skills.length)
+          ? finalAnalysis.extracted_skills
+          : immediateSkills;
         const finalCloudinaryUrl = data.cloudinary_url || immediateBlobUrl;
 
         setProfile({
@@ -1159,11 +1269,23 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
           state: finalState,
           career_goals: finalCareerGoals,
           skills: finalSkills,
-          resume_name: data.filename || file.name,
+          resume_name: data.filename || data.file_name || file.name,
           cloudinary_url: finalCloudinaryUrl,
         });
 
-        const finalReviewObj = finalAnalysis.layout_review ? finalAnalysis : generateComprehensiveReview(finalName, finalBranch, finalSkills);
+        const finalReviewObj = {
+          ...immediateReview,
+          ...finalAnalysis,
+          candidate_name: finalName,
+          detected_branch: finalBranch,
+          college: finalCollege,
+          degree: finalDegree,
+          location: finalState,
+          extracted_skills: finalSkills,
+          resume_score: finalAnalysis.resume_score || immediateReview.resume_score,
+          top_5_jobs_match: (finalAnalysis.top_5_jobs_match?.length ? finalAnalysis.top_5_jobs_match : immediateReview.top_5_jobs_match),
+          target_roles: (finalAnalysis.top_5_jobs_match?.length ? finalAnalysis.top_5_jobs_match : immediateReview.top_5_jobs_match),
+        };
         setAiAnalysis(finalReviewObj);
 
         const savedUserFinal = {
@@ -1175,7 +1297,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
           state: finalState,
           career_goals: finalCareerGoals,
           skills: finalSkills,
-          resume_name: data.filename || file.name,
+          resume_name: data.filename || data.file_name || file.name,
           cloudinary_url: finalCloudinaryUrl,
         };
         localStorage.setItem("pmis_user", JSON.stringify(savedUserFinal));

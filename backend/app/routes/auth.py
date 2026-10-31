@@ -842,29 +842,37 @@ async def upload_and_analyze_resume(
 
     # 4. Update candidate skills in MongoDB
     user = get_user_by_identifier(user_id)
+    extracted_skills = analysis.get("extracted_skills", [])
+    updated_user = None
     if user:
-        current_skills = user.get("skills", [])
-        extracted_skills = analysis.get("extracted_skills", [])
-        merged_skills = list(dict.fromkeys(current_skills + extracted_skills))
-
         updates = {
             "resume_name": file.filename,
             "cloudinary_url": cloudinary_url,
-            "skills": merged_skills
+            "skills": extracted_skills if extracted_skills else user.get("skills", [])
         }
         if analysis.get("detected_branch"):
             updates["branch"] = analysis["detected_branch"]
+        if analysis.get("candidate_name") and analysis["candidate_name"] not in ["Candidate", "PMIS Candidate", "Exact Full Name from resume"]:
+            updates["name"] = analysis["candidate_name"]
+        if analysis.get("college") and "Institute of Tech" not in analysis["college"]:
+            updates["college"] = analysis["college"]
+        if analysis.get("degree"):
+            updates["degree"] = analysis["degree"]
+        if analysis.get("location"):
+            updates["state"] = analysis["location"]
 
-        update_user_profile(user["user_id"], updates)
+        updated_user = update_user_profile(user["user_id"], updates)
         update_user_applications_resume(user["user_id"], cloudinary_url, file.filename)
 
     return {
         "status": "success",
         "message": "1-Page Resume successfully processed by AI Recruiter Engine & synced to MongoDB!",
         "cloudinary_url": cloudinary_url,
+        "filename": file.filename,
         "file_name": file.filename,
         "analysis": analysis,
-        "updated_skills": user.get("skills", []) if user else analysis.get("extracted_skills", [])
+        "user": updated_user if updated_user else (user or None),
+        "updated_skills": extracted_skills if extracted_skills else (user.get("skills", []) if user else [])
     }
 
 
