@@ -1428,8 +1428,9 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
   };
 
   const handleAddSkill = () => {
-    if (newSkill.trim() && !profile.skills.includes(newSkill.trim())) {
-      const updatedSkills = [...profile.skills, newSkill.trim()];
+    const currentSkills = Array.isArray(profile.skills) ? profile.skills : [];
+    if (newSkill.trim() && !currentSkills.includes(newSkill.trim())) {
+      const updatedSkills = [...currentSkills, newSkill.trim()];
       setProfile((prev) => ({ ...prev, skills: updatedSkills }));
       setNewSkill("");
 
@@ -1449,7 +1450,8 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
   };
 
   const handleRemoveSkill = (skillToRemove) => {
-    const updatedSkills = profile.skills.filter((s) => s !== skillToRemove);
+    const currentSkills = Array.isArray(profile.skills) ? profile.skills : [];
+    const updatedSkills = currentSkills.filter((s) => s !== skillToRemove);
     setProfile((prev) => ({ ...prev, skills: updatedSkills }));
 
     if (aiAnalysis) {
@@ -2123,14 +2125,14 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                   </span>
                   <div className="flex flex-wrap gap-1.5">
                     {["Git & Version Control", "Advanced Excel (XLOOKUP)", "Project Management", "REST APIs", "Safety Standards"]
-                      .filter((s) => !profile.skills.includes(s))
+                      .filter((s) => !(profile.skills || []).includes(s))
                       .slice(0, 4)
                       .map((rec) => (
                         <button
                           key={rec}
                           type="button"
                           onClick={() => {
-                            setProfile((prev) => ({ ...prev, skills: [...prev.skills, rec] }));
+                            setProfile((prev) => ({ ...prev, skills: [...(prev.skills || []), rec] }));
                           }}
                           className="rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 px-2 py-1 text-[10px] font-bold hover:bg-emerald-100 transition cursor-pointer flex items-center gap-1"
                         >
@@ -2180,7 +2182,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                       <div className="space-y-3">
                         <div className="flex items-start justify-between gap-3">
                           <div className="h-11 w-11 rounded-xl bg-white dark:bg-slate-800 p-2 border border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0 shadow-2xs">
-                            <CompanyLogo company={job.company} className="h-full w-full object-contain" />
+                            <CompanyLogo name={job.company || "Corporate"} company={job.company} className="h-full w-full object-contain" />
                           </div>
                           <span className="rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] font-black px-2.5 py-0.5 border border-emerald-300 shrink-0">
                             {job.match_score}% Match
@@ -2646,7 +2648,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                   >
                     <div className="flex items-start gap-4">
                       <div className="h-14 w-14 rounded-2xl bg-slate-50 dark:bg-slate-800 p-2.5 border border-slate-200 dark:border-slate-700 shrink-0 flex items-center justify-center shadow-2xs">
-                        <CompanyLogo company={job.company} className="h-full w-full object-contain" />
+                        <CompanyLogo name={job.company || "Corporate"} company={job.company} className="h-full w-full object-contain" />
                       </div>
 
                       <div className="space-y-1.5">
@@ -2830,7 +2832,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                       {/* Top Header Row */}
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="flex items-start gap-3.5">
-                          <CompanyLogo name={app.company} className="h-10 w-10 shrink-0 mt-0.5" />
+                          <CompanyLogo name={app.company || "Corporate"} company={app.company} className="h-10 w-10 shrink-0 mt-0.5" />
                           <div>
                             <div className="flex flex-wrap items-center gap-2">
                               <h4 className="font-display font-black text-base sm:text-lg text-slate-900 dark:text-white">

@@ -89,15 +89,16 @@ const BRAND_COLORS = {
   "Asian Paints": "from-red-600 to-amber-700 text-white",
 };
 
-export default function CompanyLogo({ name, className = "h-12 w-12" }) {
-  const imgSrc = KNOWN_LOGOS[name];
+export default function CompanyLogo({ name, company, className = "h-12 w-12" }) {
+  const effectiveName = String(name || company || "Company").trim() || "Company";
+  const imgSrc = KNOWN_LOGOS[effectiveName] || (name ? KNOWN_LOGOS[name] : null) || (company ? KNOWN_LOGOS[company] : null);
 
   if (imgSrc) {
     return (
       <div className={`flex items-center justify-center overflow-hidden rounded-xl border border-border bg-card p-1 shadow-xs ${className}`}>
         <img
           src={imgSrc}
-          alt={`${name} logo`}
+          alt={`${effectiveName} logo`}
           className="h-full w-full object-contain"
           loading="lazy"
         />
@@ -106,14 +107,16 @@ export default function CompanyLogo({ name, className = "h-12 w-12" }) {
   }
 
   // Initials generator
-  const words = (name || "Company").split(" ").filter((w) => /^[A-Za-z0-9]/.test(w));
-  const initials = words.length >= 2 ? `${words[0][0]}${words[1][0]}`.toUpperCase() : name.slice(0, 2).toUpperCase();
-  const colorTheme = BRAND_COLORS[name] || "from-primary to-primary/80 text-primary-foreground";
+  const words = effectiveName.split(/\s+/).filter((w) => /^[A-Za-z0-9]/.test(w));
+  const initials = words.length >= 2
+    ? `${words[0][0]}${words[1][0]}`.toUpperCase()
+    : effectiveName.slice(0, 2).toUpperCase();
+  const colorTheme = BRAND_COLORS[effectiveName] || "from-primary to-primary/80 text-primary-foreground";
 
   return (
     <div
       className={`flex items-center justify-center rounded-xl bg-gradient-to-br font-display font-bold shadow-xs select-none ${colorTheme} ${className}`}
-      title={name}
+      title={effectiveName}
     >
       <span className="text-xs sm:text-sm tracking-tight">{initials}</span>
     </div>

@@ -53,7 +53,7 @@ const JOBS = [
   { id: 7, company: "Federal Bank", role: "Branch Banking Associate", sector: "Banking & Finance", field: "Finance & Accounting", state: "Kerala", district: "Ernakulam", stipend: true, skill: false, deadline: "28 Nov 2026" },
 ];
 
-const initials = (n) => n.split(/\s+/).filter((w) => /^[A-Z]/.test(w)).slice(0, 2).map((w) => w[0]).join("");
+const initials = (n) => ((n || "").split(/\s+/).filter((w) => /^[A-Za-z]/.test(w)).slice(0, 2).map((w) => w[0]).join("")).toUpperCase() || "PM";
 const uniq = (k) => [...new Set(JOBS.map((j) => j[k]))].sort();
 
 function Filter({ label, value, options, onChange }) {
