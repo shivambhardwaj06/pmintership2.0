@@ -831,7 +831,7 @@ JSON FORMAT:
                 "page_length": "1 Page Strict Compliance (Verified)",
                 "ats_score": "95 / 100 (ATS Friendly)",
                 "structure_rating": "Excellent (Standard Section Hierarchy)",
-                "formatting_feedback": "Clean single-column layout, clear corporate typography, and high recruiter scan speed under 15 seconds."
+                "formatting_feedback": "Clean single-column layout, clear corporate typography, and optimized for applicant tracking systems and fast recruiter review."
             },
             "skills_breakdown": {
                 "technical_skills": detected_tech,

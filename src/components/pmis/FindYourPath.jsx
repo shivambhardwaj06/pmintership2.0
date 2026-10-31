@@ -1036,7 +1036,7 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
                   <div className="flex flex-wrap items-center gap-2 mb-2">
                     <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-300 px-3 py-1 text-xs font-black">
                       <Cpu className="h-3.5 w-3.5" />
-                      {roadmap.target_sector || "PMIS Technology Track"}
+                      {roadmap.target_sector || "PMIS Corporate Track"}
                     </span>
                     <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 dark:bg-orange-900/60 text-orange-800 dark:text-orange-300 px-3 py-1 text-xs font-black">
                       <Clock className="h-3.5 w-3.5" />

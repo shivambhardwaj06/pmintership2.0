@@ -642,7 +642,7 @@ export default function RecruiterPortal() {
                 <span>{activeCompany}</span>
               </h1>
               <p className="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-400 max-w-2xl">
-                Review candidate resumes directly from high-speed CDN, schedule interviews, update applicant selection progress, and publish official PMIS corporate internships.
+                Review candidate resumes, schedule interviews, update applicant selection progress, and publish official PMIS corporate internships.
               </p>
             </div>
 
@@ -999,7 +999,7 @@ export default function RecruiterPortal() {
                           className="rounded-xl bg-blue-50 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 px-4 py-2.5 text-xs font-black hover:bg-blue-100 dark:hover:bg-blue-900/60 transition flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer"
                         >
                           <Eye className="h-4 w-4" />
-                          <span>Read Resume (CDN)</span>
+                          <span>View Resume</span>
                         </button>
 
                         {/* Update Process Status Button */}
@@ -1460,7 +1460,7 @@ export default function RecruiterPortal() {
                     {resumeModalApp.candidate_name || "Youth Candidate"}
                   </span>
                   <span className="inline-flex items-center rounded-md bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 px-2 py-0.5 text-[10px] font-black border border-blue-200 dark:border-blue-800">
-                    CDN Verified 1-Page Resume
+                    Verified 1-Page Resume
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 font-semibold truncate max-w-md">
@@ -1498,14 +1498,14 @@ export default function RecruiterPortal() {
               </div>
             </div>
 
-            {/* CDN URL Indicator Strip */}
+            {/* Document URL Indicator Strip */}
             <div className="px-4 py-2 bg-slate-100 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-[11px] font-mono text-slate-600 dark:text-slate-300 flex items-center justify-between gap-2 overflow-hidden">
               <span className="truncate">
-                <span className="font-bold text-slate-400 mr-1.5">CDN Endpoint:</span>
+                <span className="font-bold text-slate-400 mr-1.5">Document URL:</span>
                 {getCdnResumeUrl(resumeModalApp.resume_url)}
               </span>
               <span className="text-[10px] font-bold text-emerald-600 shrink-0">
-                ● Live 200 OK
+                ● Verified Document
               </span>
             </div>
 

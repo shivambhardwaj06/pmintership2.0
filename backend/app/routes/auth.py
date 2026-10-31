@@ -235,7 +235,7 @@ SELECTED_RESUMES = [
             "Clear section on data structures with hackathon problem-solving credentials."
         ],
         "highlighted_skills": ["Python", "FastAPI", "Git", "Data Structures", "SQL", "Unit Testing", "React"],
-        "recruiter_feedback": "Corporate tech screeners spend under 15 seconds. Highlighting 3 core tools with live code repositories got her straight into Round 1."
+        "recruiter_feedback": "Corporate recruiters prioritize structured 1-page CVs with verifiable project links and domain-specific tools."
     },
     {
         "id": "res_agri_09",
@@ -335,7 +335,7 @@ SELECTED_RESUMES = [
             "600+ LeetCode/HackerRank algorithmic problems solved with national hackathon podium finishes (Smart India Hackathon, SFSU Hacks)."
         ],
         "highlighted_skills": ["Full stack development", "REST API", "SQL", "JavaScript", "TypeScript", "Next.js", "Python", "PostgreSQL", "Redis", "React", "MongoDB", "Node.js", "Docker", "AWS", "CI/CD & DevOps"],
-        "recruiter_feedback": "Corporate tech evaluators spend under 15 seconds per CV. Having measurable production metrics (e.g. 50% deployment speedup) and live GitHub links guaranteed immediate progression to the final interview round."
+        "recruiter_feedback": "Corporate evaluators prioritize measurable project metrics and live repository links, guaranteeing immediate progression to the interview round."
     }
 ]
 

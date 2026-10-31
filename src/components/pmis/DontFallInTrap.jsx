@@ -128,7 +128,7 @@ export default function DontFallInTrap({ onNavigateToExplore }) {
       <div className="pt-12 pb-8 px-4 text-center max-w-4xl mx-auto">
         <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 px-3.5 py-1 text-xs font-bold text-emerald-700 dark:text-emerald-300 mb-3">
           <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-          <span>Authentic Job Creation Updates • Saved in Database</span>
+          <span>Authentic Job Creation Updates • Verified Feeds</span>
         </div>
 
         <h1 className="font-display text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">

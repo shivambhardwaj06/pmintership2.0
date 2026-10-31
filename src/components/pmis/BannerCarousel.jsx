@@ -41,9 +41,9 @@ export default function BannerCarousel({ onExploreClick, onOpenAuth }) {
     },
     {
       type: "custom",
-      alt: "AI 1-Page Resume Audit & Top 5 Database Matching",
-      tag: "AI Recruiter Engine 2.0",
-      title: "AI 1-Page Resume Audit & Top 5 Database Jobs",
+      alt: "AI 1-Page Resume Audit & Smart Internship Matching",
+      tag: "AI Resume & Internship Match",
+      title: "AI 1-Page Resume Audit & Top 5 Matched Internships",
       subtitle: "Instant ATS compliance score, branch alignment, and verified matching across 260 official PM Scheme positions in 24 corporate sectors.",
       linkAction: () => {
         if (onOpenAuth) onOpenAuth("register");
@@ -138,7 +138,7 @@ export default function BannerCarousel({ onExploreClick, onOpenAuth }) {
                     <h2 className="font-display text-base sm:text-2xl lg:text-3xl font-black text-white leading-tight">
                       AI 1-Page Resume Audit &amp;{" "}
                       <span className="text-transparent bg-clip-text bg-gradient-to-r from-saffron to-amber-300">
-                        Top 5 Database Jobs
+                        Top 5 Matched Internships
                       </span>
                     </h2>
 

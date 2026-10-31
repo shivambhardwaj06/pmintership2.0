@@ -36,21 +36,21 @@ export default function StudentDashboardShowcase({ user, onOpenAuth, onNavigateT
       iconBg: "bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400",
       icon: FileCheck2,
       description:
-        "Instant compliance score evaluating single-page executive formatting, keyword density, and technical tool extraction under 15 seconds across engineering, commerce, sciences, and humanities.",
-      highlights: ["Under 15s speed test", "Zero multi-page rejection"],
+        "Instant ATS evaluation verifying single-page corporate formatting, keyword density, and key competencies across engineering, commerce, sciences, and humanities.",
+      highlights: ["Single-Page Verified", "Instant ATS Score"],
       cta: "Audit My Resume",
     },
     {
       id: "job-matching",
       tab: "profile",
-      title: "Top 5 Database Jobs Match",
+      title: "Top 5 Matching Internships",
       badge: "260 Live Openings",
       badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800",
       iconBg: "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400",
       icon: Target,
       description:
-        "Automated algorithmic alignment against 260 official PM Scheme vacancies at top companies across 24 sectors based on your academic discipline and extracted competencies.",
-      highlights: ["Auto, BFSI, Infra & Pharma fit", "24 diversified corporate sectors"],
+        "Intelligent matchmaking across 260 official PM Scheme vacancies at top companies across 24 sectors based on your academic discipline and verified skills.",
+      highlights: ["Top corporate employer fit", "24 diversified industry sectors"],
       cta: "View Matching Jobs",
     },
     {
@@ -69,14 +69,14 @@ export default function StudentDashboardShowcase({ user, onOpenAuth, onNavigateT
     {
       id: "application-tracking",
       tab: "applications",
-      title: "Corporate Application Sync",
+      title: "Live Application Tracking",
       badge: "Recruiter Portal Sync",
       badgeColor: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800",
       iconBg: "bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400",
       icon: Building2,
       description:
-        "1-click applications with live tracking as corporate recruiters review candidate profiles, schedule interviews, and issue offer letters.",
-      highlights: ["Live application status", "Direct recruiter sync"],
+        "1-click applications with live status tracking as corporate recruiters review profiles, schedule interviews, and issue offer letters.",
+      highlights: ["Live application status", "Direct recruiter updates"],
       cta: "Track My Applications",
     },
   ];

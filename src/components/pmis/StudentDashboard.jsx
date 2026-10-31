@@ -585,11 +585,11 @@ function generateComprehensiveReview(candidateName, branch = "All Disciplines / 
       ats_score: "95 / 100 (ATS Friendly)",
       structure_rating: "Excellent (Standard Section Hierarchy)",
       formatting_feedback:
-        "Clean single-column layout, standard headings, and bulleted accomplishments. Recruiter scanning speed is optimized for corporate evaluation under 15 seconds.",
+        "Clean single-column layout, standard headings, and bulleted accomplishments. Optimized for applicant tracking systems and fast corporate recruiter reviews.",
     },
     skills_breakdown: {
       technical_skills: tech.length ? tech : ["Technical Analysis", "Core Domain Concepts"],
-      tools_frameworks: ["Git Version Control", "VS Code", "MS Excel", "Domain Specific Tools"],
+      tools_frameworks: ["MS Excel / Spreadsheets", "Documentation Tools", "Analytical Software", "Domain Specific Tools"],
       soft_skills: soft,
       all_extracted: safeSkills,
     },
@@ -1691,7 +1691,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                       1-Page Strict Compliance
                     </p>
                     <p className="text-[10px] text-slate-600 dark:text-slate-400 font-semibold">
-                      Passed (Zero ATS page-overflow risk)
+                      Verified Single-Page PDF Format
                     </p>
                   </div>
                 </div>
@@ -1715,7 +1715,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                       Fast Recruiter Scan Ready
                     </p>
                     <p className="text-[10px] text-slate-600 dark:text-slate-400 font-semibold">
-                      Optimized for 15-second screening
+                      High-impact bullet points & clean flow
                     </p>
                   </div>
                 </div>
@@ -1838,15 +1838,15 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                     {/* Tools & Frameworks */}
                     <div>
                       <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1.5">
-                        Tools & Engineering Frameworks
+                        Tools & Specialized Software
                       </span>
                       <div className="flex flex-wrap gap-1.5">
                         {(
                           aiAnalysis.skills_breakdown?.tools_frameworks || [
-                            "Git Version Control",
-                            "VS Code",
-                            "Excel",
-                            "Postman",
+                            "MS Excel / Spreadsheets",
+                            "Documentation Tools",
+                            "Analytical Software",
+                            "Domain Specific Tools",
                           ]
                         ).map((tl) => (
                           <span
@@ -1891,11 +1891,11 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                   <div className="flex items-center gap-2">
                     <Target className="h-4 w-4 text-orange-500" />
                     <h4 className="font-display text-sm font-extrabold text-slate-900 dark:text-white">
-                      Top 5 Jobs Match from Database (PM Internship Scheme)
+                      Top 5 Matching Opportunities (PM Internship Scheme)
                     </h4>
                   </div>
                   <span className="text-xs font-semibold text-slate-500">
-                    Matched directly from 260 official PM Scheme corporate internships in database
+                    Matched across 260 official PM Scheme vacancies based on your profile
                   </span>
                 </div>
 
@@ -2184,7 +2184,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                       {/* Shortlist Factors */}
                       <div className="mt-4 space-y-2 bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-200/80 dark:border-slate-700/80">
                         <p className="text-[10px] font-black text-slate-600 dark:text-slate-300 uppercase tracking-wide">
-                          Why This Resume Got Shortlisted in &lt;15 Seconds:
+                          Key Factors in Recruiter Shortlisting:
                         </p>
                         <ul className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
                           {resume.shortlist_factors.map((f, i) => (

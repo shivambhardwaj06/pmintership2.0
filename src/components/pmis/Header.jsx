@@ -373,7 +373,7 @@ export default function Header({ user, onOpenAuth, onSetView, activeView = "home
                 : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5"
             }`}
           >
-            <span>Candidate Studio</span>
+            <span>Student Dashboard</span>
           </button>
 
           <button
