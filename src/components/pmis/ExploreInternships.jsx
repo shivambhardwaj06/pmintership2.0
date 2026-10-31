@@ -3,6 +3,7 @@ import {
   Search,
   MapPin,
   Building,
+  Building2,
   Briefcase,
   Calendar,
   IndianRupee,
@@ -17,12 +18,44 @@ import {
   Loader2,
   Sparkles,
   ExternalLink,
+  ArrowUpDown,
+  SlidersHorizontal,
+  Check,
+  TrendingUp,
+  Tag,
 } from "lucide-react";
 import rawInternships from "@/data/internships.json";
 import CompanyLogo from "./CompanyLogo";
 
 const RAW_BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
 const BACKEND_URL = RAW_BACKEND_URL.replace(/\/+$/, "");
+
+/**
+ * Safely parses the numerical stipend upper bound from strings like
+ * '₹8,000–₹12,000/month', '₹10,000/month', '₹5,000 / month'
+ */
+export const parseStipendAmount = (stipendStr) => {
+  if (!stipendStr) return 0;
+  const matches = String(stipendStr).match(/\d[\d,]*/g);
+  if (!matches || matches.length === 0) return 0;
+  const numbers = matches
+    .map((m) => parseInt(m.replace(/,/g, ""), 10))
+    .filter((n) => !isNaN(n) && n > 0);
+  if (numbers.length === 0) return 0;
+  return Math.max(...numbers);
+};
+
+const TOP_MNCS = [
+  { name: "Tata Consultancy Services", short: "TCS" },
+  { name: "Infosys", short: "Infosys" },
+  { name: "Wipro", short: "Wipro" },
+  { name: "Tata Motors", short: "Tata Motors" },
+  { name: "Larsen & Toubro", short: "L&T" },
+  { name: "HDFC Bank", short: "HDFC Bank" },
+  { name: "Reliance Industries", short: "Reliance" },
+  { name: "Sun Pharmaceutical Industries", short: "Sun Pharma" },
+  { name: "Maruti Suzuki", short: "Maruti Suzuki" },
+];
 
 export default function ExploreInternships({
   user,
@@ -31,9 +64,15 @@ export default function ExploreInternships({
   onNavigateToDashboard,
 }) {
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCompany, setSelectedCompany] = useState("All");
+  const [selectedStipendRange, setSelectedStipendRange] = useState("All"); // "All" | "12k_plus" | "10k_12k" | "8k_10k" | "under_8k"
   const [selectedSector, setSelectedSector] = useState("All");
   const [selectedState, setSelectedState] = useState("All");
   const [selectedMode, setSelectedMode] = useState("All");
+  const [selectedDuration, setSelectedDuration] = useState("All");
+  const [sortBy, setSortBy] = useState("featured"); // "featured" | "stipend_high_low" | "stipend_low_high" | "company_asc" | "title_asc"
+  const [quickFilter, setQuickFilter] = useState("all");
+
   const [selectedInternship, setSelectedInternship] = useState(null);
   const [appliedIds, setAppliedIds] = useState([]);
   const [applyingId, setApplyingId] = useState(null);
@@ -55,7 +94,7 @@ export default function ExploreInternships({
           }
         }
       } catch (err) {
-        console.warn("MongoDB API live sync notice, using verified dataset:", err);
+        console.warn("Live API sync notice, using verified dataset:", err);
       }
     };
     fetchMongoInternships();
@@ -83,38 +122,123 @@ export default function ExploreInternships({
     return () => window.removeEventListener("pmis_application_updated", syncApplied);
   }, [user]);
 
+  // Extract unique companies with opening counts
+  const companies = useMemo(() => {
+    const counts = {};
+    internshipsList.forEach((i) => {
+      if (i.company) {
+        const name = i.company.trim();
+        counts[name] = (counts[name] || 0) + 1;
+      }
+    });
+    const sorted = Object.keys(counts).sort((a, b) => a.localeCompare(b));
+    return [
+      { name: "All", label: `All Partner Companies (${sorted.length})`, count: internshipsList.length },
+      ...sorted.map((name) => ({ name, label: `${name} (${counts[name]})`, count: counts[name] })),
+    ];
+  }, [internshipsList]);
+
   // Extract unique sectors, states, modes from MongoDB collection
   const sectors = useMemo(() => {
-    return ["All", ...new Set(internshipsList.map((i) => i.sector))].sort();
+    return ["All", ...new Set(internshipsList.map((i) => i.sector).filter(Boolean))].sort();
   }, [internshipsList]);
 
   const states = useMemo(() => {
-    return ["All", ...new Set(internshipsList.map((i) => i.state))].sort();
+    return ["All", ...new Set(internshipsList.map((i) => i.state).filter(Boolean))].sort();
   }, [internshipsList]);
 
   const modes = useMemo(() => {
-    return ["All", ...new Set(internshipsList.map((i) => i.mode))].sort();
+    return ["All", ...new Set(internshipsList.map((i) => i.mode).filter(Boolean))].sort();
   }, [internshipsList]);
 
-  // Filtered internships
+  const durations = useMemo(() => {
+    return [
+      "All",
+      "3 Months / 12 Weeks",
+      "6 Months",
+      "12 Months",
+    ];
+  }, []);
+
+  // Filtered and Sorted internships
   const filteredList = useMemo(() => {
-    return internshipsList.filter((item) => {
+    const matched = internshipsList.filter((item) => {
+      // 1. Search text
+      const search = searchTerm.trim().toLowerCase();
       const matchSearch =
-        !searchTerm.trim() ||
-        item.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.skills.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.sector.toLowerCase().includes(searchTerm.toLowerCase());
+        !search ||
+        (item.company && item.company.toLowerCase().includes(search)) ||
+        (item.title && item.title.toLowerCase().includes(search)) ||
+        (item.skills && item.skills.toLowerCase().includes(search)) ||
+        (item.location && item.location.toLowerCase().includes(search)) ||
+        (item.city && item.city.toLowerCase().includes(search)) ||
+        (item.sector && item.sector.toLowerCase().includes(search));
 
+      // 2. Company-wise Filter
+      const matchCompany =
+        selectedCompany === "All" ||
+        (item.company && item.company.toLowerCase() === selectedCompany.toLowerCase());
+
+      // 3. Salary / Stipend-wise Filter
+      let matchStipend = true;
+      if (selectedStipendRange !== "All") {
+        const amt = parseStipendAmount(item.stipend);
+        if (selectedStipendRange === "12k_plus") matchStipend = amt >= 12000;
+        else if (selectedStipendRange === "10k_12k") matchStipend = amt >= 10000 && amt < 12000;
+        else if (selectedStipendRange === "8k_10k") matchStipend = amt >= 8000 && amt < 10000;
+        else if (selectedStipendRange === "under_8k") matchStipend = amt > 0 && amt < 8000;
+      }
+
+      // 4. Sector Filter
       const matchSector = selectedSector === "All" || item.sector === selectedSector;
-      const matchState = selectedState === "All" || item.state === selectedState;
-      const matchMode =
-        selectedMode === "All" || item.mode.toLowerCase().includes(selectedMode.toLowerCase());
 
-      return matchSearch && matchSector && matchState && matchMode;
+      // 5. State / Location Filter
+      const matchState = selectedState === "All" || item.state === selectedState;
+
+      // 6. Work Mode Filter
+      const matchMode =
+        selectedMode === "All" ||
+        (item.mode && item.mode.toLowerCase().includes(selectedMode.toLowerCase()));
+
+      // 7. Duration Filter
+      let matchDuration = true;
+      if (selectedDuration !== "All") {
+        const dur = (item.duration || "").toLowerCase();
+        if (selectedDuration.includes("3 Month")) matchDuration = dur.includes("3 month") || dur.includes("12 week");
+        else if (selectedDuration.includes("6 Month")) matchDuration = dur.includes("6 month") || dur.includes("24 week");
+        else if (selectedDuration.includes("12 Month")) matchDuration = dur.includes("12 month") || dur.includes("1 year");
+      }
+
+      return matchSearch && matchCompany && matchStipend && matchSector && matchState && matchMode && matchDuration;
     });
-  }, [internshipsList, searchTerm, selectedSector, selectedState, selectedMode]);
+
+    // Apply Sorting
+    return matched.sort((a, b) => {
+      if (sortBy === "stipend_high_low") {
+        return parseStipendAmount(b.stipend) - parseStipendAmount(a.stipend);
+      }
+      if (sortBy === "stipend_low_high") {
+        return parseStipendAmount(a.stipend) - parseStipendAmount(b.stipend);
+      }
+      if (sortBy === "company_asc") {
+        return (a.company || "").localeCompare(b.company || "");
+      }
+      if (sortBy === "title_asc") {
+        return (a.title || "").localeCompare(b.title || "");
+      }
+      return 0; // Default featured order
+    });
+  }, [
+    internshipsList,
+    searchTerm,
+    selectedCompany,
+    selectedStipendRange,
+    selectedSector,
+    selectedState,
+    selectedMode,
+    selectedDuration,
+    sortBy,
+  ]);
 
   // Real-time Application Submission
   const handleApplyClick = async (item) => {
@@ -187,20 +311,77 @@ export default function ExploreInternships({
     }
   };
 
+  const handleQuickPreset = (preset) => {
+    setQuickFilter(preset);
+    if (preset === "all") {
+      clearAllFilters();
+    } else if (preset === "high_stipend") {
+      clearAllFilters();
+      setQuickFilter("high_stipend");
+      setSelectedStipendRange("12k_plus");
+      setSortBy("stipend_high_low");
+    } else if (preset === "remote_hybrid") {
+      clearAllFilters();
+      setQuickFilter("remote_hybrid");
+      setSelectedMode("Hybrid");
+    } else if (preset === "it_tech") {
+      clearAllFilters();
+      setQuickFilter("it_tech");
+      setSelectedSector("IT & Software Development");
+    } else if (preset === "automotive") {
+      clearAllFilters();
+      setQuickFilter("automotive");
+      setSelectedSector("Automotive");
+    } else if (preset === "banking") {
+      clearAllFilters();
+      setQuickFilter("banking");
+      setSelectedSector("Banking & Financial Services");
+    }
+  };
+
   const clearAllFilters = () => {
     setSearchTerm("");
+    setSelectedCompany("All");
+    setSelectedStipendRange("All");
     setSelectedSector("All");
     setSelectedState("All");
     setSelectedMode("All");
+    setSelectedDuration("All");
+    setSortBy("featured");
+    setQuickFilter("all");
   };
 
   const hasActiveFilters =
-    searchTerm || selectedSector !== "All" || selectedState !== "All" || selectedMode !== "All";
+    Boolean(searchTerm) ||
+    selectedCompany !== "All" ||
+    selectedStipendRange !== "All" ||
+    selectedSector !== "All" ||
+    selectedState !== "All" ||
+    selectedMode !== "All" ||
+    selectedDuration !== "All" ||
+    sortBy !== "featured" ||
+    quickFilter !== "all";
+
+  const getStipendLabel = (range) => {
+    if (range === "12k_plus") return "₹12,000+/mo";
+    if (range === "10k_12k") return "₹10k–₹12k/mo";
+    if (range === "8k_10k") return "₹8k–₹10k/mo";
+    if (range === "under_8k") return "Under ₹8k/mo";
+    return range;
+  };
+
+  const getSortLabel = (sort) => {
+    if (sort === "stipend_high_low") return "Highest Stipend";
+    if (sort === "stipend_low_high") return "Lowest Stipend";
+    if (sort === "company_asc") return "Company (A-Z)";
+    if (sort === "title_asc") return "Title (A-Z)";
+    return sort;
+  };
 
   return (
     <div id="explore-internships" className="mx-auto max-w-7xl px-4 py-12">
       {/* Header section with High-Contrast Typography */}
-      <div className="text-center max-w-3xl mx-auto mb-10">
+      <div className="text-center max-w-3xl mx-auto mb-8">
         <span className="inline-flex items-center gap-1.5 rounded-full bg-saffron/20 px-3.5 py-1 text-xs font-black uppercase tracking-wider text-orange-700 dark:text-orange-300 border border-saffron/40 mb-2">
           <ShieldCheck className="h-4 w-4 text-orange-600" /> Official PM Internship Scheme Openings
         </span>
@@ -208,12 +389,80 @@ export default function ExploreInternships({
           Explore All Paid Corporate Internships
         </h2>
         <p className="text-sm font-semibold text-slate-600 dark:text-slate-300 mt-2">
-          Filter through 260+ verified corporate opportunities across 24 sectors directly connected to MongoDB database.
+          Filter through 260+ verified opportunities company-wise, salary/stipend-wise, sector, and location under the Prime Minister's Internship Scheme.
         </p>
       </div>
 
-      {/* Filter and Search Bar with High Contrast */}
-      <div className="rounded-3xl p-5 sm:p-6 mb-8 border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md">
+      {/* Quick 1-Click Discovery Presets Bar */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-6 no-scrollbar text-xs font-bold">
+        <span className="text-slate-400 font-extrabold uppercase text-[10px] tracking-wider shrink-0 mr-1 flex items-center gap-1">
+          <Sparkles className="h-3 w-3 text-orange-500" /> Quick Discovery:
+        </span>
+        <button
+          onClick={() => handleQuickPreset("all")}
+          className={`px-3 py-1.5 rounded-xl border transition shrink-0 cursor-pointer ${
+            quickFilter === "all" && !hasActiveFilters
+              ? "bg-[#0B2545] text-white border-[#0B2545] shadow-xs"
+              : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:bg-slate-50"
+          }`}
+        >
+          All Opportunities
+        </button>
+        <button
+          onClick={() => handleQuickPreset("high_stipend")}
+          className={`px-3 py-1.5 rounded-xl border transition shrink-0 cursor-pointer flex items-center gap-1 ${
+            quickFilter === "high_stipend"
+              ? "bg-emerald-600 text-white border-emerald-600 shadow-xs"
+              : "bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-50"
+          }`}
+        >
+          <IndianRupee className="h-3 w-3" /> High Stipend (₹12,000+)
+        </button>
+        <button
+          onClick={() => handleQuickPreset("remote_hybrid")}
+          className={`px-3 py-1.5 rounded-xl border transition shrink-0 cursor-pointer ${
+            quickFilter === "remote_hybrid"
+              ? "bg-indigo-600 text-white border-indigo-600 shadow-xs"
+              : "bg-white dark:bg-slate-800 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50"
+          }`}
+        >
+          Hybrid / Remote
+        </button>
+        <button
+          onClick={() => handleQuickPreset("it_tech")}
+          className={`px-3 py-1.5 rounded-xl border transition shrink-0 cursor-pointer ${
+            quickFilter === "it_tech"
+              ? "bg-blue-600 text-white border-blue-600 shadow-xs"
+              : "bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 hover:bg-blue-50"
+          }`}
+        >
+          IT & Software Tech
+        </button>
+        <button
+          onClick={() => handleQuickPreset("automotive")}
+          className={`px-3 py-1.5 rounded-xl border transition shrink-0 cursor-pointer ${
+            quickFilter === "automotive"
+              ? "bg-amber-600 text-white border-amber-600 shadow-xs"
+              : "bg-white dark:bg-slate-800 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800 hover:bg-amber-50"
+          }`}
+        >
+          Automotive & EV
+        </button>
+        <button
+          onClick={() => handleQuickPreset("banking")}
+          className={`px-3 py-1.5 rounded-xl border transition shrink-0 cursor-pointer ${
+            quickFilter === "banking"
+              ? "bg-purple-600 text-white border-purple-600 shadow-xs"
+              : "bg-white dark:bg-slate-800 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800 hover:bg-purple-50"
+          }`}
+        >
+          Banking & Finance
+        </button>
+      </div>
+
+      {/* Filter and Search Control Center with High Contrast */}
+      <div className="rounded-3xl p-5 sm:p-6 mb-8 border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md space-y-4">
+        {/* ROW 1: PRIMARY FILTERS (Search, Company, Salary/Stipend, Sort By) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
           {/* Search box */}
           <div className="relative">
@@ -224,17 +473,97 @@ export default function ExploreInternships({
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search role, company, or skill..."
-              className="w-full rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 pl-10 pr-4 py-2.5 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-primary"
+              placeholder="Search role, skills, city..."
+              className="w-full rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 pl-10 pr-8 py-2.5 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-primary"
             />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm("")}
+                className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
           </div>
 
+          {/* Company-wise Filter */}
+          <div className="relative">
+            <span className="absolute left-3.5 top-3 text-slate-400 pointer-events-none">
+              <Building2 className="h-4 w-4" />
+            </span>
+            <select
+              value={selectedCompany}
+              onChange={(e) => {
+                setSelectedCompany(e.target.value);
+                setQuickFilter("custom");
+              }}
+              className="w-full appearance-none rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 pl-10 pr-8 py-2.5 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-primary cursor-pointer truncate"
+            >
+              {companies.map((c) => (
+                <option key={c.name} value={c.name}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-3 top-3 h-4 w-4 text-slate-400" />
+          </div>
+
+          {/* Salary / Stipend-wise Filter */}
+          <div className="relative">
+            <span className="absolute left-3.5 top-3 text-emerald-600 dark:text-emerald-400 pointer-events-none">
+              <IndianRupee className="h-4 w-4" />
+            </span>
+            <select
+              value={selectedStipendRange}
+              onChange={(e) => {
+                setSelectedStipendRange(e.target.value);
+                setQuickFilter("custom");
+              }}
+              className="w-full appearance-none rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 pl-10 pr-8 py-2.5 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-primary cursor-pointer truncate"
+            >
+              <option value="All">All Stipend Ranges (₹5k–₹15k/mo)</option>
+              <option value="12k_plus">₹12,000+ / month (High Stipend)</option>
+              <option value="10k_12k">₹10,000 – ₹12,000 / month</option>
+              <option value="8k_10k">₹8,000 – ₹10,000 / month</option>
+              <option value="under_8k">Under ₹8,000 / month</option>
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-3 top-3 h-4 w-4 text-slate-400" />
+          </div>
+
+          {/* Sort By Filter */}
+          <div className="relative">
+            <span className="absolute left-3.5 top-3 text-slate-400 pointer-events-none">
+              <ArrowUpDown className="h-4 w-4" />
+            </span>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="w-full appearance-none rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 pl-10 pr-8 py-2.5 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-primary cursor-pointer truncate"
+            >
+              <option value="featured">Sort: Featured & Recommended</option>
+              <option value="stipend_high_low">Stipend: High to Low (₹ High ➔ Low)</option>
+              <option value="stipend_low_high">Stipend: Low to High (₹ Low ➔ High)</option>
+              <option value="company_asc">Company Name (A to Z)</option>
+              <option value="title_asc">Role Title (A to Z)</option>
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-3 top-3 h-4 w-4 text-slate-400" />
+          </div>
+        </div>
+
+        {/* ROW 2: DETAILED CRITERIA (Sector, Location, Mode, Duration) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 pt-1">
           {/* Sector Filter */}
           <div className="relative">
+            <span className="absolute left-3.5 top-3 text-slate-400 pointer-events-none">
+              <Briefcase className="h-4 w-4" />
+            </span>
             <select
               value={selectedSector}
-              onChange={(e) => setSelectedSector(e.target.value)}
-              className="w-full appearance-none rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 pl-3.5 pr-8 py-2.5 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-primary cursor-pointer"
+              onChange={(e) => {
+                setSelectedSector(e.target.value);
+                setQuickFilter("custom");
+              }}
+              className="w-full appearance-none rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 pl-10 pr-8 py-2.5 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-primary cursor-pointer truncate"
             >
               <option value="All">All 24 Sectors</option>
               {sectors
@@ -248,12 +577,18 @@ export default function ExploreInternships({
             <ChevronDown className="pointer-events-none absolute right-3 top-3 h-4 w-4 text-slate-400" />
           </div>
 
-          {/* State Filter */}
+          {/* State / Location Filter */}
           <div className="relative">
+            <span className="absolute left-3.5 top-3 text-slate-400 pointer-events-none">
+              <MapPin className="h-4 w-4" />
+            </span>
             <select
               value={selectedState}
-              onChange={(e) => setSelectedState(e.target.value)}
-              className="w-full appearance-none rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 pl-3.5 pr-8 py-2.5 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-primary cursor-pointer"
+              onChange={(e) => {
+                setSelectedState(e.target.value);
+                setQuickFilter("custom");
+              }}
+              className="w-full appearance-none rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 pl-10 pr-8 py-2.5 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-primary cursor-pointer truncate"
             >
               <option value="All">All States / Locations</option>
               {states
@@ -269,10 +604,16 @@ export default function ExploreInternships({
 
           {/* Work Mode Filter */}
           <div className="relative">
+            <span className="absolute left-3.5 top-3 text-slate-400 pointer-events-none">
+              <Layers className="h-4 w-4" />
+            </span>
             <select
               value={selectedMode}
-              onChange={(e) => setSelectedMode(e.target.value)}
-              className="w-full appearance-none rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 pl-3.5 pr-8 py-2.5 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-primary cursor-pointer"
+              onChange={(e) => {
+                setSelectedMode(e.target.value);
+                setQuickFilter("custom");
+              }}
+              className="w-full appearance-none rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 pl-10 pr-8 py-2.5 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-primary cursor-pointer truncate"
             >
               <option value="All">All Work Modes (Hybrid / On-site / Remote)</option>
               {modes
@@ -285,19 +626,153 @@ export default function ExploreInternships({
             </select>
             <ChevronDown className="pointer-events-none absolute right-3 top-3 h-4 w-4 text-slate-400" />
           </div>
+
+          {/* Duration Filter */}
+          <div className="relative">
+            <span className="absolute left-3.5 top-3 text-slate-400 pointer-events-none">
+              <Clock className="h-4 w-4" />
+            </span>
+            <select
+              value={selectedDuration}
+              onChange={(e) => {
+                setSelectedDuration(e.target.value);
+                setQuickFilter("custom");
+              }}
+              className="w-full appearance-none rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 pl-10 pr-8 py-2.5 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-primary cursor-pointer truncate"
+            >
+              <option value="All">All Durations (3–12 Months)</option>
+              {durations
+                .filter((d) => d !== "All")
+                .map((dur) => (
+                  <option key={dur} value={dur}>
+                    {dur}
+                  </option>
+                ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-3 top-3 h-4 w-4 text-slate-400" />
+          </div>
         </div>
 
-        {/* Counter & Clear Filter */}
-        <div className="mt-4 pt-3.5 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
-          <p className="font-extrabold text-slate-800 dark:text-slate-200">
-            Showing <span className="text-primary font-black text-sm">{filteredList.length}</span> verified internship roles
-          </p>
+        {/* ROW 3: TOP MNCs QUICK FILTER PILLS */}
+        <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2 overflow-x-auto no-scrollbar">
+          <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider shrink-0 flex items-center gap-1">
+            <Building className="h-3 w-3" /> Quick Company:
+          </span>
+          {TOP_MNCS.map((mnc) => {
+            const isSelected = selectedCompany.toLowerCase() === mnc.name.toLowerCase();
+            return (
+              <button
+                key={mnc.name}
+                type="button"
+                onClick={() => {
+                  if (isSelected) {
+                    setSelectedCompany("All");
+                  } else {
+                    setSelectedCompany(mnc.name);
+                    setQuickFilter("custom");
+                  }
+                }}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition shrink-0 cursor-pointer flex items-center gap-1 border ${
+                  isSelected
+                    ? "bg-orange-600 text-white border-orange-600 shadow-xs"
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                <span>{mnc.short}</span>
+                {isSelected && <Check className="h-3 w-3" />}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* ROW 4: ACTIVE FILTER CHIPS & RESULT COUNTER */}
+        <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <p className="font-extrabold text-slate-800 dark:text-slate-200 mr-2">
+              Showing <span className="text-primary font-black text-sm">{filteredList.length}</span> of{" "}
+              <span className="font-bold">{internshipsList.length}</span> verified roles
+            </p>
+
+            {/* Removable Active Filter Pills */}
+            {searchTerm && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 text-[11px] font-bold border border-blue-200">
+                Search: "{searchTerm}"
+                <button onClick={() => setSearchTerm("")} className="hover:text-blue-950 cursor-pointer">
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            )}
+
+            {selectedCompany !== "All" && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-orange-100 dark:bg-orange-950 text-orange-800 dark:text-orange-300 text-[11px] font-bold border border-orange-200">
+                Company: {selectedCompany}
+                <button onClick={() => setSelectedCompany("All")} className="hover:text-orange-950 cursor-pointer">
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            )}
+
+            {selectedStipendRange !== "All" && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold border border-emerald-200">
+                Stipend: {getStipendLabel(selectedStipendRange)}
+                <button onClick={() => setSelectedStipendRange("All")} className="hover:text-emerald-950 cursor-pointer">
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            )}
+
+            {selectedSector !== "All" && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 text-[11px] font-bold border border-purple-200">
+                Sector: {selectedSector}
+                <button onClick={() => setSelectedSector("All")} className="hover:text-purple-950 cursor-pointer">
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            )}
+
+            {selectedState !== "All" && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-[11px] font-bold border border-slate-300">
+                Location: {selectedState}
+                <button onClick={() => setSelectedState("All")} className="hover:text-slate-950 cursor-pointer">
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            )}
+
+            {selectedMode !== "All" && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 text-[11px] font-bold border border-indigo-200">
+                Mode: {selectedMode}
+                <button onClick={() => setSelectedMode("All")} className="hover:text-indigo-950 cursor-pointer">
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            )}
+
+            {selectedDuration !== "All" && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-[11px] font-bold border border-amber-200">
+                Duration: {selectedDuration}
+                <button onClick={() => setSelectedDuration("All")} className="hover:text-amber-950 cursor-pointer">
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            )}
+
+            {sortBy !== "featured" && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 text-[11px] font-bold">
+                Order: {getSortLabel(sortBy)}
+                <button onClick={() => setSortBy("featured")} className="hover:text-slate-950 cursor-pointer">
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            )}
+          </div>
+
           {hasActiveFilters && (
             <button
               onClick={clearAllFilters}
-              className="text-xs font-extrabold text-red-600 hover:underline flex items-center gap-1 cursor-pointer"
+              className="text-xs font-black text-rose-600 hover:text-rose-700 hover:underline flex items-center gap-1 cursor-pointer shrink-0"
             >
-              <X className="h-3.5 w-3.5" /> Clear Filters
+              <X className="h-3.5 w-3.5" /> Clear All Filters
             </button>
           )}
         </div>
@@ -381,6 +856,25 @@ export default function ExploreInternships({
                       {item.eligibility}
                     </p>
                   </div>
+
+                  {/* Skills tags preview */}
+                  {item.skills && (
+                    <div className="pt-2 flex flex-wrap gap-1">
+                      {item.skills.split(",").slice(0, 3).map((sk, idx) => (
+                        <span
+                          key={idx}
+                          className="rounded-md bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-300 px-2 py-0.5"
+                        >
+                          {sk.trim()}
+                        </span>
+                      ))}
+                      {item.skills.split(",").length > 3 && (
+                        <span className="text-[10px] font-bold text-slate-400 self-center">
+                          +{item.skills.split(",").length - 3} more
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Bottom Actions */}

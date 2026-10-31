@@ -1,1 +1,40 @@
-{}
+{
+  "G-F6923D": {
+    "user_id": "G-F6923D",
+    "name": "G-F6923D",
+    "mobile": "",
+    "email": "g-f6923d@candidate.pminternship.gov.in",
+    "branch": "Computer Science & Engineering",
+    "degree": "B.Tech / B.E.",
+    "college": "State Technological University",
+    "state": "National",
+    "career_goals": "Targeting top corporate internships under PM Scheme.",
+    "skills": [
+      "Problem Solving",
+      "Professional Communication"
+    ],
+    "resume_name": "",
+    "cloudinary_url": "",
+    "created_at": "2026-10-31T19:08:57.037071",
+    "updated_at": "2026-10-31T19:08:57.037610"
+  },
+  "PMIS-808498": {
+    "user_id": "PMIS-808498",
+    "name": "Candidate",
+    "mobile": "",
+    "email": "pmis-808498@candidate.pminternship.gov.in",
+    "branch": "Computer Science & Engineering",
+    "degree": "B.Tech / B.E.",
+    "college": "State Technological University",
+    "state": "National",
+    "career_goals": "Targeting top corporate internships under PM Scheme.",
+    "skills": [
+      "Problem Solving",
+      "Professional Communication"
+    ],
+    "resume_name": "",
+    "cloudinary_url": "",
+    "created_at": "2026-10-31T19:16:23.350779",
+    "updated_at": "2026-10-31T19:16:23.350846"
+  }
+}

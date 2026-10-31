@@ -1,7 +1,9 @@
 import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.config import settings
 from app.routes import chat, health, internships, auth, announcements, career_path, recruiter
 from app.document_parser import get_structured_internship_chunks
@@ -62,17 +64,61 @@ app = FastAPI(
 )
 
 # CORS Middleware configuration
-origins = [origin.strip() for origin in settings.CORS_ORIGINS.split(",") if origin.strip()]
-if "*" in origins or not origins:
-    origins = ["*"]
+# Explicitly support Vercel production and preview domains, Render backend, and local development
+CORS_ALLOWED_ORIGINS = [
+    "https://pmintership.vercel.app",
+    "https://pmintership2-0.onrender.com",
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://localhost:8000",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:8000",
+]
+
+env_origins = [origin.strip() for origin in settings.CORS_ORIGINS.split(",") if origin.strip() and origin.strip() != "*"]
+for o in env_origins:
+    if o not in CORS_ALLOWED_ORIGINS:
+        CORS_ALLOWED_ORIGINS.append(o)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=CORS_ALLOWED_ORIGINS,
+    allow_origin_regex=r"https://.*\.vercel\.app|https://.*\.onrender\.com|http://localhost:\d+|http://127\.0\.0\.1:\d+",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Custom Exception Handlers ensuring CORS headers on all errors
+@app.exception_handler(StarletteHTTPException)
+async def custom_http_exception_handler(request: Request, exc: StarletteHTTPException):
+    origin = request.headers.get("origin") or "https://pmintership.vercel.app"
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
+        headers={
+            "Access-Control-Allow-Origin": origin,
+            "Access-Control-Allow-Credentials": "true",
+            "Access-Control-Allow-Methods": "*",
+            "Access-Control-Allow-Headers": "*",
+        }
+    )
+
+@app.exception_handler(Exception)
+async def custom_global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Global unhandled exception on {request.method} {request.url.path}: {exc}", exc_info=True)
+    origin = request.headers.get("origin") or "https://pmintership.vercel.app"
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "An internal server error occurred.", "error": str(exc)},
+        headers={
+            "Access-Control-Allow-Origin": origin,
+            "Access-Control-Allow-Credentials": "true",
+            "Access-Control-Allow-Methods": "*",
+            "Access-Control-Allow-Headers": "*",
+        }
+    )
 
 # Include routers
 app.include_router(health.router)
@@ -94,6 +140,11 @@ app.mount("/cdn", StaticFiles(directory=str(static_dir)), name="cdn")
 
 @app.get("/")
 def root():
+    try:
+        from app.db import count_internships_db
+        total = count_internships_db()
+    except Exception:
+        total = 260
     return {
         "status": "online",
         "service": "PM Internship Scheme Disha AI Backend",
@@ -113,7 +164,7 @@ def root():
             "user_applications": "GET /api/user/applications",
             "selected_resumes": "GET /api/resumes/selected",
             "stats": "GET /api/stats",
-            "mongodb_total_internships": count_internships_db()
+            "total_internships": total
         }
     }
 

@@ -1,13 +1,15 @@
 import re
 import uuid
+import json
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any
 
 from fastapi import APIRouter, HTTPException, Depends, Query, Header
 from pydantic import BaseModel, Field
 
 from app.config import settings
+from app.llm_client import nvidia_llm
 from app.db import (
     get_recruiter_by_email,
     save_recruiter,
@@ -67,8 +69,22 @@ class PostInternshipRequest(BaseModel):
 class UpdateApplicationStatusRequest(BaseModel):
     status: str = Field(..., description="New status (e.g. Under Review, Shortlisted for Interview, Selected / Offer Released, Not Selected)")
     recruiter_notes: Optional[str] = Field(None, description="Recruiter evaluation feedback or remarks")
+    rejection_feedback: Optional[str] = Field(None, description="Detailed constructive feedback explaining rejection reasons")
     interview_date: Optional[str] = Field(None, description="Scheduled interview date/time (e.g. 2026-11-04 10:00 AM)")
     meeting_link: Optional[str] = Field(None, description="Interview video conference link (Google Meet / Microsoft Teams)")
+    ai_screener_score: Optional[int] = Field(None, description="AI ATS match score (0-100)")
+    ai_screener_verdict: Optional[str] = Field(None, description="AI screening verdict (SHORTLISTED / NOT_SELECTED / UNDER_REVIEW)")
+    missing_skills: Optional[List[str]] = Field(None, description="Technical skill gaps identified")
+    improvement_tips: Optional[List[str]] = Field(None, description="Actionable advice for candidate improvement")
+
+
+class AIScreenApplicationsRequest(BaseModel):
+    company: str = Field(..., description="Corporate company name (e.g. Tata Consultancy Services (TCS))")
+    internship_id: Optional[str] = Field(None, description="Optional internship ID to filter specific role")
+    role_title: Optional[str] = Field(None, description="Optional role title to filter applications")
+    shortlist_count: Optional[int] = Field(1, description="Number of top candidates to shortlist per opening")
+    min_score_threshold: Optional[int] = Field(70, description="Minimum score to consider for shortlisting")
+    auto_apply_status: Optional[bool] = Field(True, description="Whether to directly apply the Shortlisted/Not Selected decisions in database")
 
 
 # =========================================================================
@@ -94,7 +110,7 @@ def register_recruiter(payload: RecruiterRegisterRequest):
     if existing:
         raise HTTPException(
             status_code=400,
-            detail=f"Recruiter account with email '{email_clean}' already exists in MongoDB. Please log in."
+            detail=f"Recruiter account with email '{email_clean}' already exists. Please log in."
         )
 
     recruiter_id = f"REC-{uuid.uuid4().hex[:6].upper()}"
@@ -286,7 +302,7 @@ def post_new_internship(payload: PostInternshipRequest):
     saved = add_internship_db(internship_data)
     return {
         "status": "success",
-        "message": f"Internship '{payload.title}' successfully posted to PM Internship Scheme database in MongoDB!",
+        "message": f"Internship '{payload.title}' successfully posted to PM Internship Scheme portal!",
         "internship": saved
     }
 
@@ -327,7 +343,7 @@ def update_application_status(
     payload: UpdateApplicationStatusRequest
 ):
     """
-    Modifies candidate application status, recruiter evaluation remarks, and interview details in MongoDB.
+    Modifies candidate application status, recruiter evaluation remarks, AI feedback, and interview details in MongoDB.
     Changes are immediately reflected in the candidate's student dashboard.
     """
     clean_status = payload.status.strip()
@@ -336,17 +352,321 @@ def update_application_status(
         new_status=clean_status,
         recruiter_notes=payload.recruiter_notes,
         interview_date=payload.interview_date,
-        meeting_link=payload.meeting_link
+        meeting_link=payload.meeting_link,
+        rejection_feedback=payload.rejection_feedback,
+        ai_screener_score=payload.ai_screener_score,
+        ai_screener_verdict=payload.ai_screener_verdict,
+        missing_skills=payload.missing_skills,
+        improvement_tips=payload.improvement_tips
     )
 
     if not updated:
         raise HTTPException(
             status_code=404,
-            detail=f"Application ID '{application_id}' not found in MongoDB database."
+            detail=f"Application ID '{application_id}' not found."
         )
 
     return {
         "status": "success",
-        "message": f"Application status updated to '{clean_status}' in MongoDB! Candidate notified in real-time.",
+        "message": f"Application status updated to '{clean_status}'! Candidate notified in real-time.",
         "application": updated
+    }
+
+
+def _evaluate_application_for_role(app: Dict[str, Any], job: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    AI Candidate Screener Engine:
+    Evaluates a single application against the job requirements using ATS matching
+    and AI recruiter qualitative assessment. Returns match score, strengths,
+    identified skill gaps, and constructive rejection feedback.
+    """
+    cand_name = app.get("candidate_name") or "Candidate"
+    cand_skills = app.get("skills") or []
+    if isinstance(cand_skills, str):
+        cand_skills = [s.strip() for s in cand_skills.split(",") if s.strip()]
+
+    cand_branch = app.get("branch") or "General"
+    cand_degree = app.get("degree") or "B.Tech"
+    cand_cgpa = app.get("cgpa") or ""
+    role_title = app.get("title") or job.get("title") or "Corporate Intern"
+    job_skills_str = job.get("skills") or "Programming, Web Development, Problem Solving, Git"
+    job_sector = job.get("sector") or "Technology"
+
+    # Required skills into clean list
+    req_skills = [s.strip() for s in re.split(r'[,|;•/]+', job_skills_str) if s.strip()]
+    cand_skills_lower = [s.lower() for s in cand_skills]
+
+    matched_skills = []
+    missing_skills = []
+
+    for rs in req_skills:
+        rs_clean = rs.lower()
+        if any(rs_clean in cs or cs in rs_clean or re.search(r'\b' + re.escape(rs_clean) + r'\b', cs) for cs in cand_skills_lower):
+            matched_skills.append(rs)
+        else:
+            missing_skills.append(rs)
+
+    # Base ATS Scoring Algorithm
+    skill_ratio = len(matched_skills) / max(1, len(req_skills))
+    raw_score = 42 + int(skill_ratio * 42)
+
+    # Branch Alignment Bonus
+    b_lower = cand_branch.lower()
+    combined_context = (role_title + " " + job_sector).lower()
+    if any(kw in b_lower for kw in ["comp", "cse", "it", "soft", "tech"]) and any(kw in combined_context for kw in ["software", "developer", "data", "it", "web", "cloud"]):
+        raw_score += 10
+    elif any(kw in b_lower for kw in ["mech", "auto", "mfg"]) and any(kw in combined_context for kw in ["mechanical", "automotive", "production", "cad"]):
+        raw_score += 10
+    elif any(kw in b_lower for kw in ["civil", "struct", "infra"]) and any(kw in combined_context for kw in ["civil", "infrastructure", "construction"]):
+        raw_score += 10
+    elif any(kw in b_lower for kw in ["finance", "commerce", "bank", "account"]) and any(kw in combined_context for kw in ["banking", "finance", "audit", "wealth"]):
+        raw_score += 10
+    elif any(kw in b_lower for kw in ["pharma", "bio", "chem"]) and any(kw in combined_context for kw in ["pharma", "quality", "formulation", "lab"]):
+        raw_score += 10
+
+    # CGPA & Resume presence bonus
+    if cand_cgpa:
+        try:
+            num_cgpa = float(re.findall(r'\d+\.?\d*', cand_cgpa)[0])
+            if num_cgpa >= 8.5:
+                raw_score += 7
+            elif num_cgpa >= 7.5:
+                raw_score += 4
+        except Exception:
+            pass
+
+    if app.get("resume_name") or app.get("resume_url"):
+        raw_score += 4
+
+    final_score = min(96, max(48, raw_score))
+
+    # Strengths
+    strengths = []
+    if matched_skills:
+        strengths.append(f"Direct competency in core prerequisites: {', '.join(matched_skills[:3])}.")
+    if cand_cgpa:
+        strengths.append(f"Consistent academic standing ({cand_cgpa}) in {cand_branch}.")
+    if cand_degree:
+        strengths.append(f"Enrolled in accredited curriculum: {cand_degree}.")
+    if not strengths:
+        strengths.append("Verified student registration under PM Scheme.")
+
+    # High-quality personalized constructive rejection feedback
+    top_missing = missing_skills[:3] if missing_skills else ["Production Deployment Rigor", "Specialized Frameworks"]
+    rejection_reason = (
+        f"Application review for {role_title}: While your foundational coursework in {cand_branch} is commendable, "
+        f"this opening specifically required proven hands-on proficiency in {', '.join(top_missing)}. "
+        f"Candidates who demonstrated deployed portfolio projects and certified experience in these core requirements were prioritized for Round 1 interviews."
+    )
+
+    improvement_tips = [
+        f"Build a standalone project demonstrating practical implementation of {top_missing[0] if top_missing else 'required frameworks'}.",
+        "Include measurable results and metrics (e.g. latency, users served, system accuracy) in your project descriptions.",
+        "Update your 1-page resume and re-apply to relevant corporate openings across other PMIS sectors."
+    ]
+
+    # Quick LLM enhancement if active
+    try:
+        llm_prompt = f"""You are an AI Recruiter Screener for {job.get('company', 'Enterprise Partner')}.
+Candidate: {cand_name}
+Role: {role_title}
+Candidate Branch: {cand_branch}
+Candidate Skills: {', '.join(cand_skills)}
+Job Required Skills: {job_skills_str}
+Score: {final_score}
+
+Return JSON with keys:
+- rejection_reason: 2-sentence crisp, polite and constructive explanation of why this application was not selected.
+- improvement_tips: list of 3 actionable tips for student improvement.
+- strengths: list of 2 primary strengths.
+"""
+        raw_llm = nvidia_llm.generate_response([{"role": "user", "content": llm_prompt}], max_tokens=500, temperature=0.1)
+        if "{" in raw_llm and "}" in raw_llm:
+            s_idx = raw_llm.find("{")
+            e_idx = raw_llm.rfind("}")
+            parsed = json.loads(raw_llm[s_idx:e_idx+1])
+            if parsed.get("rejection_reason"):
+                rejection_reason = parsed["rejection_reason"]
+            if parsed.get("improvement_tips") and isinstance(parsed["improvement_tips"], list):
+                improvement_tips = parsed["improvement_tips"]
+            if parsed.get("strengths") and isinstance(parsed["strengths"], list):
+                strengths = parsed["strengths"]
+    except Exception as _e:
+        logger.debug(f"LLM qualitative screener skipped: {_e}")
+
+    return {
+        "application_id": app.get("application_id") or app.get("id"),
+        "candidate_name": cand_name,
+        "candidate_email": app.get("candidate_email") or "",
+        "title": role_title,
+        "company": app.get("company") or job.get("company"),
+        "score": final_score,
+        "matched_skills": matched_skills,
+        "missing_skills": missing_skills,
+        "strengths": strengths,
+        "rejection_feedback": rejection_reason,
+        "improvement_tips": improvement_tips
+    }
+
+
+@router.post("/ai-screen-applications")
+def ai_screen_applications(payload: AIScreenApplicationsRequest):
+    """
+    AI Corporate Recruiter Screener Bot:
+    1. Fetches all candidate applications for the company (or specific opening).
+    2. Runs comprehensive ATS criteria & skill overlap assessment against job requirements.
+    3. Ranks candidates by score and shortlists the top N best applications for interview.
+    4. Automatically generates personalized, constructive rejection feedback for unselected applications.
+    5. Updates MongoDB and synchronizes real-time status with the Student Dashboard.
+    """
+    clean_company = payload.company.strip()
+    apps = get_company_applications_db(
+        company_name=clean_company,
+        internship_id=payload.internship_id
+    )
+
+    # Optional role title filter
+    if payload.role_title:
+        r_clean = payload.role_title.strip().lower()
+        apps = [a for a in apps if r_clean in (a.get("title") or "").lower()]
+
+    if not apps:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No applications found for company '{clean_company}' under the specified filter."
+        )
+
+    # Fetch corresponding job requirements
+    col_internships = internships_collection()
+    cached_jobs: Dict[str, Dict[str, Any]] = {}
+
+    def get_job_info(internship_id: Optional[str], title: str) -> Dict[str, Any]:
+        cache_key = f"{internship_id}_{title}"
+        if cache_key in cached_jobs:
+            return cached_jobs[cache_key]
+
+        query = {}
+        if internship_id:
+            query = {"$or": [{"id": internship_id}, {"internship_id": internship_id}]}
+        else:
+            query = {"company": clean_company, "title": title}
+
+        job = col_internships.find_one(query) or {}
+        if job:
+            job.pop("_id", None)
+        cached_jobs[cache_key] = job
+        return job
+
+    # Group applications by role title
+    apps_by_role: Dict[str, List[Dict[str, Any]]] = {}
+    for a in apps:
+        t = a.get("title") or "General Intern"
+        apps_by_role.setdefault(t, []).append(a)
+
+    all_evaluated = []
+    shortlisted_candidates = []
+    rejected_candidates = []
+    updated_records = []
+
+    target_top = max(1, payload.shortlist_count or 1)
+    threshold = payload.min_score_threshold or 70
+
+    for role_title, role_apps in apps_by_role.items():
+        job_info = get_job_info(role_apps[0].get("internship_id"), role_title)
+
+        # Evaluate each application in this role
+        evaluated_in_role = []
+        for app in role_apps:
+            eval_res = _evaluate_application_for_role(app, job_info)
+            eval_res["raw_app"] = app
+            evaluated_in_role.append(eval_res)
+
+        # Sort descending by match score
+        evaluated_in_role.sort(key=lambda x: x["score"], reverse=True)
+
+        for rank_idx, item in enumerate(evaluated_in_role):
+            app_id = item["application_id"]
+            app_score = item["score"]
+            raw_app = item["raw_app"]
+
+            # Decision: Top N candidates with score >= threshold are Shortlisted
+            is_shortlist = (rank_idx < target_top) and (app_score >= threshold)
+
+            if is_shortlist:
+                new_status = "Shortlisted for Interview"
+                verdict = "SHORTLISTED"
+                notes = f"AI Screener: Shortlisted with {app_score}% ATS score. {item['strengths'][0] if item['strengths'] else 'Top match.'}"
+                interview_time = (datetime.utcnow() + timedelta(days=3)).strftime("%Y-%m-%d 11:00 AM IST")
+                meet_link = f"https://meet.google.com/pmis-interview-{uuid.uuid4().hex[:6]}"
+                rej_feedback = None
+            else:
+                new_status = "Not Selected"
+                verdict = "NOT_SELECTED"
+                notes = f"AI Screener: Evaluated ({app_score}% match). Constructive feedback provided to student."
+                interview_time = None
+                meet_link = None
+                rej_feedback = item["rejection_feedback"]
+
+            # Build record summary
+            summary = {
+                "application_id": app_id,
+                "candidate_name": item["candidate_name"],
+                "candidate_email": item["candidate_email"],
+                "role": role_title,
+                "role_title": role_title,
+                "company": clean_company,
+                "score": app_score,
+                "status": new_status,
+                "verdict": verdict,
+                "rank": rank_idx + 1,
+                "degree": raw_app.get("degree", "B.Tech / B.E."),
+                "cgpa": raw_app.get("cgpa", "8.0 / 10"),
+                "strengths": item["strengths"],
+                "match_strengths": item["strengths"],
+                "missing_skills": item["missing_skills"],
+                "rejection_feedback": rej_feedback,
+                "improvement_tips": item["improvement_tips"],
+                "interview_date": interview_time,
+                "meeting_link": meet_link
+            }
+
+            if is_shortlist:
+                shortlisted_candidates.append(summary)
+            else:
+                rejected_candidates.append(summary)
+
+            # Directly update database and notify candidate
+            if payload.auto_apply_status:
+                updated_doc = update_application_status_db(
+                    application_id=app_id,
+                    new_status=new_status,
+                    recruiter_notes=notes,
+                    interview_date=interview_time,
+                    meeting_link=meet_link,
+                    rejection_feedback=rej_feedback,
+                    ai_screener_score=app_score,
+                    ai_screener_verdict=verdict,
+                    missing_skills=item["missing_skills"],
+                    improvement_tips=item["improvement_tips"],
+                    match_strengths=item["strengths"]
+                )
+                if updated_doc:
+                    updated_records.append(updated_doc)
+            else:
+                updated_records.append({**raw_app, **summary})
+
+            all_evaluated.append(summary)
+
+    return {
+        "status": "success",
+        "company": clean_company,
+        "message": f"AI Screener Bot successfully evaluated {len(all_evaluated)} application(s)! Shortlisted {len(shortlisted_candidates)} candidate(s) and generated constructive feedback for {len(rejected_candidates)} unselected application(s).",
+        "total_screened": len(all_evaluated),
+        "shortlisted_count": len(shortlisted_candidates),
+        "rejected_count": len(rejected_candidates),
+        "shortlisted": shortlisted_candidates,
+        "rejected": rejected_candidates,
+        "shortlisted_candidates": shortlisted_candidates,
+        "rejected_candidates": rejected_candidates,
+        "applications": updated_records
     }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   User,
   GraduationCap,
@@ -23,6 +23,7 @@ import {
   ShieldCheck,
   Layers,
   TrendingUp,
+  Trash2,
   CheckSquare,
   Wrench,
   Code,
@@ -44,6 +45,8 @@ import {
   Phone,
   Mail,
   Compass,
+  Bot,
+  XCircle,
 } from "lucide-react";
 import CompanyLogo from "./CompanyLogo";
 import rawInternships from "@/data/internships.json";
@@ -145,9 +148,21 @@ function getTopDatabaseJobMatchesClient(skills = [], branch = "", limit = 5) {
     } else if (/commerce|finance|account|bank|b\.com|bba|mba|tax/i.test(bLower)) {
       if (/banking|financial|consulting|fmcg|retail/i.test(jSector)) score += 35;
       if (/commerce|finance|b\.com|bba|mba/i.test(jEligibility)) score += 15;
-    } else if (/pharm|bio|health|medic|chem/i.test(bLower)) {
-      if (/pharma|health|biotech|chemical/i.test(jSector)) score += 35;
-      if (/pharm|b\.pharm|science|biotech|chem/i.test(jEligibility)) score += 15;
+    } else if (/pharm|bio|health|medic/i.test(bLower)) {
+      if (/pharma|health|biotech|life science/i.test(jSector)) score += 35;
+      if (/pharm|b\.pharm|science|biotech/i.test(jEligibility)) score += 15;
+    } else if (/chem|material|petro|polymer/i.test(bLower)) {
+      if (/chemical|oil, gas|energy|manufacturing|metals/i.test(jSector)) score += 35;
+      if (/chemical|chemistry|materials|b\.tech/i.test(jEligibility)) score += 15;
+    } else if (/agri|crop|farming|soil/i.test(bLower)) {
+      if (/agriculture|fmcg|food/i.test(jSector)) score += 35;
+      if (/agri|b\.sc|botany/i.test(jEligibility)) score += 15;
+    } else if (/mining|metal|mineral/i.test(bLower)) {
+      if (/metals|mining|steel|manufacturing/i.test(jSector)) score += 35;
+      if (/mining|metallurgy|b\.tech/i.test(jEligibility)) score += 15;
+    } else if (/multi|operat|manage|general/i.test(bLower)) {
+      if (/consulting|retail|fmcg|banking|corporate/i.test(jSector)) score += 35;
+      score += 15;
     } else {
       const bTokens = bLower.split(/\s+/).filter((t) => t.length > 3);
       if (bTokens.some((t) => jSector.includes(t) || jEligibility.includes(t))) {
@@ -1095,12 +1110,13 @@ async function parseResumePdfClientSide(file) {
     }
   }
 
-  const finalSkills = detectedSkills.length >= 3 ? detectedSkills : [
-    ...detectedSkills,
-    "Analytical Problem Solving",
-    "Professional Communication",
-    "Team Collaboration"
-  ];
+  const finalSkills = [...detectedSkills];
+  if (!finalSkills.some((s) => s.toLowerCase().includes("communication"))) {
+    finalSkills.push("Professional Communication");
+  }
+  if (!finalSkills.some((s) => s.toLowerCase().includes("problem solving"))) {
+    finalSkills.push("Analytical Problem Solving");
+  }
 
   // 9. Real-Time ATS Score (ranges 86-98 based on complete sections, contact info, and skills)
   let atsScore = 80;
@@ -1183,6 +1199,41 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
     return localSelectedResumes;
   });
 
+  // Database Clean State
+  const [cleaningDb, setCleaningDb] = useState(false);
+  const [cleanMessage, setCleanMessage] = useState(null);
+
+  // Reactive top job matches computed directly from student verified skills & academic branch
+  const topJobMatches = useMemo(() => {
+    return getTopDatabaseJobMatchesClient(profile.skills || [], profile.branch || "", 5);
+  }, [profile.skills, profile.branch]);
+
+  // Synchronize dynamic AI review with profile whenever profile changes
+  useEffect(() => {
+    setAiAnalysis((prev) => {
+      return generateComprehensiveReview(profile.name, profile.branch, profile.skills || [], {
+        college: profile.college,
+        degree: profile.degree,
+        state: profile.state,
+        email: profile.email,
+        phone: profile.mobile,
+        careerSummary: profile.career_goals,
+        atsScore: prev?.resume_score,
+        formattingFeedback: prev?.layout_review?.formatting_feedback,
+      });
+    });
+  }, [
+    profile.name,
+    profile.branch,
+    profile.skills,
+    profile.college,
+    profile.degree,
+    profile.state,
+    profile.career_goals,
+    profile.email,
+    profile.mobile,
+  ]);
+
   // 1. Fetch user profile directly from MongoDB database on load
   const fetchProfileFromDb = async (userId) => {
     if (!userId) return;
@@ -1192,42 +1243,29 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
       if (res.ok) {
         const dbUser = await res.json();
         if (dbUser && dbUser.user_id) {
-          setProfile({
-            name: dbUser.name || "Candidate",
+          setProfile((prev) => ({
+            ...prev,
+            name: dbUser.name || prev.name || "Candidate",
             user_id: dbUser.user_id,
-            email: dbUser.email || "",
-            mobile: dbUser.mobile || "",
-            branch: dbUser.branch || "Computer Science & Engineering",
-            degree: dbUser.degree || "B.Tech / B.E.",
-            college: dbUser.college || "State University / College of Engineering",
-            state: dbUser.state || "National",
-            career_goals: dbUser.career_goals || "Targeting top corporate internships under PM Scheme.",
-            skills: Array.isArray(dbUser.skills) && dbUser.skills.length ? dbUser.skills : ["Problem Solving", "Professional Communication"],
+            email: dbUser.email ?? prev.email,
+            mobile: dbUser.mobile ?? prev.mobile,
+            branch: dbUser.branch || prev.branch || "Computer Science & Engineering",
+            degree: dbUser.degree || prev.degree || "B.Tech / B.E.",
+            college: dbUser.college || prev.college || "State University / College of Engineering",
+            state: dbUser.state || prev.state || "National",
+            career_goals: dbUser.career_goals || prev.career_goals || "Targeting top corporate internships under PM Scheme.",
+            skills: Array.isArray(dbUser.skills) && dbUser.skills.length ? dbUser.skills : prev.skills,
             resume_name: dbUser.resume_name || "",
             cloudinary_url: dbUser.cloudinary_url || "",
-          });
+          }));
 
           // Keep localStorage up to date
           const existing = JSON.parse(localStorage.getItem("pmis_user") || "{}");
           localStorage.setItem("pmis_user", JSON.stringify({ ...existing, ...dbUser }));
-
-          // Initialize dynamic AI review
-          if (dbUser.resume_name && !aiAnalysis) {
-            setAiAnalysis(
-              generateComprehensiveReview(dbUser.name, dbUser.branch, dbUser.skills || [], {
-                college: dbUser.college,
-                degree: dbUser.degree,
-                state: dbUser.state,
-                email: dbUser.email,
-                phone: dbUser.mobile,
-                careerSummary: dbUser.career_goals,
-              })
-            );
-          }
         }
       }
     } catch (err) {
-      console.warn("Could not fetch profile from MongoDB, using local state:", err);
+      console.warn("Could not fetch remote profile, using local state:", err);
     } finally {
       setDbLoading(false);
     }
@@ -1284,10 +1322,6 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
     if (activeUserId) {
       fetchProfileFromDb(activeUserId);
       syncApplicationsFromBackend(activeUserId);
-    } else {
-      // Local demo profile initialization
-      const localAnalysis = generateComprehensiveReview(profile.name, profile.branch, profile.skills);
-      setAiAnalysis(localAnalysis);
     }
   }, [user?.user_id]);
 
@@ -1317,10 +1351,14 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
       cloudinary_url: profile.cloudinary_url,
     };
 
+    const token = localStorage.getItem("pmis_access_token");
+    const headers = { "Content-Type": "application/json" };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+
     try {
       const res = await fetch(`${BACKEND_URL}/api/user/profile?user_id=${encodeURIComponent(targetUserId)}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify(payload),
       });
 
@@ -1332,33 +1370,61 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
         const currentStored = JSON.parse(localStorage.getItem("pmis_user") || "{}");
         localStorage.setItem("pmis_user", JSON.stringify({ ...currentStored, ...saved, user_id: targetUserId }));
         window.dispatchEvent(new Event("pmis_user_updated"));
-
-        // Update active AI review with latest skills & goals
-        setAiAnalysis(
-          generateComprehensiveReview(saved.name, saved.branch, saved.skills, {
-            college: saved.college,
-            degree: saved.degree,
-            state: saved.state,
-            email: saved.email,
-            phone: saved.mobile,
-            careerSummary: saved.career_goals,
-          })
-        );
         setSaveStatus("success");
       } else {
-        // Fallback local save if server offline
+        const errData = await res.json().catch(() => ({}));
+        console.error("Save profile server error:", errData);
+        // Fallback local save
         const currentStored = JSON.parse(localStorage.getItem("pmis_user") || "{}");
         localStorage.setItem("pmis_user", JSON.stringify({ ...currentStored, ...payload, user_id: targetUserId }));
         window.dispatchEvent(new Event("pmis_user_updated"));
-        setSaveStatus("success");
+        setSaveStatus("error");
       }
-    } catch {
+    } catch (err) {
+      console.error("Network error saving profile:", err);
       const currentStored = JSON.parse(localStorage.getItem("pmis_user") || "{}");
       localStorage.setItem("pmis_user", JSON.stringify({ ...currentStored, ...payload, user_id: targetUserId }));
       window.dispatchEvent(new Event("pmis_user_updated"));
-      setSaveStatus("success");
+      setSaveStatus("error");
     }
-    setTimeout(() => setSaveStatus(null), 3000);
+    setTimeout(() => setSaveStatus(null), 3500);
+  };
+
+  // Clean users database completely
+  const handleCleanUsersDatabase = async () => {
+    if (
+      !window.confirm(
+        "Are you sure you want to reset all registered users and start fresh? All candidate accounts will be cleared so each user can be registered again."
+      )
+    ) {
+      return;
+    }
+    try {
+      setCleaningDb(true);
+      const res = await fetch(`${BACKEND_URL}/api/auth/clean-users`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (res.ok) {
+        // Clear local storage sessions
+        localStorage.removeItem("pmis_user");
+        localStorage.removeItem("pmis_access_token");
+        localStorage.removeItem("pmis_refresh_token");
+        localStorage.removeItem("pmis_accounts");
+        window.dispatchEvent(new Event("pmis_user_updated"));
+        setCleanMessage("User accounts reset completely. You can now register fresh.");
+        setTimeout(() => {
+          setCleanMessage(null);
+          if (onOpenAuth) onOpenAuth("register");
+        }, 2000);
+      } else {
+        alert("Failed to reset users: " + (data.detail || data.message || "Unknown error"));
+      }
+    } catch (err) {
+      alert("Error contacting server: " + err.message);
+    } finally {
+      setCleaningDb(false);
+    }
   };
 
   const handleAddSkill = () => {
@@ -1412,76 +1478,16 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
 
     setUploadError(null);
     setUploadingResume(true);
-    setUploadStep("Scanning 1-Page PDF & Decompressing Stream Layers...");
+    setUploadStep("Scanning 1-Page PDF & Extracting Real Skills...");
 
-    // 1. Immediately extract candidate details directly from PDF in browser
+    const immediateBlobUrl = URL.createObjectURL(file);
+    const targetUserId = profile.user_id || user?.user_id || "PMIS-CANDIDATE";
+
+    // 1. Run local client-side extraction as fast preview
     const clientParsed = await parseResumePdfClientSide(file);
 
-    const extractedName =
-      clientParsed.candidateName &&
-      !["Candidate", "Student Candidate", "PMIS Candidate", "Exact Full Name from resume"].includes(
-        clientParsed.candidateName
-      )
-        ? clientParsed.candidateName
-        : profile.name;
-    const extractedBranch = clientParsed.branch || profile.branch;
-    const extractedCollege =
-      clientParsed.college && !clientParsed.college.includes("State Technological")
-        ? clientParsed.college
-        : profile.college;
-    const extractedDegree = clientParsed.degree || profile.degree;
-    const extractedState =
-      clientParsed.state && clientParsed.state !== "National" ? clientParsed.state : profile.state;
-    const extractedEmail = clientParsed.email || profile.email;
-    const extractedPhone = clientParsed.phone || profile.mobile;
-    const extractedGoals = clientParsed.careerSummary || profile.career_goals;
-    const extractedSkills = clientParsed.skills?.length ? clientParsed.skills : profile.skills;
-    const immediateBlobUrl = URL.createObjectURL(file);
-
-    // Build real-time comprehensive review
-    const immediateReview = generateComprehensiveReview(extractedName, extractedBranch, extractedSkills, {
-      college: extractedCollege,
-      degree: extractedDegree,
-      state: extractedState,
-      email: extractedEmail,
-      phone: extractedPhone,
-      atsScore: clientParsed.atsScore,
-      rawText: clientParsed.rawText,
-      careerSummary: extractedGoals,
-    });
-
-    const updatedProfile = {
-      ...profile,
-      name: extractedName,
-      email: extractedEmail,
-      mobile: extractedPhone,
-      branch: extractedBranch,
-      college: extractedCollege,
-      degree: extractedDegree,
-      state: extractedState,
-      career_goals: extractedGoals,
-      skills: extractedSkills,
-      resume_name: file.name,
-      cloudinary_url: immediateBlobUrl,
-    };
-
-    setProfile(updatedProfile);
-    setAiAnalysis(immediateReview);
-
-    // Persist to MongoDB database
-    const targetUserId = profile.user_id || user?.user_id || "PMIS-CANDIDATE";
     try {
-      setUploadStep("Syncing Candidate Profile & Extracted Skills to MongoDB...");
-      await fetch(`${BACKEND_URL}/api/user/profile?user_id=${encodeURIComponent(targetUserId)}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...updatedProfile,
-          user_id: targetUserId,
-        }),
-      });
-
-      // Upload file to backend server
+      // 2. Upload file to backend server for high-fidelity PyMuPDF & AI recruiter extraction
       const formData = new FormData();
       formData.append("file", file);
       formData.append("user_id", targetUserId);
@@ -1494,22 +1500,83 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
 
       if (res.ok) {
         const data = await res.json();
+        const realSkills = data.updated_skills?.length
+          ? data.updated_skills
+          : (data.analysis?.extracted_skills?.length ? data.analysis.extracted_skills : (clientParsed.skills?.length ? clientParsed.skills : profile.skills));
+
+        const realName = (data.analysis?.candidate_name && !["Candidate", "Student Candidate", "PMIS Candidate", "Exact Full Name from resume"].includes(data.analysis.candidate_name))
+          ? data.analysis.candidate_name
+          : (clientParsed.candidateName && !["Candidate", "Student Candidate", "PMIS Candidate", "Exact Full Name from resume"].includes(clientParsed.candidateName) ? clientParsed.candidateName : profile.name);
+
+        const realBranch = data.analysis?.detected_branch || clientParsed.branch || profile.branch;
+        const realDegree = data.analysis?.degree || clientParsed.degree || profile.degree;
+        const realCollege = (data.analysis?.college && !data.analysis.college.includes("State Technological"))
+          ? data.analysis.college
+          : (clientParsed.college && !clientParsed.college.includes("State Technological") ? clientParsed.college : profile.college);
+        const realState = (data.analysis?.location && data.analysis.location !== "National")
+          ? data.analysis.location
+          : (clientParsed.state && clientParsed.state !== "National" ? clientParsed.state : profile.state);
+        const realGoals = data.analysis?.career_summary || clientParsed.careerSummary || profile.career_goals;
+        const finalCloudinary = data.cloudinary_url || immediateBlobUrl;
+
+        // 1. UPDATE DASHBOARD PROFILE STATE WITH REAL EXTRACTED DETAILS!
+        setProfile((prev) => {
+          const next = {
+            ...prev,
+            name: realName,
+            email: data.analysis?.email || clientParsed.email || prev.email,
+            mobile: data.analysis?.phone || clientParsed.phone || prev.mobile,
+            branch: realBranch,
+            degree: realDegree,
+            college: realCollege,
+            state: realState,
+            career_goals: realGoals,
+            skills: realSkills,
+            resume_name: file.name,
+            cloudinary_url: finalCloudinary,
+          };
+          const existingUser = JSON.parse(localStorage.getItem("pmis_user") || "{}");
+          localStorage.setItem("pmis_user", JSON.stringify({ ...existingUser, ...next }));
+          return next;
+        });
+
+        // 2. UPDATE AI ANALYSIS WITH REAL VERIFIED SKILLS & REAL PMIS MATCHES!
         if (data.analysis) {
           const finalReview = {
-            ...immediateReview,
             ...data.analysis,
-            resume_score: data.analysis.resume_score || immediateReview.resume_score,
+            candidate_name: realName,
+            detected_branch: realBranch,
+            resume_score: data.analysis.resume_score || 92,
             top_5_jobs_match: data.analysis.top_5_jobs_match?.length
               ? data.analysis.top_5_jobs_match
-              : immediateReview.top_5_jobs_match,
-            extracted_skills: extractedSkills,
-            career_summary: extractedGoals,
+              : getTopDatabaseJobMatchesClient(realSkills, realBranch, 5),
+            extracted_skills: realSkills,
+            career_summary: realGoals,
+            skills_breakdown: {
+              technical_skills: realSkills.slice(0, 10),
+              tools_frameworks: realSkills.slice(10, 18),
+              soft_skills: ["Analytical Problem Solving", "Professional Communication", "Team Collaboration"],
+              all_extracted: realSkills,
+            },
           };
           setAiAnalysis(finalReview);
         }
+      } else {
+        const errJson = await res.json().catch(() => ({}));
+        if (errJson.detail) {
+          setUploadError(errJson.detail);
+        }
       }
     } catch (err) {
-      console.warn("Backend sync finished, client extraction active:", err);
+      console.warn("Backend upload error, using client extraction fallback:", err);
+      // Fallback to client extraction if network error
+      const extractedSkills = clientParsed.skills?.length ? clientParsed.skills : profile.skills;
+      setProfile((prev) => ({
+        ...prev,
+        skills: extractedSkills,
+        resume_name: file.name,
+        cloudinary_url: immediateBlobUrl,
+      }));
     } finally {
       setUploadingResume(false);
       setUploadStep("");
@@ -1586,7 +1653,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                   {profile.name || "Candidate Profile"}
                 </h1>
                 <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-[11px] font-extrabold px-2.5 py-0.5 border border-emerald-300 dark:border-emerald-800">
-                  <Database className="h-3 w-3 text-emerald-600" /> MongoDB Synced
+                  <CheckCircle2 className="h-3 w-3 text-emerald-600" /> Profile Verified & Synced
                 </span>
               </div>
 
@@ -1679,14 +1746,14 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
             }`}
           >
             <Target className="h-4 w-4 text-emerald-500" />
-            <span>Database Jobs Match</span>
+            <span>Matched Internships</span>
             {isHighScorer ? (
               <span className="ml-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-400 text-slate-950">
                 90%+ Shortlist
               </span>
             ) : (
               <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-300 text-slate-800 dark:bg-slate-700 dark:text-slate-200">
-                260 in DB
+                260 Openings
               </span>
             )}
           </button>
@@ -1717,28 +1784,51 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
         </div>
 
         {/* ================================================================ */}
-        {/* TAB 1: PROFILE & VERIFIED SKILLS (MongoDB Connected)               */}
+        {/* TAB 1: PROFILE & VERIFIED SKILLS                                 */}
         {/* ================================================================ */}
         {dashboardTab === "profile" && (
           <div className="space-y-6 animate-in fade-in duration-200">
-            {/* Database Sync Bar */}
+            {/* Profile Action Bar */}
             <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 text-xs font-semibold text-amber-900 dark:text-amber-200">
               <div className="flex items-center gap-2">
-                <Database className="h-4 w-4 text-amber-600 shrink-0" />
+                <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
                 <span>
-                  All candidate data is dynamically fetched and securely persisted in MongoDB. Any changes you save here
-                  stay permanent across browser refreshes and device logins.
+                  All candidate information is securely saved and verified. Any changes you save here stay permanent across your sessions and logins.
                 </span>
               </div>
-              <button
-                onClick={() => fetchProfileFromDb(profile.user_id)}
-                disabled={dbLoading}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 font-bold hover:bg-slate-100 transition cursor-pointer shadow-2xs"
-              >
-                <RefreshCw className={`h-3.5 w-3.5 ${dbLoading ? "animate-spin" : ""}`} />
-                <span>Refresh from DB</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => fetchProfileFromDb(profile.user_id)}
+                  disabled={dbLoading}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 font-bold hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer shadow-2xs"
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 ${dbLoading ? "animate-spin" : ""}`} />
+                  <span>Refresh Profile</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCleanUsersDatabase}
+                  disabled={cleaningDb}
+                  title="Reset user profiles to register fresh"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-900 font-bold hover:bg-red-100 dark:hover:bg-red-900/60 transition cursor-pointer shadow-2xs"
+                >
+                  {cleaningDb ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-3.5 w-3.5" />
+                  )}
+                  <span>Reset All Users</span>
+                </button>
+              </div>
             </div>
+
+            {cleanMessage && (
+              <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs font-bold flex items-center gap-2 animate-in fade-in">
+                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                <span>{cleanMessage}</span>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               {/* Left Column: Form Details (7 cols) */}
@@ -1929,18 +2019,24 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                     >
                       {saveStatus === "saving" ? (
                         <>
-                          <Loader2 className="h-4 w-4 animate-spin" /> Saving to MongoDB...
+                          <Loader2 className="h-4 w-4 animate-spin" /> Saving Changes...
                         </>
                       ) : (
                         <>
-                          <Database className="h-4 w-4" /> Save Profile to Database
+                          <CheckCircle2 className="h-4 w-4" /> Save Profile Changes
                         </>
                       )}
                     </button>
 
                     {saveStatus === "success" && (
                       <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 animate-in fade-in">
-                        <CheckCircle2 className="h-4 w-4" /> Saved in MongoDB Successfully!
+                        <CheckCircle2 className="h-4 w-4" /> Profile Saved Successfully!
+                      </span>
+                    )}
+
+                    {saveStatus === "error" && (
+                      <span className="text-xs font-extrabold text-amber-600 dark:text-amber-400 flex items-center gap-1.5 animate-in fade-in">
+                        <AlertTriangle className="h-4 w-4" /> Saved locally (Backend sync pending)
                       </span>
                     )}
 
@@ -2043,6 +2139,97 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                       ))}
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* TOP DATABASE JOB MATCHES FOR YOUR PROFILE */}
+            <div className="rounded-3xl p-6 sm:p-8 bg-white dark:bg-slate-900 border-2 border-slate-200/80 dark:border-slate-800 shadow-sm space-y-5">
+              <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+                    <Target className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <h3 className="font-display text-base sm:text-lg font-black text-slate-900 dark:text-white">
+                      Top Matched Internships for Your Profile
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Curated from official PMIS opportunities based on <strong>{profile.branch}</strong> & {profile.skills.length} verified skill(s)
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setDashboardTab("matched_jobs")}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-950 font-black text-xs hover:brightness-110 active:scale-95 transition cursor-pointer shadow-sm"
+                >
+                  <span>View All Matching Internships</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {topJobMatches.slice(0, 3).map((job, idx) => {
+                  const isApplied = appliedJobIds.includes(job.id);
+                  return (
+                    <div
+                      key={job.id || idx}
+                      className="rounded-2xl p-5 bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/80 flex flex-col justify-between space-y-4 hover:border-emerald-400 dark:hover:border-emerald-500 transition shadow-2xs"
+                    >
+                      <div className="space-y-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="h-11 w-11 rounded-xl bg-white dark:bg-slate-800 p-2 border border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0 shadow-2xs">
+                            <CompanyLogo company={job.company} className="h-full w-full object-contain" />
+                          </div>
+                          <span className="rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] font-black px-2.5 py-0.5 border border-emerald-300 shrink-0">
+                            {job.match_score}% Match
+                          </span>
+                        </div>
+
+                        <div>
+                          <h4 className="font-display text-sm font-black text-slate-900 dark:text-white line-clamp-1">
+                            {job.role || job.title}
+                          </h4>
+                          <p className="text-xs font-bold text-orange-600 dark:text-orange-400">{job.company}</p>
+                          <p className="text-[11px] text-slate-500 font-medium">{job.sector} • {job.location || job.city}</p>
+                        </div>
+
+                        <div className="flex flex-wrap gap-1">
+                          {(job.matched_skills || []).slice(0, 3).map((sk) => (
+                            <span
+                              key={sk}
+                              className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
+                            >
+                              ✓ {sk}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleApplyToJob(job)}
+                        disabled={isApplied}
+                        className={`w-full py-2.5 rounded-xl text-xs font-black transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                          isApplied
+                            ? "bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 cursor-not-allowed"
+                            : "bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs active:scale-98"
+                        }`}
+                      >
+                        {isApplied ? (
+                          <>
+                            <Check className="h-3.5 w-3.5" /> Applied
+                          </>
+                        ) : (
+                          <>
+                            <Target className="h-3.5 w-3.5" /> Direct 1-Click Apply
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -2429,7 +2616,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                 </h2>
                 <p className="text-xs sm:text-sm text-emerald-100 max-w-3xl leading-relaxed">
                   Congratulations! Your verified ATS score of <strong>{currentAtsScore}/100</strong> exceeds the 90% corporate
-                  benchmark. Every role below is queried in real time directly from our official 260-job database. Click
+                  benchmark. Every role below is matched in real time from official PM Scheme corporate openings. Click
                   <strong> Direct 1-Click Apply</strong> to submit your profile straight to the corporate recruiter portal.
                 </p>
               </div>
@@ -2450,7 +2637,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
 
             {/* Top 5 Genuine Database Openings */}
             <div className="space-y-4">
-              {((aiAnalysis?.top_5_jobs_match || []).slice(0, 5)).map((job, idx) => {
+              {(topJobMatches?.length ? topJobMatches : (aiAnalysis?.top_5_jobs_match || [])).slice(0, 5).map((job, idx) => {
                 const isApplied = appliedJobIds.includes(job.id);
                 return (
                   <div
@@ -2543,28 +2730,62 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
         )}
 
         {/* ================================================================ */}
-        {/* TAB 5: MY TRACKED APPLICATIONS (Live Synced with MongoDB)          */}
+        {/* TAB 5: MY TRACKED APPLICATIONS                                    */}
         {/* ================================================================ */}
         {dashboardTab === "applications" && (
           <div className="space-y-6 animate-in fade-in duration-200">
-            <div className="rounded-3xl p-6 sm:p-8 bg-white dark:bg-slate-900 border-2 border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h3 className="font-display text-xl font-black text-slate-900 dark:text-white">
-                  Corporate Application Tracking Portal
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  Track the real-time status of applications submitted under the Prime Minister Internship Scheme.
-                </p>
+            {/* Top Bar with Real-Time Stats */}
+            <div className="rounded-3xl p-6 sm:p-7 bg-white dark:bg-slate-900 border-2 border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 px-3 py-0.5 text-xs font-black uppercase tracking-wider mb-2 border border-indigo-200 dark:border-indigo-800">
+                    <Bot className="h-3.5 w-3.5 text-indigo-600" /> AI Screener & Recruiter Live Tracking
+                  </div>
+                  <h3 className="font-display text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                    Corporate Application Tracking Portal
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    Track real-time status, AI screener match evaluations, interview schedules, and personalized feedback.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => syncApplicationsFromBackend(profile.user_id)}
+                  disabled={syncingApps}
+                  className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-900 dark:text-white text-xs font-bold transition cursor-pointer shrink-0"
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 ${syncingApps ? "animate-spin" : ""}`} />
+                  <span>Sync Status</span>
+                </button>
               </div>
 
-              <button
-                onClick={() => syncApplicationsFromBackend(profile.user_id)}
-                disabled={syncingApps}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-bold hover:bg-slate-200 transition cursor-pointer"
-              >
-                <RefreshCw className={`h-3.5 w-3.5 ${syncingApps ? "animate-spin" : ""}`} />
-                <span>Sync Status</span>
-              </button>
+              {/* Status KPI Chips */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60">
+                  <div className="text-[11px] font-bold text-slate-500">Total Applied</div>
+                  <div className="font-display text-lg font-black text-slate-900 dark:text-white">
+                    {applications.length}
+                  </div>
+                </div>
+                <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
+                  <div className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400">Shortlisted / Interview</div>
+                  <div className="font-display text-lg font-black text-emerald-700 dark:text-emerald-300">
+                    {applications.filter((a) => (a.status || "").toLowerCase().includes("shortlist") || (a.status || "").toLowerCase().includes("interview")).length}
+                  </div>
+                </div>
+                <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800">
+                  <div className="text-[11px] font-bold text-amber-700 dark:text-amber-400">In Review Queue</div>
+                  <div className="font-display text-lg font-black text-amber-700 dark:text-amber-300">
+                    {applications.filter((a) => (a.status || "").toLowerCase().includes("review") || (a.status || "").toLowerCase().includes("submitted")).length}
+                  </div>
+                </div>
+                <div className="p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800">
+                  <div className="text-[11px] font-bold text-rose-700 dark:text-rose-400">Feedback Provided</div>
+                  <div className="font-display text-lg font-black text-rose-700 dark:text-rose-300">
+                    {applications.filter((a) => (a.status || "").toLowerCase().includes("not selected") || (a.status || "").toLowerCase().includes("reject")).length}
+                  </div>
+                </div>
+              </div>
             </div>
 
             {applications.length === 0 ? (
@@ -2576,7 +2797,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                   No Active Applications Yet
                 </h4>
                 <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                  Audit your 1-page resume to unlock top database matches, then apply with 1 click to track recruiters live.
+                  Audit your 1-page resume to unlock top corporate openings, then apply with 1 click to track recruiters live.
                 </p>
                 <button
                   onClick={() => setDashboardTab("matched_jobs")}
@@ -2586,33 +2807,329 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                 </button>
               </div>
             ) : (
-              <div className="space-y-3">
-                {applications.map((app) => (
-                  <div
-                    key={app.id}
-                    className="rounded-2xl p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-                  >
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-display font-black text-sm text-slate-900 dark:text-white">
-                          {app.title}
-                        </span>
-                        <span className="rounded-full bg-blue-100 text-blue-900 dark:bg-blue-950 dark:text-blue-300 text-[10px] font-black px-2.5 py-0.5 border border-blue-300">
-                          {app.status || "Application Submitted"}
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-500 font-semibold">
-                        {app.company} • Applied on {app.date} • Ref: {app.id}
-                      </p>
-                    </div>
+              <div className="space-y-4">
+                {applications.map((app) => {
+                  const statusStr = (app.status || "Application Submitted").toLowerCase();
+                  const isShortlisted = statusStr.includes("shortlist") || statusStr.includes("interview");
+                  const isSelected = statusStr.includes("selected") || statusStr.includes("offer");
+                  const isNotSelected = statusStr.includes("not selected") || statusStr.includes("reject");
 
-                    <div className="text-right">
-                      <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                        ₹5,000/mo + ₹6,000 Govt Grant
-                      </span>
+                  const badgeClass = isSelected
+                    ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border-emerald-300"
+                    : isShortlisted
+                    ? "bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 border-indigo-300"
+                    : isNotSelected
+                    ? "bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300 border-rose-300"
+                    : "bg-blue-100 dark:bg-blue-950 text-blue-900 dark:text-blue-300 border-blue-300";
+
+                  return (
+                    <div
+                      key={app.id || app.application_id}
+                      className="rounded-3xl p-6 bg-white dark:bg-slate-900 border-2 border-slate-200/90 dark:border-slate-800 shadow-sm space-y-5 transition hover:border-slate-300 dark:hover:border-slate-700"
+                    >
+                      {/* Top Header Row */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="flex items-start gap-3.5">
+                          <CompanyLogo name={app.company} className="h-10 w-10 shrink-0 mt-0.5" />
+                          <div>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h4 className="font-display font-black text-base sm:text-lg text-slate-900 dark:text-white">
+                                {app.title}
+                              </h4>
+                              <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-black border ${badgeClass}`}>
+                                {app.status || "Application Submitted"}
+                              </span>
+                              {app.ai_screener_score !== undefined && (
+                                <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-black bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                                  <Bot className="h-3 w-3" />
+                                  <span>ATS Match: {app.ai_screener_score}%</span>
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-slate-500 font-semibold mt-0.5">
+                              {app.company} • Applied on {app.applied_date || app.date || "Recent"} • App ID: {app.application_id || app.id}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="text-left sm:text-right shrink-0">
+                          <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-3 py-1 rounded-xl border border-emerald-200 dark:border-emerald-800">
+                            ₹5,000/mo + ₹6,000 Govt Grant
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* 4-Step Application Lifecycle Progress Bar */}
+                      <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
+                          {/* Step 1: Submitted */}
+                          <div className="flex flex-col items-center gap-1.5">
+                            <div className="h-7 w-7 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-black shadow-xs">
+                              <Check className="h-3.5 w-3.5" />
+                            </div>
+                            <span className="text-[11px] font-black text-slate-900 dark:text-white">1. Submitted</span>
+                            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">Completed</span>
+                          </div>
+
+                          {/* Step 2: AI Screener Review */}
+                          <div className="flex flex-col items-center gap-1.5">
+                            <div className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-black shadow-xs ${
+                              isNotSelected
+                                ? "bg-rose-600 text-white"
+                                : (isShortlisted || isSelected)
+                                ? "bg-emerald-600 text-white"
+                                : "bg-amber-500 text-white"
+                            }`}>
+                              {isNotSelected ? <X className="h-3.5 w-3.5" /> : <Check className="h-3.5 w-3.5" />}
+                            </div>
+                            <span className="text-[11px] font-black text-slate-900 dark:text-white">2. AI Screening</span>
+                            <span className={`text-[10px] font-bold ${
+                              isNotSelected ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"
+                            }`}>
+                              {isNotSelected ? "Feedback Ready" : "Evaluated"}
+                            </span>
+                          </div>
+
+                          {/* Step 3: Technical Interview */}
+                          <div className="flex flex-col items-center gap-1.5">
+                            <div className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-black shadow-xs ${
+                              isShortlisted
+                                ? "bg-indigo-600 text-white animate-pulse"
+                                : isSelected
+                                ? "bg-emerald-600 text-white"
+                                : "bg-slate-200 dark:bg-slate-700 text-slate-400"
+                            }`}>
+                              <Video className="h-3.5 w-3.5" />
+                            </div>
+                            <span className="text-[11px] font-black text-slate-900 dark:text-white">3. Interview</span>
+                            <span className={`text-[10px] font-bold ${
+                              isShortlisted ? "text-indigo-600 dark:text-indigo-400" : "text-slate-400"
+                            }`}>
+                              {isShortlisted ? "Scheduled" : isNotSelected ? "Halted" : "Upcoming"}
+                            </span>
+                          </div>
+
+                          {/* Step 4: Final Selection & Offer */}
+                          <div className="flex flex-col items-center gap-1.5">
+                            <div className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-black shadow-xs ${
+                              isSelected
+                                ? "bg-emerald-600 text-white"
+                                : "bg-slate-200 dark:bg-slate-700 text-slate-400"
+                            }`}>
+                              <Award className="h-3.5 w-3.5" />
+                            </div>
+                            <span className="text-[11px] font-black text-slate-900 dark:text-white">4. Offer & Grant</span>
+                            <span className={`text-[10px] font-bold ${
+                              isSelected ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400"
+                            }`}>
+                              {isSelected ? "Released" : "Pending"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* ========================================================== */}
+                      {/* CASE A: NOT SELECTED -> CONSTRUCTIVE AI FEEDBACK & TIPS     */}
+                      {/* ========================================================== */}
+                      {isNotSelected ? (
+                        <div className="rounded-2xl bg-rose-50/70 dark:bg-rose-950/30 p-4 sm:p-5 border-2 border-rose-200/90 dark:border-rose-900/60 space-y-3.5">
+                          <div className="flex items-center justify-between gap-2 border-b border-rose-200/60 dark:border-rose-900/40 pb-2.5">
+                            <div className="flex items-center gap-2">
+                              <div className="h-7 w-7 rounded-lg bg-rose-600 text-white flex items-center justify-center">
+                                <Bot className="h-4 w-4" />
+                              </div>
+                              <div>
+                                <h5 className="font-display font-black text-xs sm:text-sm text-rose-900 dark:text-rose-200">
+                                  AI Recruiter Screening Decision & Constructive Feedback
+                                </h5>
+                                <p className="text-[11px] text-rose-700 dark:text-rose-400 font-semibold">
+                                  Transparent evaluation of your application against opening requirements
+                                </p>
+                              </div>
+                            </div>
+                            {app.ai_screener_score !== undefined && (
+                              <span className="rounded-full bg-rose-200/70 dark:bg-rose-900 text-rose-900 dark:text-rose-100 text-[10px] font-black px-2.5 py-1">
+                                Match Score: {app.ai_screener_score}%
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Feedback Explanation */}
+                          <div className="space-y-1">
+                            <span className="text-[11px] font-black uppercase text-rose-800 dark:text-rose-300 tracking-wider">
+                              Why your application was not selected:
+                            </span>
+                            <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-semibold bg-white dark:bg-slate-900/70 p-3 rounded-xl border border-rose-200 dark:border-rose-900">
+                              {app.rejection_feedback || app.recruiter_notes || "Your profile was reviewed by the corporate AI screening bot. While your academic background was noted, your technical skills did not meet the mandatory criteria required for this opening."}
+                            </p>
+                          </div>
+
+                          {/* Missing Skill Gaps */}
+                          {Array.isArray(app.missing_skills) && app.missing_skills.length > 0 && (
+                            <div className="space-y-1.5">
+                              <span className="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 tracking-wider">
+                                Key Skills Required for this Opening:
+                              </span>
+                              <div className="flex flex-wrap gap-1.5">
+                                {app.missing_skills.map((s, idx) => (
+                                  <span
+                                    key={idx}
+                                    className="rounded-lg bg-rose-100 dark:bg-rose-900/60 text-rose-800 dark:text-rose-200 px-2.5 py-1 text-xs font-black border border-rose-200 dark:border-rose-800 flex items-center gap-1"
+                                  >
+                                    <X className="h-3 w-3 text-rose-600" />
+                                    <span>{s}</span>
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Actionable Improvement Tips */}
+                          {Array.isArray(app.improvement_tips) && app.improvement_tips.length > 0 && (
+                            <div className="space-y-1.5 bg-white dark:bg-slate-900/70 p-3 rounded-xl border border-rose-200 dark:border-rose-900">
+                              <span className="text-[11px] font-black uppercase text-slate-800 dark:text-slate-200 tracking-wider flex items-center gap-1.5">
+                                <Lightbulb className="h-3.5 w-3.5 text-amber-500" />
+                                Actionable Roadmap to Get Hired:
+                              </span>
+                              <ul className="list-disc list-inside space-y-1 text-xs text-slate-600 dark:text-slate-400 font-semibold">
+                                {app.improvement_tips.map((tip, idx) => (
+                                  <li key={idx}>{tip}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          {/* Candidate Strengths */}
+                          {Array.isArray(app.match_strengths) && app.match_strengths.length > 0 && (
+                            <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                              <span className="text-[11px] font-bold text-slate-500">Your Noted Strengths:</span>
+                              {app.match_strengths.map((str, idx) => (
+                                <span
+                                  key={idx}
+                                  className="rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 px-2 py-0.5 text-[10px] font-bold"
+                                >
+                                  ✓ {str}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Next Steps CTA */}
+                          <div className="pt-2 flex flex-wrap items-center gap-2.5">
+                            <button
+                              onClick={() => {
+                                if (onNavigateToInternships) {
+                                  onNavigateToInternships();
+                                } else {
+                                  setDashboardTab("matched_jobs");
+                                }
+                              }}
+                              className="inline-flex items-center gap-1.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 text-xs font-black shadow-xs transition cursor-pointer"
+                            >
+                              <Briefcase className="h-3.5 w-3.5" />
+                              <span>Explore Matching PMIS Internships</span>
+                            </button>
+                            <button
+                              onClick={() => setDashboardTab("resume_ats")}
+                              className="inline-flex items-center gap-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 px-4 py-2 text-xs font-bold hover:bg-slate-50 transition cursor-pointer"
+                            >
+                              <FileText className="h-3.5 w-3.5" />
+                              <span>Optimize 1-Page Resume</span>
+                            </button>
+                          </div>
+                        </div>
+                      ) : isShortlisted ? (
+                        /* ========================================================== */
+                        /* CASE B: SHORTLISTED -> CELEBRATORY & INTERVIEW DETAILS     */
+                        /* ========================================================== */
+                        <div className="rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 p-4 sm:p-5 border-2 border-emerald-200 dark:border-emerald-800 space-y-3.5">
+                          <div className="flex items-center justify-between gap-2 border-b border-emerald-200/60 dark:border-emerald-900/40 pb-2.5">
+                            <div className="flex items-center gap-2">
+                              <div className="h-7 w-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center">
+                                <Sparkles className="h-4 w-4" />
+                              </div>
+                              <div>
+                                <h5 className="font-display font-black text-xs sm:text-sm text-emerald-900 dark:text-emerald-200">
+                                  Congratulations! Shortlisted for Technical Interview
+                                </h5>
+                                <p className="text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold">
+                                  Your resume was ranked in the top shortlist by the AI screener bot
+                                </p>
+                              </div>
+                            </div>
+                            {app.ai_screener_score !== undefined && (
+                              <span className="rounded-full bg-emerald-200/70 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-100 text-[10px] font-black px-2.5 py-1">
+                                Match Score: {app.ai_screener_score}%
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Recruiter Evaluation Notes */}
+                          {app.recruiter_notes && (
+                            <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-semibold bg-white dark:bg-slate-900/70 p-3 rounded-xl border border-emerald-200 dark:border-emerald-900">
+                              <strong className="text-emerald-950 dark:text-emerald-200 mr-1">Recruiter Review Remarks:</strong>
+                              {app.recruiter_notes}
+                            </p>
+                          )}
+
+                          {/* Interview Scheduling Box */}
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800">
+                            <div className="space-y-0.5">
+                              <div className="text-[11px] font-bold text-slate-500 flex items-center gap-1">
+                                <Calendar className="h-3.5 w-3.5 text-indigo-600" />
+                                <span>Interview Schedule:</span>
+                              </div>
+                              <div className="text-xs font-black text-slate-900 dark:text-white">
+                                {app.interview_date || "2026-11-04 11:30 AM (IST)"}
+                              </div>
+                            </div>
+
+                            {app.meeting_link ? (
+                              <a
+                                href={app.meeting_link}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black shadow-xs transition"
+                              >
+                                <Video className="h-3.5 w-3.5" />
+                                <span>Join Google Meet</span>
+                                <ExternalLink className="h-3 w-3" />
+                              </a>
+                            ) : (
+                              <span className="text-xs font-semibold text-slate-500">
+                                Meeting link will be shared via email prior to the interview.
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="pt-1 flex items-center gap-2">
+                            <button
+                              onClick={() => setDashboardTab("resumes")}
+                              className="text-xs font-black text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
+                            >
+                              <span>Review Past Selected Resumes & Interview Rounds for {userBranchCategory}</span>
+                              <ArrowRight className="h-3 w-3" />
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        /* ========================================================== */
+                        /* CASE C: UNDER REVIEW / SUBMITTED                           */
+                        /* ========================================================== */
+                        <div className="rounded-2xl bg-slate-50 dark:bg-slate-800/40 p-3.5 sm:p-4 border border-slate-200 dark:border-slate-700/60 text-xs space-y-2">
+                          <div className="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-200">
+                            <Clock className="h-4 w-4 text-amber-500 shrink-0" />
+                            <span>Application in Recruiter & AI Screening Queue</span>
+                          </div>
+                          <p className="text-slate-600 dark:text-slate-400 text-[11px] leading-relaxed">
+                            {app.recruiter_notes ||
+                              `Your verified 1-page resume has been submitted to the talent portal at ${app.company}. The corporate AI candidate screener bot will evaluate your application against other submissions.`}
+                          </p>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

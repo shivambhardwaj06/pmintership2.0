@@ -32,7 +32,9 @@ import {
   Layers,
   ChevronDown,
   UserCheck,
-  Check
+  Check,
+  Bot,
+  XCircle
 } from "lucide-react";
 import CompanyLogo from "./CompanyLogo";
 
@@ -171,6 +173,15 @@ export default function RecruiterPortal() {
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
   const [resumeModalApp, setResumeModalApp] = useState(null);
+
+  // AI Screener Bot State
+  const [showAiScreenerModal, setShowAiScreenerModal] = useState(false);
+  const [screeningRole, setScreeningRole] = useState("All");
+  const [shortlistCount, setShortlistCount] = useState(1);
+  const [minScoreThreshold, setMinScoreThreshold] = useState(70);
+  const [screeningRunning, setScreeningRunning] = useState(false);
+  const [screeningResult, setScreeningResult] = useState(null);
+  const [screenerError, setScreenerError] = useState(null);
 
   // Post Internship Form State
   const [postTitle, setPostTitle] = useState("");
@@ -368,6 +379,49 @@ export default function RecruiterPortal() {
       alert("Error contacting backend server.");
     } finally {
       setUpdatingStatus(false);
+    }
+  };
+
+  // Run AI Candidate Screener Bot
+  const handleRunAiScreener = async () => {
+    setScreeningRunning(true);
+    setScreenerError(null);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/recruiter/ai-screen-applications`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          company: activeCompany,
+          role_title: screeningRole === "All" ? undefined : screeningRole,
+          shortlist_count: Number(shortlistCount) || 1,
+          min_score_threshold: Number(minScoreThreshold) || 70,
+          auto_apply_status: true,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.detail || "AI screening failed.");
+      }
+
+      setScreeningResult(data);
+
+      // Re-fetch applications from backend to reflect updated statuses & AI feedback
+      const encComp = encodeURIComponent(activeCompany);
+      const updatedAppsRes = await fetch(`${BACKEND_URL}/api/recruiter/applications?company=${encComp}`).then((r) => r.json());
+      if (updatedAppsRes?.status === "success" && updatedAppsRes.applications) {
+        setApplications(updatedAppsRes.applications);
+      }
+
+      // Refresh statistics counters
+      fetch(`${BACKEND_URL}/api/recruiter/stats?company=${encComp}`)
+        .then((r) => r.json())
+        .then((st) => st?.status === "success" && setStats(st));
+    } catch (err) {
+      console.error("AI Screener error:", err);
+      setScreenerError(err.message || "Failed to screen applications.");
+    } finally {
+      setScreeningRunning(false);
     }
   };
 
@@ -795,6 +849,59 @@ export default function RecruiterPortal() {
         {/* ============================================================== */}
         {activeTab === "pipeline" && (
           <div className="space-y-6">
+            {/* AI Screener Bot Banner */}
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0B2545] via-slate-900 to-[#134074] border-2 border-indigo-500/30 p-6 text-white shadow-xl">
+              <div className="absolute -right-8 -top-8 h-44 w-44 rounded-full bg-indigo-500/10 blur-2xl" />
+              <div className="absolute right-24 -bottom-10 h-36 w-36 rounded-full bg-orange-500/10 blur-xl" />
+
+              <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="space-y-2 max-w-2xl">
+                  <div className="inline-flex items-center gap-2 rounded-full bg-indigo-500/20 border border-indigo-400/40 px-3 py-1 text-xs font-black text-indigo-300">
+                    <Bot className="h-4 w-4 text-indigo-400 animate-pulse" />
+                    <span>AI Candidate Screener Bot</span>
+                    <span className="text-[10px] bg-indigo-400/30 px-1.5 py-0.5 rounded text-white font-mono">ATS 2.0</span>
+                  </div>
+                  <h3 className="font-display text-xl sm:text-2xl font-black text-white">
+                    Automate Shortlisting & Generate Constructive Feedback
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                    Filter all applications for any opening based on real-world recruiter ATS criteria (technical skill overlap, branch fit, and CGPA). Automatically shortlist top candidates with Google Meet interview slots, and generate personalized, constructive rejection feedback for unselected applications.
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2.5 pt-1 text-xs text-slate-300 font-semibold">
+                    <span className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1 rounded-lg">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                      ATS Ranking & Match Scores
+                    </span>
+                    <span className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1 rounded-lg">
+                      <Calendar className="h-3.5 w-3.5 text-indigo-400" />
+                      Auto-Schedule Interview Slots
+                    </span>
+                    <span className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1 rounded-lg">
+                      <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+                      Constructive Rejection Feedback for Candidates
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row md:flex-col gap-2 shrink-0">
+                  <button
+                    onClick={() => {
+                      setScreeningResult(null);
+                      setScreenerError(null);
+                      setShowAiScreenerModal(true);
+                    }}
+                    className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black text-xs shadow-lg hover:shadow-orange-500/25 transition cursor-pointer"
+                  >
+                    <Bot className="h-4 w-4" />
+                    <span>Launch AI Screener Bot</span>
+                  </button>
+                  <div className="text-[11px] text-center text-slate-400 font-semibold">
+                    {applications.length} applications received for {activeCompany}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Filters Bar */}
             <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-2xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
               {/* Search */}
@@ -850,7 +957,7 @@ export default function RecruiterPortal() {
             {loading ? (
               <div className="rounded-2xl border border-slate-200 dark:border-slate-800 p-12 text-center bg-white dark:bg-slate-900">
                 <RefreshCw className="h-8 w-8 text-orange-500 animate-spin mx-auto mb-3" />
-                <p className="text-xs font-bold text-slate-500">Loading candidate applications from MongoDB...</p>
+                <p className="text-xs font-bold text-slate-500">Loading candidate applications...</p>
               </div>
             ) : filteredApplications.length === 0 ? (
               <div className="rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 p-12 text-center space-y-3 bg-white dark:bg-slate-900">
@@ -894,6 +1001,12 @@ export default function RecruiterPortal() {
                             <span className={`h-1.5 w-1.5 rounded-full ${badge.dot}`} />
                             {badge.label}
                           </span>
+                          {app.ai_screener_score !== undefined && (
+                            <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-black bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                              <Bot className="h-3 w-3" />
+                              <span>Score: {app.ai_screener_score}%</span>
+                            </span>
+                          )}
                           <span className="text-[11px] font-bold text-slate-400">
                             App ID: {app.application_id || app.id}
                           </span>
@@ -964,31 +1077,113 @@ export default function RecruiterPortal() {
                           </div>
                         )}
 
-                        {/* Recruiter Remarks / Feedback Preview */}
-                        {app.recruiter_notes && (
-                          <div className="rounded-xl bg-slate-50 dark:bg-slate-800/60 p-2.5 text-xs text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/60 mt-1">
-                            <span className="font-extrabold text-slate-900 dark:text-white mr-1.5">
-                              💬 Recruiter Feedback:
-                            </span>
-                            <span>{app.recruiter_notes}</span>
+                        {/* Candidate Status & AI Screening Feedback Display */}
+                        {(app.status === "Not Selected" || app.rejection_feedback) ? (
+                          <div className="rounded-2xl bg-rose-50/80 dark:bg-rose-950/30 p-3.5 text-xs border border-rose-200 dark:border-rose-900 space-y-2 mt-2">
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-1.5 font-black text-rose-800 dark:text-rose-300">
+                                <XCircle className="h-4 w-4 text-rose-600 dark:text-rose-400" />
+                                <span>AI Screener: Not Selected for this Role</span>
+                              </div>
+                              {app.ai_screener_score !== undefined && (
+                                <span className="text-[11px] font-bold text-rose-600 dark:text-rose-400">
+                                  Match Score: {app.ai_screener_score}%
+                                </span>
+                              )}
+                            </div>
+
+                            <p className="text-slate-700 dark:text-slate-300 font-semibold leading-relaxed">
+                              <strong className="text-rose-900 dark:text-rose-200 mr-1">Feedback Delivered to Candidate:</strong>
+                              {app.rejection_feedback || app.recruiter_notes || "Profile did not meet required skill criteria for this opening."}
+                            </p>
+
+                            {Array.isArray(app.missing_skills) && app.missing_skills.length > 0 && (
+                              <div className="space-y-1">
+                                <span className="text-[10px] font-bold text-slate-500">Missing Key Skills:</span>
+                                <div className="flex flex-wrap gap-1">
+                                  {app.missing_skills.map((s, idx) => (
+                                    <span
+                                      key={idx}
+                                      className="rounded-md bg-rose-100 dark:bg-rose-900/60 px-2 py-0.5 text-[10px] font-bold text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800"
+                                    >
+                                      ✗ {s}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {Array.isArray(app.improvement_tips) && app.improvement_tips.length > 0 && (
+                              <div className="space-y-1 pt-1 border-t border-rose-200/60 dark:border-rose-900/50">
+                                <span className="text-[10px] font-bold text-slate-500">Improvement Guidance Provided:</span>
+                                <ul className="list-disc list-inside space-y-0.5 text-[11px] text-slate-600 dark:text-slate-400">
+                                  {app.improvement_tips.map((tip, idx) => (
+                                    <li key={idx}>{tip}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        ) : (app.status?.toLowerCase().includes("shortlist") || app.status?.toLowerCase().includes("interview")) ? (
+                          <div className="rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/30 p-3.5 text-xs border border-emerald-200 dark:border-emerald-900 space-y-2 mt-2">
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-1.5 font-black text-emerald-800 dark:text-emerald-300">
+                                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                                <span>Shortlisted for Technical Interview</span>
+                              </div>
+                              {app.ai_screener_score !== undefined && (
+                                <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
+                                  Score: {app.ai_screener_score}%
+                                </span>
+                              )}
+                            </div>
+
+                            {app.recruiter_notes && (
+                              <p className="text-slate-700 dark:text-slate-300 font-semibold">
+                                <strong className="text-emerald-950 dark:text-emerald-200 mr-1">Recruiter Notes:</strong>
+                                {app.recruiter_notes}
+                              </p>
+                            )}
+
+                            {Array.isArray(app.match_strengths) && app.match_strengths.length > 0 && (
+                              <div className="flex flex-wrap items-center gap-1">
+                                <span className="text-[10px] font-bold text-slate-500 mr-1">Strengths:</span>
+                                {app.match_strengths.map((str, idx) => (
+                                  <span key={idx} className="rounded-md bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 px-2 py-0.5 text-[10px] font-bold">
+                                    ✓ {str}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+
                             {app.interview_date && (
-                              <div className="flex items-center gap-2 mt-1 text-[11px] font-bold text-indigo-600 dark:text-indigo-400">
-                                <Calendar className="h-3 w-3" />
-                                <span>Scheduled: {app.interview_date}</span>
+                              <div className="flex flex-wrap items-center gap-3 text-xs font-bold text-indigo-700 dark:text-indigo-300 bg-white dark:bg-slate-800 p-2 rounded-xl border border-indigo-200 dark:border-indigo-800">
+                                <span className="flex items-center gap-1">
+                                  <Calendar className="h-3.5 w-3.5" />
+                                  Scheduled: {app.interview_date}
+                                </span>
                                 {app.meeting_link && (
                                   <a
                                     href={app.meeting_link}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="underline ml-1 flex items-center gap-0.5"
+                                    className="inline-flex items-center gap-1 underline text-indigo-600 dark:text-indigo-400 hover:text-indigo-800"
                                   >
-                                    Join Meeting <ExternalLink className="h-2.5 w-2.5" />
+                                    <Video className="h-3.5 w-3.5" />
+                                    Join Google Meet <ExternalLink className="h-3 w-3" />
                                   </a>
                                 )}
                               </div>
                             )}
                           </div>
-                        )}
+                        ) : app.recruiter_notes ? (
+                          <div className="rounded-xl bg-slate-50 dark:bg-slate-800/60 p-2.5 text-xs text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/60 mt-1">
+                            <span className="font-extrabold text-slate-900 dark:text-white mr-1.5">
+                              💬 Recruiter Feedback:
+                            </span>
+                            <span>{app.recruiter_notes}</span>
+                          </div>
+                        ) : null}
                       </div>
 
                       {/* Right: Actions */}
@@ -1130,7 +1325,7 @@ export default function RecruiterPortal() {
                 Post New Corporate Opportunity
               </h2>
               <p className="text-xs font-semibold text-slate-500">
-                Opportunities are directly published to the MongoDB database and visible to all registered youth candidates across India.
+                Opportunities are directly published and visible to all registered youth candidates across India.
               </p>
             </div>
 
@@ -1138,7 +1333,7 @@ export default function RecruiterPortal() {
               <div className="rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 p-4 mb-6 flex items-center gap-3 text-emerald-800 dark:text-emerald-300">
                 <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
                 <div className="text-xs font-bold">
-                  Internship successfully published to PMIS live database! Redirecting to company openings...
+                  Internship successfully published! Redirecting to company openings...
                 </div>
               </div>
             )}
@@ -1309,7 +1504,7 @@ export default function RecruiterPortal() {
                   {postingLoading ? (
                     <>
                       <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                      Publishing to MongoDB...
+                      Publishing Opportunity...
                     </>
                   ) : (
                     <>
@@ -1323,6 +1518,288 @@ export default function RecruiterPortal() {
           </div>
         )}
       </main>
+
+      {/* ============================================================== */}
+      {/* MODAL 0: AI CANDIDATE SCREENER BOT & REJECTION FEEDBACK        */}
+      {/* ============================================================== */}
+      {showAiScreenerModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/75 backdrop-blur-xs overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full p-6 sm:p-7 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-5 my-6 max-h-[92vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="h-10 w-10 rounded-2xl bg-gradient-to-tr from-[#0B2545] to-orange-500 text-white flex items-center justify-center shadow-md shrink-0">
+                  <Bot className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-display text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+                    <span>AI Candidate Screener Bot</span>
+                    <span className="rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-[10px] font-black px-2 py-0.5 border border-indigo-200 dark:border-indigo-800">
+                      ATS 2.0
+                    </span>
+                  </h3>
+                  <p className="text-[11px] font-semibold text-slate-500">
+                    {activeCompany} • Shortlist top applicants & dispatch constructive feedback
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowAiScreenerModal(false)}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Modal Scrollable Content */}
+            <div className="flex-1 overflow-y-auto pr-1 space-y-4">
+              {/* Screening Parameters */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Select Opening to Screen:
+                  </label>
+                  <select
+                    value={screeningRole}
+                    onChange={(e) => setScreeningRole(e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  >
+                    <option value="All">All Active Openings ({distinctRoles.length} Roles)</option>
+                    {distinctRoles.map((r) => (
+                      <option key={r} value={r}>
+                        {r}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Shortlist Target (Top N Candidates):
+                  </label>
+                  <div className="flex items-center gap-1.5">
+                    {[1, 2, 3, 5].map((cnt) => (
+                      <button
+                        key={cnt}
+                        type="button"
+                        onClick={() => setShortlistCount(cnt)}
+                        className={`flex-1 py-2 text-xs font-black rounded-xl border transition cursor-pointer ${
+                          shortlistCount === cnt
+                            ? "bg-[#0B2545] text-white border-[#0B2545] shadow-xs"
+                            : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100"
+                        }`}
+                      >
+                        Top {cnt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Real ATS Criteria Information */}
+              <div className="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/60 text-xs space-y-1.5">
+                <div className="font-black text-indigo-900 dark:text-indigo-300 flex items-center gap-1.5">
+                  <Sparkles className="h-3.5 w-3.5 text-indigo-600" />
+                  <span>Real-World ATS Filtering & Feedback Logic:</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px] text-slate-600 dark:text-slate-400 font-semibold">
+                  <div className="flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 shrink-0" />
+                    <span>Technical Skills Overlap (50% weight)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 shrink-0" />
+                    <span>Discipline / Branch Alignment (25% weight)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 shrink-0" />
+                    <span>Academic CGPA Performance (15% weight)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 shrink-0" />
+                    <span>Constructive Rejection Guidance for Students</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Error banner */}
+              {screenerError && (
+                <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 text-xs font-bold text-rose-600 flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span>{screenerError}</span>
+                </div>
+              )}
+
+              {/* Live Screening Results */}
+              {screeningResult && (
+                <div className="space-y-4 pt-3 border-t border-slate-200 dark:border-slate-800">
+                  {/* Results Summary Banner */}
+                  <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs flex items-center gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
+                    <div>
+                      <div className="font-black text-emerald-900 dark:text-emerald-200">
+                        Screening & Feedback Dispatch Complete!
+                      </div>
+                      <div className="text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold">
+                        {screeningResult.shortlisted_count} application(s) shortlisted with interview slots • {screeningResult.rejected_count} application(s) provided constructive rejection feedback.
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Shortlisted Candidates */}
+                  {screeningResult.shortlisted?.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-black uppercase text-emerald-700 dark:text-emerald-400 tracking-wider flex items-center gap-1.5">
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                        Top Shortlisted Candidates ({screeningResult.shortlisted.length})
+                      </h4>
+                      <div className="space-y-2">
+                        {screeningResult.shortlisted.map((cand) => (
+                          <div
+                            key={cand.application_id}
+                            className="p-3.5 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 space-y-1.5"
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="font-display font-black text-xs text-slate-900 dark:text-white">
+                                {cand.candidate_name}
+                              </span>
+                              <span className="rounded-full bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 text-[10px] font-black px-2 py-0.5">
+                                ATS Score: {cand.score}% • Rank #{cand.rank}
+                              </span>
+                            </div>
+                            <div className="text-[11px] text-slate-600 dark:text-slate-400 font-semibold">
+                              Role: {cand.role_title} • {cand.degree} • CGPA: {cand.cgpa}
+                            </div>
+                            {cand.match_strengths?.length > 0 && (
+                              <div className="flex flex-wrap gap-1">
+                                {cand.match_strengths.map((str, i) => (
+                                  <span
+                                    key={i}
+                                    className="text-[10px] font-bold bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded border border-emerald-200"
+                                  >
+                                    ✓ {str}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                            {cand.interview_date && (
+                              <div className="text-[10px] font-bold text-indigo-700 dark:text-indigo-300 flex items-center gap-1.5 bg-white dark:bg-slate-800 p-2 rounded-xl">
+                                <Calendar className="h-3 w-3" />
+                                <span>Interview Scheduled: {cand.interview_date}</span>
+                                {cand.meeting_link && (
+                                  <a
+                                    href={cand.meeting_link}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="underline ml-1"
+                                  >
+                                    Join Meet
+                                  </a>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Rejected Candidates With Feedback */}
+                  {screeningResult.rejected?.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-black uppercase text-rose-700 dark:text-rose-400 tracking-wider flex items-center gap-1.5">
+                        <XCircle className="h-3.5 w-3.5" />
+                        Not Selected Candidates (Constructive Feedback Synced to Student Dashboards)
+                      </h4>
+                      <div className="space-y-2">
+                        {screeningResult.rejected.map((cand) => (
+                          <div
+                            key={cand.application_id}
+                            className="p-3.5 rounded-2xl bg-rose-50/50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800 space-y-1.5"
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="font-display font-black text-xs text-slate-900 dark:text-white">
+                                {cand.candidate_name}
+                              </span>
+                              <span className="rounded-full bg-rose-100 dark:bg-rose-900 text-rose-800 dark:text-rose-200 text-[10px] font-black px-2 py-0.5">
+                                ATS Score: {cand.score}% • Rank #{cand.rank}
+                              </span>
+                            </div>
+                            <div className="text-[11px] text-slate-600 dark:text-slate-400 font-semibold">
+                              Role: {cand.role_title} • {cand.degree}
+                            </div>
+
+                            {/* Constructive Rejection Feedback */}
+                            <div className="p-2.5 rounded-xl bg-white dark:bg-slate-800 text-[11px] text-slate-700 dark:text-slate-300 border border-rose-100 dark:border-rose-900">
+                              <strong className="text-rose-900 dark:text-rose-200">Constructive Feedback: </strong>
+                              {cand.rejection_feedback}
+                            </div>
+
+                            {/* Missing Skills */}
+                            {cand.missing_skills?.length > 0 && (
+                              <div className="space-y-1">
+                                <span className="text-[10px] font-bold text-slate-500">Missing Key Skills:</span>
+                                <div className="flex flex-wrap gap-1">
+                                  {cand.missing_skills.map((ms, i) => (
+                                    <span
+                                      key={i}
+                                      className="text-[10px] font-bold bg-rose-100 dark:bg-rose-900/60 text-rose-800 dark:text-rose-300 px-1.5 py-0.5 rounded"
+                                    >
+                                      ✗ {ms}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Improvement Guidance Tips */}
+                            {cand.improvement_tips?.length > 0 && (
+                              <ul className="list-disc list-inside text-[10px] text-slate-600 dark:text-slate-400 space-y-0.5">
+                                {cand.improvement_tips.map((tip, i) => (
+                                  <li key={i}>{tip}</li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Modal Bottom Actions */}
+            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3 shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowAiScreenerModal(false)}
+                className="rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 transition cursor-pointer"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={handleRunAiScreener}
+                disabled={screeningRunning}
+                className="rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-5 py-2 text-xs font-black shadow-md transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                {screeningRunning ? (
+                  <>
+                    <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                    <span>Evaluating Applications & Generating Feedback...</span>
+                  </>
+                ) : (
+                  <>
+                    <Bot className="h-3.5 w-3.5" />
+                    <span>{screeningResult ? "Re-Run AI Screener" : "Run AI Screener Now"}</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ============================================================== */}
       {/* MODAL 1: STATUS & PROCESS UPDATER */}
@@ -1432,7 +1909,7 @@ export default function RecruiterPortal() {
                 {updatingStatus ? (
                   <>
                     <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                    Saving to MongoDB...
+                    Saving Changes...
                   </>
                 ) : (
                   <>

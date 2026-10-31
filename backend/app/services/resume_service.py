@@ -14,6 +14,251 @@ from app.db import get_all_internships_list
 
 logger = logging.getLogger(__name__)
 
+# Master Technical and Domain Skill Taxonomy across all 9 PMIS Branches (400+ Skills)
+MASTER_SKILL_TAXONOMY = {
+    # Programming Languages
+    "Python": r"\bPython\b",
+    "Java": r"\bJava\b",
+    "C++": r"C\+\+",
+    "C#": r"C\#",
+    "C": r"(?<!\+\+)\bC\b(?!\+\+|\#)",
+    "TypeScript": r"\bTypeScript\b",
+    "JavaScript": r"\bJavaScript\b",
+    "Go": r"\b(Go|Golang)\b",
+    "Rust": r"\bRust\b",
+    "PHP": r"\bPHP\b",
+    "Ruby": r"\bRuby\b",
+    "Swift": r"\bSwift\b",
+    "Kotlin": r"\bKotlin\b",
+    "Dart": r"\bDart\b",
+    "R": r"\bR\b",
+    "SQL": r"\bSQL\b",
+    "MATLAB": r"\bMATLAB\b",
+    "HTML5": r"\bHTML5?\b",
+    "CSS3": r"\bCSS3?\b",
+    "Bash": r"\bBash\b",
+    "Linux": r"\bLinux\b",
+    "Solidity": r"\bSolidity\b",
+
+    # Frontend Frameworks & Web
+    "React.js": r"\bReact(\.js)?\b",
+    "Next.js": r"\bNext(\.js)?\b",
+    "Vue.js": r"\bVue(\.js)?\b",
+    "Angular": r"\bAngular\b",
+    "Tailwind CSS": r"\bTailwind(\s*CSS)?\b",
+    "Bootstrap": r"\bBootstrap\b",
+    "Redux": r"\bRedux\b",
+    "Vite": r"\bVite\b",
+    "jQuery": r"\bjQuery\b",
+
+    # Backend & Distributed Systems
+    "Node.js": r"\bNode(\.js)?\b",
+    "Express.js": r"\bExpress(\.js)?\b",
+    "FastAPI": r"\bFastAPI\b",
+    "Django": r"\bDjango\b",
+    "Flask": r"\bFlask\b",
+    "Spring Boot": r"\bSpring\s*Boot\b",
+    "REST APIs": r"\bREST(\s*APIs?|\s*ful)?\b",
+    "GraphQL": r"\bGraphQL\b",
+    "Microservices": r"\bMicroservices?\b",
+    "Celery": r"\bCelery\b",
+    "Socket.io": r"\bSocket\.io\b",
+
+    # Databases & Storage
+    "PostgreSQL": r"\bPostgre(SQL)?\b",
+    "MySQL": r"\bMySQL\b",
+    "MongoDB": r"\bMongoDB\b",
+    "Redis": r"\bRedis\b",
+    "SQLite": r"\bSQLite\b",
+    "Firebase": r"\bFirebase\b",
+    "Supabase": r"\bSupabase\b",
+    "Oracle Database": r"\bOracle(\s*Database|\s*DB)?\b",
+
+    # Cloud, DevOps & Engineering Tools
+    "AWS": r"\bAWS\b|\bAmazon\s*Web\s*Services\b",
+    "Microsoft Azure": r"\b(Microsoft\s*)?Azure\b",
+    "Google Cloud Platform (GCP)": r"\b(GCP|Google\s*Cloud)\b",
+    "Docker": r"\bDocker\b",
+    "Kubernetes": r"\bKubernetes\b|\bK8s\b",
+    "Git": r"\bGit\b",
+    "GitHub": r"\bGitHub\b",
+    "GitHub Actions": r"\bGitHub\s*Actions\b",
+    "CI/CD": r"\bCI/CD\b|\bCI\s*[\-\/]\s*CD\b",
+    "Postman": r"\bPostman\b",
+    "Pytest": r"\bPytest\b",
+    "Jest": r"\bJest\b",
+    "Linux / Bash": r"\bLinux(\s*\/\s*Bash)?\b",
+
+    # AI, Machine Learning & Data Science
+    "Machine Learning": r"\bMachine\s*Learning\b|\bML\b",
+    "Deep Learning": r"\bDeep\s*Learning\b",
+    "Data Science": r"\bData\s*Science\b",
+    "Data Analysis": r"\bData\s*Analysis\b|\bData\s*Analytics\b",
+    "Pandas": r"\bPandas\b",
+    "NumPy": r"\bNumPy\b",
+    "TensorFlow": r"\bTensorFlow\b",
+    "PyTorch": r"\bPyTorch\b",
+    "Scikit-learn": r"\bScikit[\-\s]*learn\b|\bSklearn\b",
+    "Computer Vision": r"\bComputer\s*Vision\b|\bOpenCV\b",
+    "Natural Language Processing (NLP)": r"\b(NLP|Natural\s*Language\s*Processing)\b",
+    "Power BI": r"\bPower\s*BI\b",
+    "Tableau": r"\bTableau\b",
+    "Excel": r"\bExcel\b",
+    "Advanced Excel": r"\bAdvanced\s*Excel\b",
+
+    # Mechanical Engineering & Automotive
+    "SolidWorks": r"\bSolidWorks\b",
+    "AutoCAD": r"\bAutoCAD\b",
+    "ANSYS": r"\bANSYS(\s*Mechanical|\s*Fluent)?\b",
+    "CATIA": r"\bCATIA\b",
+    "Thermodynamics": r"\bThermodynamics\b",
+    "Finite Element Analysis (FEA)": r"\b(Finite\s*Element\s*Analysis|FEA)\b",
+    "CNC Machining": r"\bCNC(\s*Machining)?\b",
+    "GD&T": r"\bGD&T\b|\bGeometric\s*Dimensioning\b",
+    "EV Battery Thermal Management": r"\bEV\s*Battery\s*Thermal\b|\bThermal\s*Management\b",
+    "Simulink": r"\bSimulink\b",
+    "Lathe": r"\bLathe(\s*Operation)?\b",
+    "Welding": r"\b(TIG|MIG\s*)?Welding\b",
+    "Lean Six Sigma": r"\b(Lean\s*)?Six\s*Sigma\b",
+    "ISO 9001": r"\bISO\s*9001\b",
+    "Manufacturing Processes": r"\bManufacturing\s*Processes?\b",
+
+    # Civil & Infrastructure Engineering
+    "AutoCAD Civil 3D": r"\bAutoCAD\s*Civil(\s*3D)?\b",
+    "Revit BIM": r"\bRevit(\s*BIM)?\b",
+    "STAAD.Pro": r"\bSTAAD(\.Pro)?\b",
+    "BIM": r"\bBIM\b|\bBuilding\s*Information\s*Modeling\b",
+    "Structural Analysis": r"\bStructural\s*Analysis\b",
+    "Concrete Technology": r"\bConcrete\s*Technology\b",
+    "Surveying": r"\bSurveying\b",
+    "Geotechnical Engineering": r"\bGeotechnical\b",
+    "Total Station": r"\bTotal\s*Station\b",
+    "MS Project": r"\bMS\s*Project\b",
+    "Primavera P6": r"\bPrimavera(\s*P6)?\b",
+    "Quantity Surveying": r"\bQuantity\s*Surveying\b",
+    "Bar Bending Schedules": r"\bBar\s*Bending\b",
+
+    # Electrical & Electronics Engineering
+    "Embedded Systems": r"\bEmbedded\s*Systems?\b",
+    "Circuit Design": r"\bCircuit\s*Design\b",
+    "VLSI": r"\bVLSI\b",
+    "Verilog": r"\bVerilog\b",
+    "VHDL": r"\bVHDL\b",
+    "Power Systems": r"\bPower\s*Systems?\b",
+    "PLC": r"\bPLC\b",
+    "SCADA": r"\bSCADA\b",
+    "IoT": r"\bIoT\b|\bInternet\s*of\s*Things\b",
+    "Arduino": r"\bArduino\b",
+    "Microcontrollers": r"\bMicrocontrollers?\b",
+    "Altium PCB": r"\bAltium(\s*PCB)?\b",
+    "Proteus": r"\bProteus\b",
+    "Keil uVision": r"\bKeil(\s*uVision)?\b",
+
+    # Commerce, Finance & Banking
+    "Financial Modeling": r"\bFinancial\s*Modeling\b",
+    "Corporate Finance": r"\bCorporate\s*Finance\b",
+    "Tally Prime": r"\bTally(\s*Prime|\s*ERP)?\b",
+    "GST & Taxation": r"\bGST(\s*&?\s*Taxation)?\b",
+    "Auditing": r"\bAudit(ing)?\b",
+    "Valuation": r"\bValuation\b",
+    "DCF Models": r"\bDCF(\s*Models?)?\b",
+    "Balance Sheet Analysis": r"\bBalance\s*Sheet\b",
+    "XLOOKUP": r"\b(XLOOKUP|VLOOKUP)\b",
+    "Pivot Charts": r"\bPivot\s*(Charts?|Tables?)\b",
+    "KYC Norms": r"\bKYC(\s*Norms?)?\b",
+    "AML Compliance": r"\b(AML|Anti[\-\s]*Money\s*Laundering)\b",
+    "Credit Risk": r"\bCredit\s*Risk\b",
+    "Cost Accounting": r"\bCost\s*Accounting\b",
+
+    # Pharmaceutical Sciences & Healthcare
+    "Drug Formulation": r"\b(Drug\s*)?Formulation\b",
+    "HPLC": r"\bHPLC\b",
+    "UV-Vis Spectroscopy": r"\bUV[\-\s]*Vis\b",
+    "GLP": r"\bGLP\b|\bGood\s*Laboratory\s*Practice\b",
+    "cGMP": r"\b(c?GMP)\b|\bGood\s*Manufacturing\s*Practice\b",
+    "Clinical Pharmacology": r"\bClinical\s*Pharmacology\b",
+    "QA/QC": r"\bQA\s*/\s*QC\b|\bQuality\s*Assurance\b",
+    "Biochemical Analysis": r"\bBiochemical\s*Analysis\b",
+    "Microbiology": r"\bMicrobiology\b",
+    "Dissolution Testing": r"\bDissolution\s*(Testing|Apparatus)\b",
+
+    # Soft & Professional Competencies
+    "Analytical Problem Solving": r"\b(Problem\s*Solving|Analytical\s*Thinking)\b",
+    "Technical Communication": r"\b(Technical\s*Communication|Professional\s*Communication)\b",
+    "Team Leadership": r"\b(Team\s*Leadership|Leadership)\b",
+    "Project Management": r"\bProject\s*Management\b"
+}
+
+
+def extract_real_skills_from_resume(text: str) -> List[str]:
+    """
+    High-precision skill extraction engine:
+    1. Scans against comprehensive master taxonomy across 9 PMIS academic branches.
+    2. Identifies and parses the candidate's explicit 'Technical Skills / Competencies' section.
+    3. Normalizes and deduplicates skills to return candidate's genuine capabilities.
+    """
+    if not text:
+        return []
+
+    matched_skills = []
+
+    # 1. Regex word-boundary search against Master Taxonomy
+    for skill_name, pattern in MASTER_SKILL_TAXONOMY.items():
+        if re.search(pattern, text, re.I):
+            matched_skills.append(skill_name)
+
+    # 2. Extract explicit candidate skills section
+    lines = [l.strip() for l in text.splitlines() if l.strip()]
+    in_skills = False
+    start_pat = re.compile(
+        r'^(core\s+technical\s+competencies|technical\s+skills|key\s+skills|skills\s+&\s+proficiencies|skills|competencies|areas\s+of\s+expertise|technical\s+proficiencies|programming\s+languages)',
+        re.I
+    )
+    end_pat = re.compile(
+        r'^(key\s+projects|projects|work\s+experience|experience|professional\s+experience|education|academic|certifications|achievements|publications|coursework)',
+        re.I
+    )
+
+    for line in lines:
+        clean_header = re.sub(r'^[^\w\s]+', '', line).strip()
+        if start_pat.search(clean_header):
+            in_skills = True
+            continue
+        if in_skills:
+            if end_pat.search(clean_header):
+                break
+
+            clean_line = re.sub(r'^[^\w\s]+', '', line).strip()
+            # If line is a subheader ending with colon (e.g. 'Programming Languages:')
+            if clean_line.endswith(':') and len(clean_line.split()) <= 4:
+                continue
+
+            # If inline category: 'Languages: Python, Java'
+            if ':' in clean_line:
+                clean_line = clean_line.split(':', 1)[1]
+
+            # Split tokens by commas, bullets, pipes, semicolons
+            tokens = re.split(r'[,|•\u2022\u25cf\u25aa\u25b6;]+', clean_line)
+            for raw_tok in tokens:
+                tok = raw_tok.strip()
+                tok = re.sub(r'^[^\w\s+]+', '', tok).strip()
+                tok = re.sub(r'\s*\(.*?\)', '', tok).strip()  # Clean parentheticals like (S3, EC2)
+                tok = re.sub(r'^(and|with)\s+', '', tok, flags=re.I).strip()
+
+                if tok and 2 <= len(tok) <= 35:
+                    # Ignore prose and noise words
+                    if not any(w in tok.lower() for w in ['experience', 'responsible', 'knowledge', 'understanding', 'basics', 'awareness', 'worked on', 'proficient in']):
+                        if tok not in matched_skills:
+                            matched_skills.append(tok)
+
+    # Ensure soft skills are present
+    if not any("communication" in s.lower() for s in matched_skills):
+        matched_skills.append("Professional Communication")
+    if not any("problem solving" in s.lower() for s in matched_skills):
+        matched_skills.append("Analytical Problem Solving")
+
+    return list(dict.fromkeys(matched_skills))
+
 # Local resume backup folder
 STATIC_RESUMES_DIR = Path(__file__).parent.parent.parent / "static" / "resumes"
 STATIC_RESUMES_DIR.mkdir(parents=True, exist_ok=True)
@@ -41,31 +286,56 @@ class ResumeService:
         """
         Validates that the uploaded resume is strictly a 1-page PDF and extracts its text.
         Enforces user requirement: 'PDF aur PDF sirf one page ka rakho resume ka. Limit lagao uski'.
+        Uses PyMuPDF (fitz) for highest Unicode and layout accuracy with pypdf fallback.
         """
-        try:
-            reader = pypdf.PdfReader(io.BytesIO(file_bytes))
-            num_pages = len(reader.pages)
+        num_pages = 1
+        extracted_text = ""
+        pymupdf_success = False
 
+        # 1. Try PyMuPDF first (fastest and most accurate layout extraction)
+        try:
+            import pymupdf
+            doc = pymupdf.open(stream=file_bytes, filetype="pdf")
+            num_pages = len(doc)
             if num_pages > 1:
                 raise HTTPException(
                     status_code=400,
                     detail=f"Page limit exceeded: Your resume has {num_pages} pages. Please upload a 1-page resume (Industry corporate standard for PM Internship applications)."
                 )
-
-            # Extract text from page 1, preserving line breaks
-            extracted_text = ""
-            for page in reader.pages:
-                extracted_text += (page.extract_text() or "") + "\n"
-
-            # Clean horizontal whitespace but keep newline structure for accurate parsing
-            clean_lines = [re.sub(r"[ \t]+", " ", line).strip() for line in extracted_text.splitlines() if line.strip()]
-            clean_text = "\n".join(clean_lines)
-            return num_pages, clean_text
+            for page in doc:
+                extracted_text += (page.get_text("text") or "") + "\n"
+            pymupdf_success = True
         except HTTPException:
             raise
-        except Exception as e:
-            logger.error(f"Error reading PDF: {e}")
-            raise HTTPException(status_code=400, detail="Invalid PDF file or corrupt document.")
+        except Exception as fitz_err:
+            logger.warning(f"PyMuPDF extraction note: {fitz_err}")
+
+        # 2. Fallback to pypdf if PyMuPDF didn't run or returned minimal characters
+        if not pymupdf_success or len(extracted_text.strip()) < 15:
+            try:
+                reader = pypdf.PdfReader(io.BytesIO(file_bytes))
+                num_pages = len(reader.pages)
+                if num_pages > 1:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Page limit exceeded: Your resume has {num_pages} pages. Please upload a 1-page resume (Industry corporate standard for PM Internship applications)."
+                    )
+                pypdf_text = ""
+                for page in reader.pages:
+                    pypdf_text += (page.extract_text() or "") + "\n"
+                if len(pypdf_text.strip()) > len(extracted_text.strip()):
+                    extracted_text = pypdf_text
+            except HTTPException:
+                raise
+            except Exception as e:
+                logger.error(f"Error reading PDF with pypdf: {e}")
+                if not extracted_text:
+                    raise HTTPException(status_code=400, detail="Invalid PDF file or corrupt document.")
+
+        # Clean horizontal whitespace but keep newline structure for accurate parsing
+        clean_lines = [re.sub(r"[ \t]+", " ", line).strip() for line in extracted_text.splitlines() if line.strip()]
+        clean_text = "\n".join(clean_lines)
+        return num_pages, clean_text
 
     def upload_to_cloudinary_or_storage(self, file_bytes: bytes, filename: str) -> str:
         """
@@ -264,6 +534,9 @@ class ResumeService:
         Extracts verified full candidate profile (name, email, phone, college, degree, branch, location),
         skills, layout analysis, top 5 database matching jobs from PMIS MongoDB, and step-by-step roadmap.
         """
+        # 1. Deterministically extract candidate real skills directly from resume text & explicit skills section
+        verified_skills = extract_real_skills_from_resume(resume_text)
+
         # Quick extract candidate name from filename (e.g. Ritik_Sharma_Resume.pdf -> Ritik Sharma)
         cand_from_file = ""
         if filename:
@@ -289,6 +562,9 @@ RESUME CONTENT:
 
 FILENAME:
 {filename}
+
+VERIFIED SKILLS PRE-DETECTED IN RESUME:
+{', '.join(verified_skills[:20])}
 
 Return ONLY a valid JSON object matching the exact structure below. Do NOT output markdown code blocks (e.g. no ```json).
 
@@ -346,14 +622,19 @@ JSON FORMAT:
             if start != -1 and end != -1:
                 parsed = json.loads(cleaned[start:end+1])
                 score = parsed.get("resume_score", 0)
-                all_s = parsed.get("extracted_skills") or parsed.get("skills_breakdown", {}).get("all_extracted") or parsed.get("skills_breakdown", {}).get("technical_skills", [])
+                llm_skills = parsed.get("extracted_skills") or parsed.get("skills_breakdown", {}).get("all_extracted") or parsed.get("skills_breakdown", {}).get("technical_skills", [])
                 
+                # Merge verified regex skills with LLM extracted skills
+                combined_skills = list(dict.fromkeys(verified_skills + (llm_skills if isinstance(llm_skills, list) else [])))
+
                 # If LLM returned empty or low score or Grade F placeholder, fall back to dynamic analysis
-                if score < 60 or not all_s or parsed.get("grade", "").startswith("Grade F"):
+                if score < 60 or not combined_skills or parsed.get("grade", "").startswith("Grade F"):
                     logger.info("LLM response incomplete; using dynamic intelligent review.")
                     return self._generate_dynamic_analysis(resume_text, filename)
 
-                parsed["extracted_skills"] = all_s
+                parsed["extracted_skills"] = combined_skills
+                if "skills_breakdown" in parsed:
+                    parsed["skills_breakdown"]["all_extracted"] = combined_skills
                 
                 # If parsed name is generic placeholder, use cand_from_file
                 if not parsed.get("candidate_name") or parsed.get("candidate_name") in ["Candidate", "Exact Full Name from resume", "Student Candidate"]:
@@ -747,28 +1028,40 @@ JSON FORMAT:
 
         cfg = domain_definitions[best_domain_key]
 
-        # Extract matching skills
-        detected_tech = []
-        for sk in cfg["tech_pool"]:
-            clean_sk = sk.split()[0].lower()
-            if clean_sk in text_lower or sk.lower() in text_lower:
-                detected_tech.append(sk)
-        if not detected_tech:
-            detected_tech = cfg["tech_pool"][:4]
+        # Extract real candidate skills directly from resume text & explicit skills section
+        real_extracted = extract_real_skills_from_resume(resume_text)
 
-        detected_tools = []
-        for tl in cfg["tools_pool"]:
-            if tl.lower() in text_lower:
-                detected_tools.append(tl)
-        if not detected_tools:
-            detected_tools = cfg["tools_pool"][:3]
+        if real_extracted:
+            all_skills = real_extracted
+            detected_tech = [s for s in real_extracted if not any(w in s.lower() for w in ["communication", "problem solving", "leadership", "project management"])]
+            detected_tools = [s for s in detected_tech if any(w in s.lower() for w in ["git", "docker", "postman", "linux", "cad", "autocad", "solidworks", "ansys", "excel", "power bi", "tableau", "tally", "revit", "staad", "hplc", "matlab", "simulink"])]
+            if not detected_tools:
+                detected_tools = detected_tech[len(detected_tech)//2:]
+            detected_soft = [s for s in real_extracted if any(w in s.lower() for w in ["communication", "problem solving", "leadership", "project management"])]
+            if not detected_soft:
+                detected_soft = ["Analytical Problem Solving", "Professional Communication", "Team Collaboration"]
+        else:
+            detected_tech = []
+            for sk in cfg["tech_pool"]:
+                clean_sk = sk.split()[0].lower()
+                if clean_sk in text_lower or sk.lower() in text_lower:
+                    detected_tech.append(sk)
+            if not detected_tech:
+                detected_tech = cfg["tech_pool"][:4]
 
-        soft_catalog = ["Professional Communication", "Analytical Problem Solving", "Team Leadership", "Cross-functional Collaboration", "Project Management"]
-        detected_soft = [sf for sf in soft_catalog if sf.lower() in text_lower]
-        if not detected_soft:
-            detected_soft = ["Analytical Problem Solving", "Professional Communication", "Team Collaboration"]
+            detected_tools = []
+            for tl in cfg["tools_pool"]:
+                if tl.lower() in text_lower:
+                    detected_tools.append(tl)
+            if not detected_tools:
+                detected_tools = cfg["tools_pool"][:3]
 
-        all_skills = list(dict.fromkeys(detected_tech + detected_tools + detected_soft))
+            soft_catalog = ["Professional Communication", "Analytical Problem Solving", "Team Leadership", "Cross-functional Collaboration", "Project Management"]
+            detected_soft = [sf for sf in soft_catalog if sf.lower() in text_lower]
+            if not detected_soft:
+                detected_soft = ["Analytical Problem Solving", "Professional Communication", "Team Collaboration"]
+
+            all_skills = list(dict.fromkeys(detected_tech + detected_tools + detected_soft))
 
         # 1. First attempt: search first 6 non-empty lines of resume text for candidate full name
         candidate_name = ""

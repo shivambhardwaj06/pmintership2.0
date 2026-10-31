@@ -18,6 +18,8 @@ DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 INITIAL_SEED_FILE = DATA_DIR / "pm_internships_250.json"
 if not INITIAL_SEED_FILE.exists():
     INITIAL_SEED_FILE = DATA_DIR / "pm_internships_120.json"
+USERS_STORE_FILE = DATA_DIR / "users_store.json"
+APPLICATIONS_STORE_FILE = DATA_DIR / "applications_store.json"
 
 # ==========================================
 # MONGODB CONNECTION MANAGER
@@ -91,6 +93,71 @@ def job_news_collection():
 def recruiters_collection():
     return get_database()["recruiters"]
 
+# ==========================================
+# DISK PERSISTENCE ENGINE (ACROSS RESTARTS)
+# ==========================================
+
+def _sync_users_to_disk():
+    """Syncs MongoDB users collection to persistent JSON file on disk."""
+    try:
+        col = users_collection()
+        docs = list(col.find({}, {"_id": 0}))
+        users_map = {doc["user_id"]: doc for doc in docs if "user_id" in doc}
+        with open(USERS_STORE_FILE, "w", encoding="utf-8") as f:
+            json.dump(users_map, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        logger.error(f"Failed to sync users to disk store: {e}")
+
+def _load_users_from_disk():
+    """Loads users from persistent JSON file into MongoDB collection on startup."""
+    try:
+        if not USERS_STORE_FILE.exists():
+            return
+        with open(USERS_STORE_FILE, "r", encoding="utf-8") as f:
+            content = f.read().strip()
+            if not content or content == "{}":
+                return
+            users_map = json.loads(content)
+            if isinstance(users_map, dict):
+                col = users_collection()
+                for uid, doc in users_map.items():
+                    if isinstance(doc, dict) and "user_id" in doc:
+                        clean = {k: v for k, v in doc.items() if k != "_id"}
+                        col.update_one({"user_id": doc["user_id"]}, {"$set": clean}, upsert=True)
+                logger.info(f"Loaded {len(users_map)} registered user(s) from disk store into database.")
+    except Exception as e:
+        logger.error(f"Failed to load users from disk store: {e}")
+
+def _sync_applications_to_disk():
+    """Syncs MongoDB applications collection to persistent JSON file on disk."""
+    try:
+        col = applications_collection()
+        docs = list(col.find({}, {"_id": 0}))
+        with open(APPLICATIONS_STORE_FILE, "w", encoding="utf-8") as f:
+            json.dump(docs, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        logger.error(f"Failed to sync applications to disk store: {e}")
+
+def _load_applications_from_disk():
+    """Loads applications from persistent JSON file into MongoDB collection on startup."""
+    try:
+        if not APPLICATIONS_STORE_FILE.exists():
+            return
+        with open(APPLICATIONS_STORE_FILE, "r", encoding="utf-8") as f:
+            content = f.read().strip()
+            if not content:
+                return
+            apps_list = json.loads(content)
+            if isinstance(apps_list, list):
+                col = applications_collection()
+                for app in apps_list:
+                    if isinstance(app, dict) and app.get("application_id"):
+                        clean = {k: v for k, v in app.items() if k != "_id"}
+                        col.update_one({"application_id": app["application_id"]}, {"$set": clean}, upsert=True)
+                logger.info(f"Loaded {len(apps_list)} application(s) from disk store into database.")
+    except Exception as e:
+        logger.error(f"Failed to load applications from disk store: {e}")
+
 def _initialize_indexes_and_seed():
     """Sets up indexes on MongoDB collections and populates minimum 250+ internships and recruiter seeds."""
     try:
@@ -140,6 +207,10 @@ def _initialize_indexes_and_seed():
 
         # Seed initial recruiters and candidate applications for testing
         _seed_default_recruiters_and_applications()
+
+        # Restore persistent users and applications from disk
+        _load_users_from_disk()
+        _load_applications_from_disk()
 
     except Exception as e:
         logger.error(f"Error during MongoDB index initialization/seeding: {e}")
@@ -242,8 +313,8 @@ def get_user_by_identifier(ident: str) -> Optional[Dict[str, Any]]:
 
     user = col.find_one({
         "$or": [
-            {"user_id": {"$regex": f"^{ident_clean}$", "$options": "i"}},
-            {"email": {"$regex": f"^{ident_clean}$", "$options": "i"}},
+            {"user_id": {"$regex": f"^{re.escape(ident_clean)}$", "$options": "i"}},
+            {"email": {"$regex": f"^{re.escape(ident_clean)}$", "$options": "i"}},
             {"mobile": ident_clean}
         ]
     }, {"_id": 0})
@@ -251,23 +322,90 @@ def get_user_by_identifier(ident: str) -> Optional[Dict[str, Any]]:
     return user
 
 def save_user(user_data: Dict[str, Any]) -> Dict[str, Any]:
-    """Persists or updates a user document in MongoDB."""
+    """Persists or updates a user document in MongoDB and persistent disk store."""
     col = users_collection()
     user_id = user_data["user_id"]
     clean_data = {k: v for k, v in user_data.items() if k != "_id"}
     clean_data["updated_at"] = datetime.utcnow().isoformat()
     
     col.update_one({"user_id": user_id}, {"$set": clean_data}, upsert=True)
+    _sync_users_to_disk()
     return clean_data
 
 def update_user_profile(user_id: str, updates: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-    """Updates specific fields of a user in MongoDB."""
+    """Updates specific fields of a user in MongoDB and persistent disk store."""
     col = users_collection()
+    user = get_user_by_identifier(user_id)
+    target_id = user["user_id"] if user else user_id.strip()
+
     clean_updates = {k: v for k, v in updates.items() if k != "_id" and v is not None}
     clean_updates["updated_at"] = datetime.utcnow().isoformat()
     
-    col.update_one({"user_id": user_id}, {"$set": clean_updates})
-    return get_user_by_identifier(user_id)
+    res = col.update_one(
+        {"$or": [
+            {"user_id": target_id},
+            {"user_id": {"$regex": f"^{re.escape(target_id)}$", "$options": "i"}},
+            {"email": {"$regex": f"^{re.escape(target_id)}$", "$options": "i"}},
+            {"mobile": target_id}
+        ]},
+        {"$set": clean_updates}
+    )
+
+    if res.matched_count == 0 and not user:
+        new_doc = {
+            "user_id": target_id,
+            "name": clean_updates.get("name", "Candidate"),
+            "email": clean_updates.get("email", ""),
+            "mobile": clean_updates.get("mobile", ""),
+            "branch": clean_updates.get("branch", "Computer Science & Engineering"),
+            "degree": clean_updates.get("degree", "B.Tech / B.E."),
+            "college": clean_updates.get("college", "State Technological University"),
+            "state": clean_updates.get("state", "National"),
+            "career_goals": clean_updates.get("career_goals", "Targeting top corporate internships under PM Scheme."),
+            "skills": clean_updates.get("skills", []),
+            "resume_name": clean_updates.get("resume_name", ""),
+            "cloudinary_url": clean_updates.get("cloudinary_url", ""),
+            "created_at": datetime.utcnow().isoformat(),
+            **clean_updates
+        }
+        save_user(new_doc)
+        return get_user_by_identifier(target_id)
+
+    _sync_users_to_disk()
+    return get_user_by_identifier(target_id)
+
+def clean_all_users_database() -> Dict[str, Any]:
+    """Completely purges all candidate user accounts, refresh tokens, and non-seed applications."""
+    try:
+        col_users = users_collection()
+        del_users = col_users.delete_many({}).deleted_count
+
+        col_tokens = refresh_tokens_collection()
+        del_tokens = col_tokens.delete_many({}).deleted_count
+
+        # Reset disk store to empty object
+        with open(USERS_STORE_FILE, "w", encoding="utf-8") as f:
+            json.dump({}, f, indent=2)
+
+        # Clear candidate submitted applications, keeping default seed recruiter applications
+        col_apps = applications_collection()
+        seed_app_ids = [a["application_id"] for a in DEFAULT_SEED_APPLICATIONS]
+        col_apps.delete_many({"application_id": {"$nin": seed_app_ids}})
+        _sync_applications_to_disk()
+
+        logger.info(f"Database users cleaned: {del_users} user(s) purged, {del_tokens} token(s) revoked.")
+        return {
+            "status": "success",
+            "message": f"Database of users has been cleaned completely! Purged {del_users} user account(s).",
+            "deleted_users_count": del_users,
+            "deleted_tokens_count": del_tokens
+        }
+    except Exception as e:
+        logger.error(f"Error during clean_all_users_database: {e}")
+        return {
+            "status": "error",
+            "message": f"Failed to clean database: {str(e)}"
+        }
 
 
 # ==========================================
@@ -330,14 +468,14 @@ def get_user_applications(user_id: str) -> List[Dict[str, Any]]:
     return list(col.find({"user_id": {"$regex": f"^{clean_uid}$", "$options": "i"}}, {"_id": 0}).sort("applied_at", -1))
 
 def add_user_application(user_id: str, application_data: Dict[str, Any]) -> List[Dict[str, Any]]:
-    """Adds a new application in MongoDB if not already applied, and returns updated list."""
+    """Adds a new application in MongoDB if not already applied, persists to disk, and returns updated list."""
     col = applications_collection()
     clean_uid = user_id.strip()
     internship_id = application_data.get("internship_id")
 
     # Check if already applied
     existing = col.find_one({
-        "user_id": {"$regex": f"^{clean_uid}$", "$options": "i"},
+        "user_id": {"$regex": f"^{re.escape(clean_uid)}$", "$options": "i"},
         "internship_id": internship_id
     })
     
@@ -346,6 +484,7 @@ def add_user_application(user_id: str, application_data: Dict[str, Any]) -> List
         if "applied_at" not in doc:
             doc["applied_at"] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
         col.insert_one(doc)
+        _sync_applications_to_disk()
 
     return get_user_applications(user_id)
 
@@ -910,9 +1049,15 @@ def update_application_status_db(
     recruiter_notes: Optional[str] = None,
     interview_date: Optional[str] = None,
     meeting_link: Optional[str] = None,
-    updated_by: Optional[str] = None
+    updated_by: Optional[str] = None,
+    rejection_feedback: Optional[str] = None,
+    ai_screener_score: Optional[int] = None,
+    ai_screener_verdict: Optional[str] = None,
+    missing_skills: Optional[List[str]] = None,
+    improvement_tips: Optional[List[str]] = None,
+    match_strengths: Optional[List[str]] = None
 ) -> Optional[Dict[str, Any]]:
-    """Updates the status and notes of an application in MongoDB, immediately syncing to student dashboard."""
+    """Updates the status, AI screener feedback, and notes of an application in MongoDB, immediately syncing to student dashboard and disk."""
     col = applications_collection()
     clean_id = application_id.strip()
 
@@ -929,12 +1074,25 @@ def update_application_status_db(
         updates["meeting_link"] = meeting_link
     if updated_by is not None:
         updates["updated_by"] = updated_by
+    if rejection_feedback is not None:
+        updates["rejection_feedback"] = rejection_feedback
+    if ai_screener_score is not None:
+        updates["ai_screener_score"] = ai_screener_score
+    if ai_screener_verdict is not None:
+        updates["ai_screener_verdict"] = ai_screener_verdict
+    if missing_skills is not None:
+        updates["missing_skills"] = missing_skills
+    if improvement_tips is not None:
+        updates["improvement_tips"] = improvement_tips
+    if match_strengths is not None:
+        updates["match_strengths"] = match_strengths
 
     res = col.find_one_and_update(
         {"$or": [{"application_id": clean_id}, {"id": clean_id}]},
         {"$set": updates},
         return_document=True
     )
+    _sync_applications_to_disk()
     if res:
         res.pop("_id", None)
     return res

@@ -14,6 +14,8 @@ from pydantic import BaseModel, Field
 from app.config import settings
 from app.services.resume_service import resume_service
 from app.db import (
+    users_collection,
+    clean_all_users_database,
     get_user_by_identifier,
     save_user,
     update_user_profile,
@@ -426,7 +428,7 @@ def register_user(payload: RegisterRequest):
     if existing:
         raise HTTPException(
             status_code=400,
-            detail="An account with this mobile number already exists in MongoDB database. Please log in."
+            detail="An account with this mobile number already exists. Please log in."
         )
 
     user_id = f"PMIS-{mobile[-6:]}"
@@ -457,7 +459,7 @@ def register_user(payload: RegisterRequest):
 
     return {
         "status": "success",
-        "message": "Youth Registration Successful! User stored in MongoDB.",
+        "message": "Youth Registration Successful! Welcome to the PM Internship Scheme Portal.",
         "user_id": user_id,
         "user": sanitize_user(saved),
         "access_token": access_token,
@@ -476,8 +478,8 @@ def login_user(payload: LoginRequest):
 
     if not user:
         raise HTTPException(
-            status_code=404,
-            detail="Account not found in MongoDB database. Please register first as a new youth candidate."
+            status_code=401,
+            detail="Account not found. Please register first as a new youth candidate."
         )
 
     stored_password = user.get("password")
@@ -554,7 +556,7 @@ def logout_user(payload: Optional[LogoutRequest] = None, current_user: Optional[
 
     return {
         "status": "success",
-        "message": "Session terminated successfully. Token revoked from MongoDB."
+        "message": "Session terminated successfully."
     }
 
 
@@ -746,7 +748,7 @@ async def google_auth(payload: GoogleAuthRequest):
 
     return {
         "status": "success",
-        "message": f"Welcome, {clean_name}! Google profile verified & saved to MongoDB.",
+        "message": f"Welcome, {clean_name}! Profile verified successfully.",
         "user": sanitize_user(saved),
         "access_token": access_token,
         "refresh_token": refresh_token,
@@ -761,7 +763,7 @@ def reset_password(payload: ResetPasswordRequest):
     ident = payload.user_id.strip()
     user = get_user_by_identifier(ident)
     if not user:
-        raise HTTPException(status_code=404, detail="No registered account found with this ID / Mobile in MongoDB.")
+        raise HTTPException(status_code=404, detail="No registered account found with this ID / Mobile.")
     return {
         "status": "success",
         "message": f"A One-Time Password (OTP) has been sent to the registered mobile / email for User ID: {ident}."
@@ -774,39 +776,66 @@ def reset_password(payload: ResetPasswordRequest):
 
 @router.get("/user/profile")
 def get_profile(user_id: str):
-    """Retrieves full candidate profile directly from MongoDB."""
-    user = get_user_by_identifier(user_id)
-    if not user:
-        clean_id = user_id.strip()
-        col = users_collection()
-        new_doc = {
+    """Retrieves full candidate profile directly from database or creates default profile if not found."""
+    clean_id = user_id.strip() if user_id else ""
+    if not clean_id:
+        raise HTTPException(status_code=400, detail="User ID is required.")
+
+    try:
+        user = get_user_by_identifier(clean_id)
+        if not user:
+            new_doc = {
+                "user_id": clean_id,
+                "name": clean_id if not clean_id.startswith("PMIS-") else "Candidate",
+                "mobile": "",
+                "email": f"{clean_id.lower()}@candidate.pminternship.gov.in" if "@" not in clean_id else clean_id,
+                "branch": "Computer Science & Engineering",
+                "degree": "B.Tech / B.E.",
+                "college": "State Technological University",
+                "state": "National",
+                "career_goals": "Targeting top corporate internships under PM Scheme.",
+                "skills": ["Problem Solving", "Professional Communication"],
+                "resume_name": "",
+                "cloudinary_url": "",
+                "created_at": datetime.utcnow().isoformat(),
+                "updated_at": datetime.utcnow().isoformat(),
+            }
+            try:
+                user = save_user(new_doc)
+            except Exception as save_err:
+                logger.warning(f"Could not save new user document to disk: {save_err}")
+                user = new_doc
+        return sanitize_user(user)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error retrieving profile for user_id={clean_id}: {e}", exc_info=True)
+        # Safe fallback profile to prevent breaking client UI
+        return {
             "user_id": clean_id,
             "name": clean_id if not clean_id.startswith("PMIS-") else "Candidate",
             "mobile": "",
             "email": f"{clean_id.lower()}@candidate.pminternship.gov.in" if "@" not in clean_id else clean_id,
             "branch": "Computer Science & Engineering",
             "degree": "B.Tech / B.E.",
-            "college": "State University / College of Engineering",
+            "college": "State Technological University",
             "state": "National",
             "career_goals": "Targeting top corporate internships under PM Scheme.",
             "skills": ["Problem Solving", "Professional Communication"],
             "resume_name": "",
             "cloudinary_url": "",
-            "created_at": datetime.utcnow().isoformat(),
-            "updated_at": datetime.utcnow().isoformat(),
         }
-        col.insert_one(new_doc)
-        user = get_user_by_identifier(clean_id)
-    return sanitize_user(user)
 
 
 @router.put("/user/profile")
 def update_profile(user_id: str, payload: ProfileUpdateRequest):
-    """Updates candidate profile fields in MongoDB."""
-    user = get_user_by_identifier(user_id)
-    if not user:
-        get_profile(user_id)
-        user = get_user_by_identifier(user_id)
+    """Updates candidate profile fields in MongoDB and persistent store."""
+    clean_id = user_id.strip() if user_id else ""
+    if not clean_id:
+        raise HTTPException(status_code=400, detail="User ID is required.")
+
+    user = get_user_by_identifier(clean_id)
+    target_id = user["user_id"] if user else clean_id
 
     updates: Dict[str, Any] = {}
     if payload.name is not None and payload.name.strip():
@@ -832,12 +861,18 @@ def update_profile(user_id: str, payload: ProfileUpdateRequest):
     if payload.cloudinary_url is not None:
         updates["cloudinary_url"] = payload.cloudinary_url
 
-    updated = update_user_profile(user["user_id"], updates)
+    updated = update_user_profile(target_id, updates)
     return {
         "status": "success",
-        "message": "Profile updated in MongoDB successfully!",
-        "user": sanitize_user(updated or user)
+        "message": "Profile updated successfully!",
+        "user": sanitize_user(updated or user or {"user_id": target_id, **updates})
     }
+
+
+@router.post("/auth/clean-users")
+def clean_users_endpoint():
+    """Wipes all registered users from MongoDB and persistent storage so they can be registered again fresh."""
+    return clean_all_users_database()
 
 
 @router.post("/user/upload-resume")
@@ -870,6 +905,7 @@ async def upload_and_analyze_resume(
     user = get_user_by_identifier(user_id)
     extracted_skills = analysis.get("extracted_skills", [])
     updated_user = None
+
     if user:
         updates = {
             "resume_name": file.filename,
@@ -886,13 +922,37 @@ async def upload_and_analyze_resume(
             updates["degree"] = analysis["degree"]
         if analysis.get("location"):
             updates["state"] = analysis["location"]
+        if analysis.get("career_summary"):
+            updates["career_goals"] = analysis["career_summary"]
 
         updated_user = update_user_profile(user["user_id"], updates)
         update_user_applications_resume(user["user_id"], cloudinary_url, file.filename)
+    else:
+        # Auto-initialize user doc with extracted resume credentials
+        cand_name = analysis.get("candidate_name")
+        if not cand_name or cand_name in ["Candidate", "PMIS Candidate", "Exact Full Name from resume"]:
+            cand_name = user_id.split("@")[0].capitalize() if "@" in user_id else "Candidate"
+
+        new_doc = {
+            "user_id": user_id,
+            "name": cand_name,
+            "email": analysis.get("email") or (user_id if "@" in user_id else f"{user_id}@candidate.in"),
+            "mobile": analysis.get("phone") or "",
+            "branch": analysis.get("detected_branch") or "Computer Science & Engineering",
+            "degree": analysis.get("degree") or "B.Tech / B.E.",
+            "college": analysis.get("college") or "State University / College of Engineering",
+            "state": analysis.get("location") or "National",
+            "career_goals": analysis.get("career_summary") or "Targeting top corporate internships under PM Scheme.",
+            "skills": extracted_skills,
+            "resume_name": file.filename,
+            "cloudinary_url": cloudinary_url,
+        }
+        save_user(new_doc)
+        updated_user = new_doc
 
     return {
         "status": "success",
-        "message": "1-Page Resume successfully processed by AI Recruiter Engine & synced to MongoDB!",
+        "message": "1-Page Resume successfully processed by AI Recruiter Engine!",
         "cloudinary_url": cloudinary_url,
         "filename": file.filename,
         "file_name": file.filename,
@@ -954,7 +1014,7 @@ def apply_internship(user_id: str, payload: ApplyRequest):
     updated_apps = add_user_application(user_id, new_app)
     return {
         "status": "success",
-        "message": f"Successfully applied for {payload.title} at {payload.company}! Saved in MongoDB.",
+        "message": f"Successfully applied for {payload.title} at {payload.company}!",
         "application": new_app,
         "total_applied": len(updated_apps)
     }

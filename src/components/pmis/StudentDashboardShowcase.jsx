@@ -42,7 +42,7 @@ export default function StudentDashboardShowcase({ user, onOpenAuth, onNavigateT
     },
     {
       id: "job-matching",
-      tab: "profile",
+      tab: "matches",
       title: "Top 5 Matching Internships",
       badge: "260 Live Openings",
       badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800",
