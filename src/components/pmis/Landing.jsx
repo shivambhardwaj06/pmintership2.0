@@ -291,71 +291,88 @@ export default function Landing() {
               onApplyClick={handleApplyFromLanding}
             />
 
-            {/* TWO HIGH-IMPACT PROMOTIONAL CARDS FOR "DON'T FALL IN THE TRAP" & "FIND YOUR PATH" */}
-            <section className="py-12 px-4 bg-slate-100/60 dark:bg-slate-900/40 border-t border-slate-200 dark:border-slate-800">
+            {/* CLEAN CANDIDATE INTELLIGENCE & GUIDANCE CARDS */}
+            <section className="py-14 sm:py-18 px-4 border-t border-slate-200/80 dark:border-white/10 bg-slate-50/60 dark:bg-slate-950/40">
               <div className="mx-auto max-w-7xl">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  {/* Promo Card 1: Don't Fall in the Trap */}
-                  <div className="relative overflow-hidden rounded-3xl border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-white dark:to-slate-900 p-8 shadow-sm flex flex-col justify-between group hover:border-amber-500/60 hover:shadow-xl transition-all duration-300">
-                    <div className="space-y-3">
-                      <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 px-3 py-1 text-xs font-black uppercase text-amber-600 dark:text-amber-400">
-                        <Flame className="h-3.5 w-3.5 fill-amber-500 text-amber-500 animate-pulse" />
-                        <span>Daily Verified Hiring Stream</span>
-                      </div>
-                      <h3 className="font-display text-2xl font-black text-slate-900 dark:text-white">
-                        Don&apos;t Fall in the Trap
-                      </h3>
-                      <p className="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 leading-relaxed">
-                        <span className="text-rose-600 dark:text-rose-400 font-extrabold line-through mr-1">
-                          Stop focusing on layoffs.
+                <div className="text-center max-w-2xl mx-auto mb-10 space-y-2">
+                  <div className="inline-flex items-center gap-2 rounded-full bg-saffron/15 dark:bg-saffron/20 border border-saffron/30 px-3 py-1 text-xs font-black uppercase text-saffron tracking-wider">
+                    <Sparkles className="h-3.5 w-3.5 text-saffron" />
+                    <span>Candidate Intelligence &amp; Roadmap</span>
+                  </div>
+                  <h2 className="font-display text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                    Stay Ahead. Learn Fast. Get Hired.
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium">
+                    Verified real-time corporate hiring announcements paired with personalized AI preparation roadmaps.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Card 1: Hiring Stream */}
+                  <div
+                    onClick={() => setActiveView("trap")}
+                    className="group relative rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-900/90 p-7 sm:p-8 shadow-xs hover:shadow-xl hover:border-amber-500/50 transition-all duration-300 cursor-pointer flex flex-col justify-between space-y-6"
+                  >
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="h-12 w-12 rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400 grid place-items-center transition-transform group-hover:scale-105">
+                          <TrendingUp className="h-6 w-6" />
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300">
+                          Live Daily Stream
                         </span>
-                        <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">
-                          Focus on massive new corporate roles created daily!
-                        </span>{" "}
-                        Track verified hiring announcements from Google News, Tata Semiconductor, GCC expansions, and top Indian MNCs.
-                      </p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <h3 className="font-display text-xl sm:text-2xl font-black text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition">
+                          Daily Verified Hiring News
+                        </h3>
+                        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
+                          Cut through the noise. Track authentic new job creation across Indian GCCs, semiconductor fabs, rail infra, and top corporate employers updated daily from verified government and industry feeds.
+                        </p>
+                      </div>
                     </div>
 
-                    <div className="mt-6 pt-4 border-t border-amber-500/20 flex items-center justify-between">
-                      <span className="text-xs font-bold text-amber-700 dark:text-amber-400">
-                        1,25,000+ PMIS Openings • Real-time Sources
-                      </span>
-                      <button
-                        onClick={() => setActiveView("trap")}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white px-5 py-2.5 text-xs font-black shadow-md hover:brightness-105 transition cursor-pointer"
-                      >
-                        <span>View Hiring Stream</span>
+                    <div className="pt-4 border-t border-slate-100 dark:border-white/10 flex items-center justify-between">
+                      <span className="text-xs font-black text-amber-600 dark:text-amber-400 group-hover:underline inline-flex items-center gap-1.5">
+                        <span>View Corporate Openings</span>
                         <ArrowRight className="h-4 w-4" />
-                      </button>
+                      </span>
+                      <span className="text-[11px] font-mono font-bold text-slate-400">1,25,000+ Posts</span>
                     </div>
                   </div>
 
-                  {/* Promo Card 2: Find Your Path */}
-                  <div className="relative overflow-hidden rounded-3xl border-2 border-indigo-500/30 bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-white dark:to-slate-900 p-8 shadow-sm flex flex-col justify-between group hover:border-indigo-500/60 hover:shadow-xl transition-all duration-300">
-                    <div className="space-y-3">
-                      <div className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/15 border border-indigo-500/30 px-3 py-1 text-xs font-black uppercase text-indigo-600 dark:text-indigo-400">
-                        <Compass className="h-3.5 w-3.5 text-indigo-500" />
-                        <span>AI-Powered Career Navigator</span>
+                  {/* Card 2: Find Your Path */}
+                  <div
+                    onClick={() => setActiveView("path")}
+                    className="group relative rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-900/90 p-7 sm:p-8 shadow-xs hover:shadow-xl hover:border-indigo-500/50 transition-all duration-300 cursor-pointer flex flex-col justify-between space-y-6"
+                  >
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="h-12 w-12 rounded-2xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 grid place-items-center transition-transform group-hover:scale-105">
+                          <Compass className="h-6 w-6" />
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-700 dark:text-indigo-300">
+                          AI Career Planner
+                        </span>
                       </div>
-                      <h3 className="font-display text-2xl font-black text-slate-900 dark:text-white">
-                        Find Your Path
-                      </h3>
-                      <p className="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 leading-relaxed">
-                        Select your dream corporate role from official PM Internship Scheme tracks, and let AI generate an actionable, week-by-week preparation roadmap with 100% free open-source resources and progress tracking.
-                      </p>
+
+                      <div className="space-y-2">
+                        <h3 className="font-display text-xl sm:text-2xl font-black text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition">
+                          Personalized Learning Roadmap
+                        </h3>
+                        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
+                          Select your target corporate internship role and generate a tailored, week-by-week preparation sprint equipped with free open-source materials, interview benchmarks, and progress trackers.
+                        </p>
+                      </div>
                     </div>
 
-                    <div className="mt-6 pt-4 border-t border-indigo-500/20 flex items-center justify-between">
-                      <span className="text-xs font-bold text-indigo-700 dark:text-indigo-400">
-                        Custom 4, 8 or 12-Week Sprints
-                      </span>
-                      <button
-                        onClick={() => setActiveView("path")}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-5 py-2.5 text-xs font-black shadow-md hover:brightness-105 transition cursor-pointer"
-                      >
-                        <span>Generate AI Roadmap</span>
+                    <div className="pt-4 border-t border-slate-100 dark:border-white/10 flex items-center justify-between">
+                      <span className="text-xs font-black text-indigo-600 dark:text-indigo-400 group-hover:underline inline-flex items-center gap-1.5">
+                        <span>Generate AI Sprint</span>
                         <ArrowRight className="h-4 w-4" />
-                      </button>
+                      </span>
+                      <span className="text-[11px] font-mono font-bold text-slate-400">4, 8 &amp; 12-Week Sprints</span>
                     </div>
                   </div>
                 </div>

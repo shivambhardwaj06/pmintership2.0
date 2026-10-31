@@ -55,38 +55,39 @@ export default function TopFeaturedInternships({
   );
 
   return (
-    <section id="top-featured-internships" className="mx-auto max-w-7xl px-4 py-14">
+    <section id="top-featured-internships" className="mx-auto max-w-7xl px-4 py-14 sm:py-18">
       {/* Section Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
         <div>
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-saffron/15 px-3 py-1 text-xs font-bold uppercase tracking-wider text-saffron-foreground border border-saffron/30 mb-2">
-            <Sparkles className="h-3.5 w-3.5 text-orange-600" /> Top Corporate Openings
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-saffron/15 dark:bg-saffron/20 border border-saffron/30 px-3 py-1 text-xs font-black uppercase text-saffron tracking-wider mb-2">
+            <Sparkles className="h-3.5 w-3.5 text-saffron animate-pulse" />
+            <span>Top Corporate Openings</span>
           </div>
-          <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
             Featured PM Internships
           </h2>
-          <p className="text-sm font-medium text-slate-600 dark:text-slate-300 mt-1 max-w-xl">
+          <p className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300 mt-1 max-w-xl">
             Hand-picked paid research and engineering internships across India's top corporate partners.
           </p>
         </div>
 
         <button
           onClick={onExploreAll}
-          className="group flex items-center gap-2 rounded-2xl bg-gradient-to-r from-primary to-primary/90 px-6 py-3 text-sm font-bold text-white shadow-md hover:shadow-lg transition-all active:scale-95 w-fit"
+          className="group flex items-center gap-2 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-950 px-5 py-2.5 text-xs sm:text-sm font-bold shadow-md hover:shadow-lg transition-all active:scale-95 w-fit cursor-pointer"
         >
-          <span>Explore All Internships</span>
+          <span>Explore All 260+ Openings</span>
           <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
         </button>
       </div>
 
-      {/* 6 High-Contrast Cards Grid */}
+      {/* 6 Clean Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {topInternships.map((item) => {
           const isApplied = appliedIds.includes(item.id);
           return (
             <div
               key={item.id}
-              className="group relative flex flex-col justify-between rounded-3xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm hover:shadow-xl transition-all duration-300 hover:border-primary/60 hover:-translate-y-1"
+              className="group relative flex flex-col justify-between rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-900/90 p-6 shadow-xs hover:shadow-xl transition-all duration-300 hover:border-primary/50 hover:-translate-y-1"
             >
               <div>
                 {/* Header: Company Logo & Sector Badge */}

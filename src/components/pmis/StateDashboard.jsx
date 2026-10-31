@@ -50,11 +50,18 @@ export default function StateDashboard() {
   ];
 
   return (
-    <section id="dashboard" className="mx-auto max-w-7xl px-4 py-16">
-      <div className="mb-10 flex items-center justify-center gap-4">
-        <span className="h-0.5 w-14 bg-saffron" />
-        <h2 className="font-display text-2xl font-bold text-primary dark:text-white sm:text-3xl">Dashboard</h2>
-        <span className="h-0.5 w-14 bg-saffron" />
+    <section id="dashboard" className="mx-auto max-w-7xl px-4 py-14 sm:py-18">
+      <div className="text-center max-w-2xl mx-auto mb-10 space-y-2">
+        <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 dark:bg-primary/20 border border-primary/20 px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary dark:text-sky-300">
+          <MapPinned className="h-3.5 w-3.5" />
+          <span>Pan-India Vacancy Map</span>
+        </div>
+        <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          Opportunities Across States &amp; UTs
+        </h2>
+        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium">
+          Interactive distribution of corporate internship vacancies across 36 States, Union Territories, and 742 districts.
+        </p>
       </div>
 
       <div className="grid items-start gap-8 lg:grid-cols-[1.15fr_1fr]">

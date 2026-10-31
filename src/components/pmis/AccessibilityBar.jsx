@@ -20,6 +20,7 @@ export default function AccessibilityBar() {
   useEffect(() => {
     document.documentElement.style.setProperty("--base-size", size + "px");
   }, [size]);
+
   useEffect(() => {
     document.documentElement.classList.toggle("high-contrast", contrast);
   }, [contrast]);
@@ -30,50 +31,59 @@ export default function AccessibilityBar() {
   };
 
   const btn =
-    "grid h-7 min-w-7 place-items-center rounded-md px-1.5 text-xs font-semibold transition-colors hover:bg-ink-foreground/10 cursor-pointer";
+    "grid h-6 min-w-6 place-items-center rounded px-1 text-[11px] font-bold text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer";
 
   return (
-    <div className="bg-ink text-ink-foreground">
+    <div className="bg-slate-950 text-slate-300 border-b border-white/5 select-none text-[11px]">
       <a
         href="#main"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-saffron focus:px-3 focus:py-1 focus:text-saffron-foreground"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-saffron focus:px-3 focus:py-1 focus:text-slate-950 font-bold"
       >
         Skip to main content
       </a>
-      <div className="mx-auto flex h-10 max-w-7xl items-center justify-between gap-3 px-4 text-xs sm:text-sm">
+      <div className="mx-auto flex h-8 max-w-7xl items-center justify-between gap-3 px-4">
         <div className="flex min-w-0 items-center gap-2">
-          <img src={flag} alt="" className="h-4 w-6 shrink-0 rounded-sm" />
-          <span className="truncate">भारत सरकार <span className="opacity-50">/</span> Government of India</span>
+          <img src={flag} alt="India Flag" className="h-3.5 w-5 shrink-0 rounded-xs" />
+          <span className="truncate font-semibold tracking-wide text-slate-300">
+            भारत सरकार <span className="text-slate-600">/</span> Government of India
+          </span>
         </div>
         <div className="flex shrink-0 items-center gap-1" role="toolbar" aria-label="Accessibility options">
-          <a href="#main" className={btn + " hidden gap-1 sm:flex"} aria-label="Screen reader access">
-            <Volume2 className="h-3.5 w-3.5" /> <span className="ml-1">Screen Reader</span>
+          <a
+            href="#main"
+            className="hidden sm:flex items-center gap-1 h-6 px-1.5 rounded text-[11px] font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+            aria-label="Screen reader access"
+          >
+            <Volume2 className="h-3 w-3" />
+            <span>Screen Reader</span>
           </a>
-          <span className="mx-1 hidden h-4 w-px bg-ink-foreground/20 sm:block" />
-          <button className={btn} onClick={() => step(-1)} aria-label="Decrease text size">A−</button>
-          <button className={btn} onClick={() => setSize(16)} aria-label="Reset text size">A</button>
-          <button className={btn} onClick={() => step(1)} aria-label="Increase text size">A+</button>
+          <span className="mx-1 hidden h-3.5 w-px bg-white/15 sm:block" />
+          <button className={btn} onClick={() => step(-1)} aria-label="Decrease text size" title="Decrease font size">
+            A−
+          </button>
+          <button className={btn} onClick={() => setSize(16)} aria-label="Reset text size" title="Normal font size">
+            A
+          </button>
+          <button className={btn} onClick={() => step(1)} aria-label="Increase text size" title="Increase font size">
+            A+
+          </button>
           <button
             className={btn}
             onClick={() => setContrast((c) => !c)}
             aria-pressed={contrast}
             aria-label="Toggle high contrast"
-            title="High Contrast"
+            title="Toggle High Contrast"
           >
-            <Contrast className="h-4 w-4" />
+            <Contrast className="h-3.5 w-3.5" />
           </button>
-          <span className="mx-0.5 h-4 w-px bg-ink-foreground/20" />
+          <span className="mx-0.5 h-3.5 w-px bg-white/15" />
           <button
             className={btn}
             onClick={toggleTheme}
             aria-label={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
             title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
           >
-            {theme === "dark" ? (
-              <Sun className="h-4 w-4 text-amber-400" />
-            ) : (
-              <Moon className="h-4 w-4" />
-            )}
+            {theme === "dark" ? <Sun className="h-3.5 w-3.5 text-amber-400" /> : <Moon className="h-3.5 w-3.5" />}
           </button>
         </div>
       </div>
