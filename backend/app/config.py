@@ -49,7 +49,11 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "30"))
 
     # Google OAuth 2.0
-    GOOGLE_CLIENT_ID: Optional[str] = os.getenv("GOOGLE_CLIENT_ID", "")
+    GOOGLE_CLIENT_ID: Optional[str] = (
+        os.getenv("GOOGLE_CLIENT_ID", "")
+        or os.getenv("VITE_GOOGLE_CLIENT_ID", "")
+        or os.getenv("GOOGLE_OAUTH_CLIENT_ID", "")
+    )
     GOOGLE_CLIENT_SECRET: Optional[str] = os.getenv("GOOGLE_CLIENT_SECRET", "")
 
     # RAG Settings

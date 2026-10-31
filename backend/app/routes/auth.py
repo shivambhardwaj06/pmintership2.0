@@ -637,6 +637,26 @@ async def verify_google_oauth2_token(raw_token: str) -> Optional[Dict[str, Any]]
     return None
 
 
+@router.get("/auth/google/client-id")
+def get_google_oauth_client_id():
+    """
+    Returns configured Google OAuth 2.0 Web Client ID from server settings or environment
+    so frontend Google Identity Services (GIS) can launch the authentic Google authentication popup.
+    """
+    import os
+    cid = (
+        getattr(settings, "GOOGLE_CLIENT_ID", "")
+        or os.getenv("GOOGLE_CLIENT_ID", "")
+        or os.getenv("VITE_GOOGLE_CLIENT_ID", "")
+        or ""
+    ).strip()
+    return {
+        "status": "success",
+        "client_id": cid,
+        "configured": bool(cid)
+    }
+
+
 @router.post("/auth/google")
 async def google_auth(payload: GoogleAuthRequest):
     """

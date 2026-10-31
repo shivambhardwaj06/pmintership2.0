@@ -8,6 +8,12 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 export default defineConfig({
   vite: {
+    envPrefix: ["VITE_", "GOOGLE_"],
+    define: {
+      "import.meta.env.VITE_GOOGLE_CLIENT_ID": JSON.stringify(
+        process.env.VITE_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID || ""
+      ),
+    },
     server: {
       proxy: {
         "/api": {
