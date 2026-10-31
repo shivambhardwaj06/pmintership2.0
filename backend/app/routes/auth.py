@@ -380,6 +380,8 @@ class GoogleAuthRequest(BaseModel):
 
 class ProfileUpdateRequest(BaseModel):
     name: Optional[str] = None
+    email: Optional[str] = None
+    mobile: Optional[str] = None
     branch: Optional[str] = None
     degree: Optional[str] = None
     college: Optional[str] = None
@@ -775,7 +777,26 @@ def get_profile(user_id: str):
     """Retrieves full candidate profile directly from MongoDB."""
     user = get_user_by_identifier(user_id)
     if not user:
-        raise HTTPException(status_code=404, detail="Profile not found in MongoDB for this candidate.")
+        clean_id = user_id.strip()
+        col = users_collection()
+        new_doc = {
+            "user_id": clean_id,
+            "name": clean_id if not clean_id.startswith("PMIS-") else "Candidate",
+            "mobile": "",
+            "email": f"{clean_id.lower()}@candidate.pminternship.gov.in" if "@" not in clean_id else clean_id,
+            "branch": "Computer Science & Engineering",
+            "degree": "B.Tech / B.E.",
+            "college": "State University / College of Engineering",
+            "state": "National",
+            "career_goals": "Targeting top corporate internships under PM Scheme.",
+            "skills": ["Problem Solving", "Professional Communication"],
+            "resume_name": "",
+            "cloudinary_url": "",
+            "created_at": datetime.utcnow().isoformat(),
+            "updated_at": datetime.utcnow().isoformat(),
+        }
+        col.insert_one(new_doc)
+        user = get_user_by_identifier(clean_id)
     return sanitize_user(user)
 
 
@@ -784,11 +805,16 @@ def update_profile(user_id: str, payload: ProfileUpdateRequest):
     """Updates candidate profile fields in MongoDB."""
     user = get_user_by_identifier(user_id)
     if not user:
-        raise HTTPException(status_code=404, detail="Candidate not found in MongoDB.")
+        get_profile(user_id)
+        user = get_user_by_identifier(user_id)
 
     updates: Dict[str, Any] = {}
     if payload.name is not None and payload.name.strip():
         updates["name"] = payload.name.strip()
+    if payload.email is not None and payload.email.strip():
+        updates["email"] = payload.email.strip()
+    if payload.mobile is not None and payload.mobile.strip():
+        updates["mobile"] = payload.mobile.strip()
     if payload.branch is not None:
         updates["branch"] = payload.branch
     if payload.degree is not None:
