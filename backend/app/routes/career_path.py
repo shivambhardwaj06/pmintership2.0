@@ -17,18 +17,18 @@ class CareerRoadmapRequest(BaseModel):
     target_sector: Optional[str] = "Corporate Sector"
     current_skills: Optional[List[str]] = []
     academic_level: Optional[str] = "Pre-Final Year (3rd Year)"
-    pace: Optional[str] = "12-Week Comprehensive"
+    pace: Optional[str] = "12-Month Comprehensive (Master the Field)"
 
 
 DOMAIN_ROADMAP_TEMPLATES = {
     "software": {
         "role_badge": "Information Technology & Software Engineering",
-        "estimated_hours_per_week": "10-12 hrs/week",
+        "estimated_hours_per_week": "8-10 hrs/week",
         "phases": [
             {
                 "phase_number": 1,
                 "title": "Phase 1: Core Foundation & Tool Stack Mastery",
-                "weeks": "Weeks 1 - 3",
+                "weeks": "Months 1 - 3 (Core Discipline & Standard Tool Stacks)",
                 "goal": "Build unshakable fundamentals in modern languages, version control, and data structures.",
                 "milestones": [
                     "Master modern language idioms (JavaScript/TypeScript ES6+ or Python 3.12).",
@@ -46,8 +46,8 @@ DOMAIN_ROADMAP_TEMPLATES = {
             {
                 "phase_number": 2,
                 "title": "Phase 2: Production Projects & Full-Stack Architecture",
-                "weeks": "Weeks 4 - 7",
-                "goal": "Construct 2 real-world SaaS applications with live deployments and public GitHub repositories.",
+                "weeks": "Months 4 - 6 (Enterprise Production Systems)",
+                "goal": "Construct real-world SaaS applications with live deployments and public GitHub repositories.",
                 "milestones": [
                     "Project 1: Build a secure RESTful API with authentication (JWT/OAuth), relational database (PostgreSQL with indexing), and Redis caching.",
                     "Project 2: Develop a responsive frontend (React / Next.js) with Tailwind CSS, connecting to your API with robust error boundaries.",
@@ -63,16 +63,16 @@ DOMAIN_ROADMAP_TEMPLATES = {
             },
             {
                 "phase_number": 3,
-                "title": "Phase 3: Industry Certifications & Real-World Rigor",
-                "weeks": "Weeks 8 - 10",
-                "goal": "Validate enterprise competencies with industry testing standards and cloud services.",
+                "title": "Phase 3: Industry Testing & Next-Gen Technologies",
+                "weeks": "Months 7 - 9 (Advanced Quality, Compliance & Next-Gen Tech)",
+                "goal": "Validate enterprise competencies with industry testing standards and high-demand cloud/AI tooling.",
                 "milestones": [
                     "Write automated unit and integration tests (pytest or Jest) achieving >80% code coverage.",
                     "Gain hands-on familiarity with cloud fundamentals: AWS S3, EC2, or Azure App Service.",
-                    "Participate in 1 national hackathon (Smart India Hackathon or Devpost) with a team.",
+                    "Integrate modern LLM APIs or vector embeddings (Qdrant/FAISS) into a production workflow.",
                     "Optimize database schemas with foreign key constraints, connection pooling, and EXPLAIN ANALYZE."
                 ],
-                "recommended_tools": ["pytest / Jest", "AWS Free Tier", "Redis", "GitHub Actions"],
+                "recommended_tools": ["pytest / Jest", "AWS Free Tier", "Redis", "GitHub Actions", "Docker"],
                 "free_resources": [
                     {"name": "AWS Cloud Practitioner Free Essentials", "url": "https://aws.amazon.com/training"},
                     {"name": "PostgreSQL Tutorial", "url": "https://www.postgresqltutorial.com"}
@@ -81,7 +81,7 @@ DOMAIN_ROADMAP_TEMPLATES = {
             {
                 "phase_number": 4,
                 "title": "Phase 4: ATS Resume Optimization & Corporate Interview Mastery",
-                "weeks": "Weeks 11 - 12",
+                "weeks": "Months 10 - 12 (Portfolio Defense & Placement Rounds)",
                 "goal": "Align your profile with PM Internship Scheme corporate screeners and clear technical rounds.",
                 "milestones": [
                     "Format resume into strict 1-page single-column layout with live demo URLs and GitHub links.",
@@ -397,14 +397,29 @@ DOMAIN_ROADMAP_TEMPLATES = {
 
 
 def get_weeks_for_pace(pace: str) -> List[str]:
-    """Dynamically returns week ranges corresponding to selected roadmap pace."""
+    """Dynamically returns month ranges corresponding to selected roadmap pace (6, 12, or 15 months)."""
     p = (pace or "").lower()
-    if "8" in p:
-        return ["Weeks 1 - 2", "Weeks 3 - 4", "Weeks 5 - 6", "Weeks 7 - 8"]
-    elif "16" in p:
-        return ["Weeks 1 - 4", "Weeks 5 - 8", "Weeks 9 - 12", "Weeks 13 - 16"]
+    if "6" in p:
+        return [
+            "Months 1 - 2 (Core Fundamentals & Essential Tools)",
+            "Months 3 - 4 (Applied Internship Capstone & Execution)",
+            "Month 5 (Corporate Quality Benchmarks & Production Practice)",
+            "Month 6 (ATS 1-Page Resume & PMIS Interview Ready)"
+        ]
+    elif "15" in p:
+        return [
+            "Months 1 - 4 (Comprehensive Architecture & Foundational Core)",
+            "Months 5 - 8 (Production Deployment & Scaled Enterprise Workflows)",
+            "Months 9 - 12 (Advanced & In-Demand Next-Gen Tech Specialization)",
+            "Months 13 - 15 (Executive Engineering Leadership & Tier-1 Placement)"
+        ]
     else:
-        return ["Weeks 1 - 3", "Weeks 4 - 7", "Weeks 8 - 10", "Weeks 11 - 12"]
+        return [
+            "Months 1 - 3 (Core Discipline & Standard Tool Stacks)",
+            "Months 4 - 6 (Enterprise Production Systems & Architecture)",
+            "Months 7 - 9 (Advanced Quality, Compliance & Cross-functional Workflows)",
+            "Months 10 - 12 (Portfolio Defense, Corporate Mock Rounds & Offer Readiness)"
+        ]
 
 
 def _get_fallback_roadmap(role: str, sector: str, pace: str) -> Dict[str, Any]:
@@ -425,8 +440,19 @@ def _get_fallback_roadmap(role: str, sector: str, pace: str) -> Dict[str, Any]:
     tmpl = DOMAIN_ROADMAP_TEMPLATES[template_key]
     week_ranges = get_weeks_for_pace(pace)
     p_lower = (pace or "").lower()
-    hours = "14-16 hrs/week" if "8" in p_lower else ("6-8 hrs/week" if "16" in p_lower else "10-12 hrs/week")
-    total_weeks = 8 if "8" in p_lower else (16 if "16" in p_lower else 12)
+    
+    if "6" in p_lower:
+        hours = "12-14 hrs/week"
+        duration_label = "6 Months (Internship Ready Fast-Track)"
+        overview = f"A high-yield 6-month fast-track roadmap ({hours}) concisely focused on essential tools and production capstones to get you PM Internship Scheme ready in 6 months."
+    elif "15" in p_lower:
+        hours = "6-8 hrs/week"
+        duration_label = "15 Months (Advanced & In-Demand Specialization)"
+        overview = f"An elite 15-month advanced curriculum ({hours}) covering end-to-end foundations plus next-generation in-demand technologies (Industry 4.0, cloud infrastructure & automation) for top corporate placement."
+    else:
+        hours = "8-10 hrs/week"
+        duration_label = "12 Months (Master the Field)"
+        overview = f"A comprehensive 12-month mastery roadmap ({hours}) covering standard corporate workflows, enterprise compliance, and professional excellence for {role} under PM Internship Scheme."
 
     phases = []
     for idx, p in enumerate(tmpl["phases"]):
@@ -439,10 +465,10 @@ def _get_fallback_roadmap(role: str, sector: str, pace: str) -> Dict[str, Any]:
         "status": "success",
         "target_role": role,
         "target_sector": sector or "National Enterprise Sector",
-        "pace": pace,
+        "pace": duration_label,
         "role_badge": tmpl["role_badge"],
         "estimated_hours_per_week": hours,
-        "roadmap_overview": f"A targeted, progressive {total_weeks}-week roadmap ({hours}) designed to take you from foundational concepts to an ATS-cleared, industry-ready candidate for {role} under PM Internship Scheme.",
+        "roadmap_overview": overview,
         "phases": phases,
         "key_competencies_mastered": [
             f"{role} Core Competencies",
@@ -465,16 +491,30 @@ def generate_career_roadmap(payload: CareerRoadmapRequest):
 
     week_ranges = get_weeks_for_pace(payload.pace)
     p_lower = (payload.pace or "").lower()
-    total_weeks = 8 if "8" in p_lower else (16 if "16" in p_lower else 12)
-    hours = "14-16 hrs/week" if "8" in p_lower else ("6-8 hrs/week" if "16" in p_lower else "10-12 hrs/week")
+    
+    if "6" in p_lower:
+        hours = "12-14 hrs/week"
+        duration_label = "6 Months (Internship Ready Fast-Track)"
+        duration_instruction = "CONCISE 6-MONTH CURRICULUM: Keep milestones tight, high-yield, and focused on essential tools and a hands-on capstone to make the student corporate internship ready quickly without unneeded fluff."
+    elif "15" in p_lower:
+        hours = "6-8 hrs/week"
+        duration_label = "15 Months (Advanced & In-Demand Specialization)"
+        duration_instruction = "ADVANCED 15-MONTH CURRICULUM: Include cutting-edge, currently in-demand industry skills (such as AI integrations, cloud architecture, telemetry, Industry 4.0 automation, and senior engineering leadership) commanding top corporate recruiter interest."
+    else:
+        hours = "8-10 hrs/week"
+        duration_label = "12 Months (Master the Field)"
+        duration_instruction = "COMPREHENSIVE 12-MONTH MASTERY: Provide complete end-to-end domain mastery, standard corporate workflows, multi-tiered project architecture, and rigorous quality compliance."
 
     # Try generating dynamic AI roadmap with NVIDIA Nemotron
     prompt = f"""You are an elite corporate career counselor and technical mentor for the Prime Minister's Internship Scheme (PMIS).
-Create a comprehensive, highly actionable 4-phase Career Roadmap spanning exactly {total_weeks} weeks for a student targeting the role: '{target}' in sector: '{payload.target_sector}'.
-Candidate level: {payload.academic_level}. Learning pace: {payload.pace} ({hours}). Current skills: {', '.join(payload.current_skills) if payload.current_skills else 'Beginner/Intermediate'}.
+Create a comprehensive, highly actionable 4-phase Career Roadmap spanning {duration_label} for a student targeting the role: '{target}' in sector: '{payload.target_sector}'.
+Candidate level: {payload.academic_level}. Learning pace: {duration_label} ({hours}). Current skills: {', '.join(payload.current_skills) if payload.current_skills else 'Beginner/Intermediate'}.
+
+CURRICULUM SPECIFICATIONS:
+{duration_instruction}
 
 CRITICAL DURATION REQUIREMENT:
-The 4 phases must strictly cover the following exact week durations for this {total_weeks}-week curriculum:
+The 4 phases must strictly cover the following exact duration periods:
 - Phase 1: {week_ranges[0]}
 - Phase 2: {week_ranges[1]}
 - Phase 3: {week_ranges[2]}
@@ -484,10 +524,10 @@ Return ONLY a valid JSON object matching the exact format:
 {{
   "target_role": "{target}",
   "target_sector": "{payload.target_sector}",
-  "pace": "{payload.pace}",
+  "pace": "{duration_label}",
   "role_badge": "Category domain badge",
   "estimated_hours_per_week": "{hours}",
-  "roadmap_overview": "Crisp 2-sentence executive summary of this {total_weeks}-week learning journey.",
+  "roadmap_overview": "Crisp 2-sentence executive summary of this {duration_label} learning journey.",
   "phases": [
     {{
       "phase_number": 1,
@@ -553,7 +593,7 @@ Return ONLY a valid JSON object matching the exact format:
             parsed = json.loads(cleaned[start:end+1])
             if parsed.get("phases") and len(parsed["phases"]) >= 4:
                 parsed["status"] = "success"
-                parsed["pace"] = payload.pace
+                parsed["pace"] = duration_label
                 parsed["estimated_hours_per_week"] = hours
                 for idx, phase in enumerate(parsed["phases"][:4]):
                     phase["weeks"] = week_ranges[idx]
@@ -562,4 +602,4 @@ Return ONLY a valid JSON object matching the exact format:
         logger.warning(f"AI Roadmap LLM call exception: {e}")
 
     # Fallback to high-quality domain template
-    return _get_fallback_roadmap(target, payload.target_sector or "Corporate Sector", payload.pace or "12-Week")
+    return _get_fallback_roadmap(target, payload.target_sector or "Corporate Sector", payload.pace or "12-Month")

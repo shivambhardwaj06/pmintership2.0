@@ -24,37 +24,98 @@ import {
   Clock,
   ChevronRight,
   FileText,
+  ShieldCheck,
 } from "lucide-react";
 import internshipsData from "@/data/internships.json";
 
 const RAW_BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
 const BACKEND_URL = RAW_BACKEND_URL.replace(/\/+$/, "");
 
-// Popular PMIS target role suggestions
+// 20 Popular PMIS target role tracks across 24 corporate sectors
 const POPULAR_ROLES = [
   { title: "Automotive & EV Engineering Intern", sector: "Automotive & Electric Vehicles", icon: Briefcase },
-  { title: "Corporate Finance & Banking Operations Intern", sector: "Banking & Financial Services", icon: TrendingUp },
+  { title: "Corporate Finance & Credit Risk Analyst Intern", sector: "Banking & Financial Services", icon: TrendingUp },
   { title: "Civil Site & Infrastructure Planning Intern", sector: "Infrastructure & Construction", icon: Layers },
-  { title: "Pharmaceutical Quality Assurance Intern", sector: "Pharmaceuticals & Healthcare", icon: Award },
-  { title: "Renewable Energy & Solar Project Intern", sector: "Oil, Gas & Energy", icon: Award },
-  { title: "Software & Digital Systems Intern", sector: "IT & Software Development", icon: Cpu },
+  { title: "Pharmaceutical Quality Assurance & QC Intern", sector: "Pharmaceuticals & Healthcare", icon: Award },
+  { title: "Renewable Energy & Solar Grid Telemetry Intern", sector: "Oil, Gas & Energy", icon: Award },
+  { title: "Full-Stack Software & Cloud Architecture Intern", sector: "IT & Software Development", icon: Cpu },
+  { title: "AI, Machine Learning & Data Engineering Intern", sector: "IT & Artificial Intelligence", icon: Cpu },
   { title: "Supply Chain & Logistics Operations Intern", sector: "Supply Chain & Retail", icon: Compass },
-  { title: "Data Analyst & Business Intelligence Intern", sector: "Analytics & Management", icon: TrendingUp },
+  { title: "Business Intelligence & Financial Analytics Intern", sector: "Analytics & Management", icon: TrendingUp },
   { title: "VLSI & Semiconductor Verification Intern", sector: "Semiconductor & Electronics", icon: Cpu },
-  { title: "Mechanical Design & Manufacturing Intern", sector: "Manufacturing & Heavy Industries", icon: Briefcase },
+  { title: "Mechanical Design & Robotics Automation Intern", sector: "Manufacturing & Heavy Industries", icon: Briefcase },
+  { title: "Chemical Process & Plant Safety Engineering Intern", sector: "Chemicals & Petrochemicals", icon: Layers },
+  { title: "Agri-Tech & Precision Farming Operations Intern", sector: "Agriculture & Allied Sectors", icon: Compass },
+  { title: "Telecom 5G Network & Fiber Infrastructure Intern", sector: "Telecommunications", icon: Cpu },
+  { title: "Hospital Administration & Medical Device Intern", sector: "Healthcare & Life Sciences", icon: Award },
+  { title: "FMCG Brand Marketing & Consumer Insights Intern", sector: "FMCG & Consumer Goods", icon: TrendingUp },
+  { title: "Human Resource Talent Analytics Intern", sector: "Management & Corporate Services", icon: Briefcase },
+  { title: "Mining Operations & Mineral Processing Intern", sector: "Metals & Mining", icon: Layers },
+  { title: "Aviation Maintenance & Ground Operations Intern", sector: "Aviation & Aerospace", icon: Compass },
+  { title: "Cybersecurity & Enterprise Risk Governance Intern", sector: "Cybersecurity & IT Infrastructure", icon: ShieldCheck },
 ];
 
 const ACADEMIC_LEVELS = [
-  { id: "pre_final", label: "Pre-Final Year (3rd Year - Internship Focus)", defaultPace: "12-Week Comprehensive" },
-  { id: "final_year", label: "Final Year / Graduate (Placement Focus)", defaultPace: "8-Week Fast-Track Sprint" },
-  { id: "early_stage", label: "1st / 2nd Year (Explorer & Skill Builder)", defaultPace: "16-Week Deep Mastery" },
+  { id: "pre_final", label: "Pre-Final Year (3rd Year - Internship Focus)", defaultPace: "6-month" },
+  { id: "final_year", label: "Final Year / Graduate (Placement & Career Mastery)", defaultPace: "12-month" },
+  { id: "early_stage", label: "1st / 2nd Year (Explorer & Next-Gen Specialization)", defaultPace: "15-month" },
 ];
 
 const PACES = [
-  { id: "8-week", label: "8-Week Sprint", hours: "14-16 hrs/wk", intensity: "Intensive" },
-  { id: "12-week", label: "12-Week Comprehensive", hours: "10-12 hrs/wk", intensity: "Recommended" },
-  { id: "16-week", label: "16-Week Deep Mastery", hours: "6-8 hrs/wk", intensity: "Steady & Thorough" },
+  {
+    id: "6-month",
+    label: "6 Months",
+    sublabel: "Internship Ready (Concise Fast-Track)",
+    badge: "Concise & High-Yield",
+    hours: "12-14 hrs/wk",
+    intensity: "Fast-Track",
+    description: "High-yield core essentials & tools to become corporate internship-ready in 6 months.",
+  },
+  {
+    id: "12-month",
+    label: "12 Months",
+    sublabel: "Master the Field (Comprehensive)",
+    badge: "Recommended Standard",
+    hours: "8-10 hrs/wk",
+    intensity: "Comprehensive",
+    description: "Complete professional domain mastery, end-to-end workflows & enterprise compliance.",
+  },
+  {
+    id: "15-month",
+    label: "15 Months",
+    sublabel: "Advanced & In-Demand (Next-Gen Tech)",
+    badge: "High Industry Demand",
+    hours: "6-8 hrs/wk",
+    intensity: "Specialization",
+    description: "Cutting-edge skills, Industry 4.0, advanced architecture & high-demand technologies.",
+  },
 ];
+
+// Motivational quotes shown during cooldown to inspire execution over endless re-planning
+const MOTIVATIONAL_QUOTES = [
+  {
+    quote: "Action expresses priorities. Before seeking another path, take time to reflect, plan, and take the first step on the roadmap already before you.",
+    author: "Mahatma Gandhi",
+    hindiNote: "Pehle jo roadmap aapne banaya hai, uspe dhyan lagayein aur pehla kadam uthayein. Asli pragati nirantar abhyas se aati hai.",
+  },
+  {
+    quote: "Knowing is not enough; we must apply. Willing is not enough; we must do. Dedicate time to executing what you have charted.",
+    author: "Johann Wolfgang von Goethe",
+    hindiNote: "Kewal naye roadmap khojne se kuch nahi hoga, jo rasta banaya hai uspe amal karna aur sikhna sabse zaroori hai.",
+  },
+  {
+    quote: "A journey of a thousand miles begins with a single step. Focus on mastering Phase 1 milestones before looking for another horizon.",
+    author: "Lao Tzu",
+    hindiNote: "Ek naye raste par bhatakne ke bajaye, apne samne ke milestones ko pura karne par dhyan kendrit karein.",
+  },
+  {
+    quote: "Execution is everything. The best roadmap is not the one you generate tomorrow, but the one you start working on today.",
+    author: "Corporate Career Principle",
+    hindiNote: "Har roz naya plan banane se behtar hai ki aaj ke milestone ko pura kiya jaye.",
+  },
+];
+
+const COOLDOWN_SECONDS = 300; // 5 minutes (300 seconds) cooldown to prevent spam & promote absorption
 
 // Fallback robust templates matching diverse engineering, manufacturing, business, healthcare, and tech sectors
 const FALLBACK_ROADMAPS = {
@@ -62,10 +123,10 @@ const FALLBACK_ROADMAPS = {
     target_role: "Automotive & EV Engineering Intern",
     target_sector: "Automotive & Electric Vehicles",
     academic_level: "Pre-Final Year (3rd Year)",
-    pace: "12-Week Comprehensive",
-    estimated_hours_per_week: "10-12 hrs/week",
+    pace: "12 Months (Master the Field)",
+    estimated_hours_per_week: "8-10 hrs/week",
     summary:
-      "A structured 12-week roadmap designed to take you from 3D CAD modeling and vehicle dynamics to structural FEA simulation, electric powertrain design, and clearing technical rounds at Tata Motors, Maruti Suzuki, and Mahindra.",
+      "A structured career roadmap designed to take you from 3D CAD modeling and vehicle dynamics to structural FEA simulation, electric powertrain design, and clearing technical rounds at Tata Motors, Maruti Suzuki, and Mahindra.",
     key_competencies_mastered: [
       "SolidWorks & AutoCAD Parametric 3D CAD",
       "Geometric Dimensioning & Tolerancing (GD&T)",
@@ -150,10 +211,10 @@ const FALLBACK_ROADMAPS = {
     target_role: "Corporate Finance & Banking Operations Intern",
     target_sector: "Banking & Financial Services",
     academic_level: "Pre-Final Year (3rd Year)",
-    pace: "12-Week Comprehensive",
-    estimated_hours_per_week: "10-12 hrs/week",
+    pace: "12 Months (Master the Field)",
+    estimated_hours_per_week: "8-10 hrs/week",
     summary:
-      "A structured 12-week roadmap covering financial statement analysis, 3-statement financial modeling, credit risk assessment, and banking compliance for premier roles at HDFC Bank, ICICI Bank, and SBI.",
+      "A structured career roadmap covering financial statement analysis, 3-statement financial modeling, credit risk assessment, and banking compliance for premier roles at HDFC Bank, ICICI Bank, and SBI.",
     key_competencies_mastered: [
       "Financial Statement Analysis (P&L, Balance Sheet, Cash Flow)",
       "Dynamic 3-Statement Financial Modeling in Excel",
@@ -237,10 +298,10 @@ const FALLBACK_ROADMAPS = {
     target_role: "Civil Site & Infrastructure Planning Intern",
     target_sector: "Infrastructure & Construction",
     academic_level: "Pre-Final Year (3rd Year)",
-    pace: "12-Week Comprehensive",
-    estimated_hours_per_week: "10-12 hrs/week",
+    pace: "12 Months (Master the Field)",
+    estimated_hours_per_week: "8-10 hrs/week",
     summary:
-      "A structured 12-week roadmap covering structural drafting, IS 456 / IS 800 code compliance, Bar Bending Schedules (BBS), and site project scheduling for infrastructure roles at Larsen & Toubro, Tata Projects, and Afcons.",
+      "A structured career roadmap covering structural drafting, IS 456 / IS 800 code compliance, Bar Bending Schedules (BBS), and site project scheduling for infrastructure roles at Larsen & Toubro, Tata Projects, and Afcons.",
     key_competencies_mastered: [
       "AutoCAD Civil 3D & Structural Drafting",
       "STAAD.Pro / ETABS Structural Modeling",
@@ -324,10 +385,10 @@ const FALLBACK_ROADMAPS = {
     target_role: "Pharmaceutical Quality Assurance Intern",
     target_sector: "Pharmaceuticals & Healthcare",
     academic_level: "Pre-Final Year (3rd Year)",
-    pace: "12-Week Comprehensive",
-    estimated_hours_per_week: "10-12 hrs/week",
+    pace: "12 Months (Master the Field)",
+    estimated_hours_per_week: "8-10 hrs/week",
     summary:
-      "A structured 12-week masterplan covering drug formulation, analytical chemistry instrumentation (HPLC, UV-Vis), cGMP compliance, and QA/QC documentation for top pharma leaders like Sun Pharma, Cipla, and Dr. Reddy's.",
+      "A structured career masterplan covering drug formulation, analytical chemistry instrumentation (HPLC, UV-Vis), cGMP compliance, and QA/QC documentation for top pharma leaders like Sun Pharma, Cipla, and Dr. Reddy's.",
     key_competencies_mastered: [
       "HPLC, UV-Vis Spectrophotometry & Dissolution Testing",
       "Good Manufacturing Practices (cGMP) & GLP Compliance",
@@ -411,10 +472,10 @@ const FALLBACK_ROADMAPS = {
     target_role: "Software & Digital Systems Intern",
     target_sector: "IT & Software Development",
     academic_level: "Pre-Final Year (3rd Year)",
-    pace: "12-Week Comprehensive",
-    estimated_hours_per_week: "10-12 hrs/week",
+    pace: "12 Months (Master the Field)",
+    estimated_hours_per_week: "8-10 hrs/week",
     summary:
-      "A structured 12-week masterplan designed to take you from core programming fundamentals to deploying enterprise-grade full-stack web applications and clearing corporate PMIS technical evaluations.",
+      "A structured career masterplan designed to take you from core programming fundamentals to deploying enterprise-grade full-stack web applications and clearing corporate PMIS technical evaluations.",
     key_competencies_mastered: [
       "Modern TypeScript & Python 3.12",
       "Production RESTful API Architecture",
@@ -500,13 +561,29 @@ const FALLBACK_ROADMAPS = {
   },
 };
 
-function getWeekRanges(paceId) {
-  if (paceId === "8-week") {
-    return ["Weeks 1 - 2", "Weeks 3 - 4", "Weeks 5 - 6", "Weeks 7 - 8"];
-  } else if (paceId === "16-week") {
-    return ["Weeks 1 - 4", "Weeks 5 - 8", "Weeks 9 - 12", "Weeks 13 - 16"];
+function getPhaseDurations(paceId) {
+  const p = (paceId || "").toLowerCase();
+  if (p.includes("6")) {
+    return [
+      "Months 1 - 2 (Core Fundamentals & Essential Tools)",
+      "Months 3 - 4 (Applied Internship Capstone & Execution)",
+      "Month 5 (Corporate Quality Benchmarks & Production Practice)",
+      "Month 6 (ATS 1-Page Resume & PMIS Interview Ready)",
+    ];
+  } else if (p.includes("15")) {
+    return [
+      "Months 1 - 4 (Comprehensive Architecture & Foundational Core)",
+      "Months 5 - 8 (Production Deployment & Scaled Enterprise Workflows)",
+      "Months 9 - 12 (Advanced & In-Demand Next-Gen Tech Specialization)",
+      "Months 13 - 15 (Executive Engineering Leadership & Tier-1 Placement)",
+    ];
   } else {
-    return ["Weeks 1 - 3", "Weeks 4 - 7", "Weeks 8 - 10", "Weeks 11 - 12"];
+    return [
+      "Months 1 - 3 (Core Discipline & Standard Tool Stacks)",
+      "Months 4 - 6 (Enterprise Production Systems & Architecture)",
+      "Months 7 - 9 (Advanced Quality, Compliance & Cross-functional Workflows)",
+      "Months 10 - 12 (Portfolio Defense, Corporate Mock Rounds & Offer Readiness)",
+    ];
   }
 }
 
@@ -514,7 +591,7 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
   const [selectedRole, setSelectedRole] = useState("Automotive & EV Engineering Intern");
   const [customRoleInput, setCustomRoleInput] = useState("");
   const [selectedAcademic, setSelectedAcademic] = useState("pre_final");
-  const [selectedPace, setSelectedPace] = useState("12-week");
+  const [selectedPace, setSelectedPace] = useState("6-month");
   const [isSearchingRole, setIsSearchingRole] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -524,6 +601,42 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
   const [generationStep, setGenerationStep] = useState("");
   const [errorMsg, setErrorMsg] = useState(null);
   const roadmapResultRef = useRef(null);
+
+  // Cooldown Protection & Motivational Reflection State (5-min cooldown to prevent continuous generation spam)
+  const [cooldownRemaining, setCooldownRemaining] = useState(() => {
+    try {
+      const storageKey = `pmis_last_roadmap_time_${user?.user_id || "guest"}`;
+      const savedTime = localStorage.getItem(storageKey);
+      if (savedTime) {
+        const elapsedSec = Math.floor((Date.now() - parseInt(savedTime, 10)) / 1000);
+        return Math.max(0, COOLDOWN_SECONDS - elapsedSec);
+      }
+    } catch {}
+    return 0;
+  });
+  const [isCooldownModalOpen, setIsCooldownModalOpen] = useState(false);
+  const [activeQuoteIndex, setActiveQuoteIndex] = useState(0);
+
+  // Tick down cooldown timer
+  useEffect(() => {
+    if (cooldownRemaining <= 0) return;
+    const timer = setInterval(() => {
+      setCooldownRemaining((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [cooldownRemaining]);
+
+  const formatCooldown = (sec) => {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  };
 
   // User milestone completion tracker in localStorage
   const [completedMilestones, setCompletedMilestones] = useState(() => {
@@ -597,6 +710,13 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
       return;
     }
 
+    // Cooldown verification: Prevent rapid re-generation to encourage thoughtful execution
+    if (cooldownRemaining > 0) {
+      setActiveQuoteIndex((prev) => (prev + 1) % MOTIVATIONAL_QUOTES.length);
+      setIsCooldownModalOpen(true);
+      return;
+    }
+
     const target = (roleToUse || customRoleInput.trim() || selectedRole).trim();
     if (!target) return;
 
@@ -610,8 +730,7 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
 
       const academicObj = ACADEMIC_LEVELS.find((a) => a.id === selectedAcademic);
       const paceObj = PACES.find((p) => p.id === selectedPace);
-      const weekRanges = getWeekRanges(selectedPace);
-      const totalWeeks = selectedPace === "8-week" ? 8 : selectedPace === "16-week" ? 16 : 12;
+      const phaseDurations = getPhaseDurations(selectedPace);
 
       const response = await fetch(`${BACKEND_URL}/api/career/roadmap`, {
         method: "POST",
@@ -620,7 +739,7 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
           target_role: target,
           target_sector: "Corporate Sector",
           academic_level: academicObj?.label || "Pre-Final Year (3rd Year)",
-          pace: paceObj?.label || "12-Week Comprehensive",
+          pace: paceObj?.label || "6 Months (Internship Ready Fast-Track)",
         }),
       });
 
@@ -630,10 +749,10 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
 
       const data = await response.json();
       if (data && data.phases && data.phases.length > 0) {
-        // Enforce the chosen timeline weeks and pace metadata
+        // Enforce the chosen timeline durations and pace metadata
         data.phases.forEach((p, idx) => {
-          if (weekRanges[idx]) {
-            p.weeks = weekRanges[idx];
+          if (phaseDurations[idx]) {
+            p.weeks = phaseDurations[idx];
           }
         });
         data.pace = paceObj?.label || data.pace;
@@ -641,41 +760,54 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
         setRoadmap(data);
         setSelectedRole(target);
         setCustomRoleInput("");
+
+        // Start cooldown to protect candidate against decision paralysis
+        try {
+          const storageKey = `pmis_last_roadmap_time_${user?.user_id || "guest"}`;
+          localStorage.setItem(storageKey, Date.now().toString());
+          setCooldownRemaining(COOLDOWN_SECONDS);
+        } catch {}
       } else {
         throw new Error("Invalid roadmap response structure");
       }
     } catch (err) {
       console.warn("AI Career Roadmap API failed or offline, using robust domain template:", err);
       const paceObj = PACES.find((p) => p.id === selectedPace);
-      const weekRanges = getWeekRanges(selectedPace);
-      const totalWeeks = selectedPace === "8-week" ? 8 : selectedPace === "16-week" ? 16 : 12;
+      const phaseDurations = getPhaseDurations(selectedPace);
 
       // Check if we have an explicit structured roadmap in FALLBACK_ROADMAPS first
       let templateKey = null;
-      if (/auto|mech|vehicle|powertrain|cad|fea|manufacturing/i.test(target)) {
+      if (/auto|mech|vehicle|powertrain|cad|fea|manufacturing|robotics/i.test(target)) {
         templateKey = "automotive";
-      } else if (/finan|bank|account|audit|tax|wealth|credit/i.test(target)) {
+      } else if (/finan|bank|account|audit|tax|wealth|credit|risk/i.test(target)) {
         templateKey = "finance";
-      } else if (/civil|infra|construct|struct|survey|bim/i.test(target)) {
+      } else if (/civil|infra|construct|struct|survey|bim|site/i.test(target)) {
         templateKey = "civil";
-      } else if (/pharma|drug|health|biochem|formulat|clinic/i.test(target)) {
+      } else if (/pharma|drug|health|biochem|formulat|clinic|qc/i.test(target)) {
         templateKey = "pharma";
-      } else if (/software|developer|coding|web|full stack|cloud|it\b/i.test(target)) {
+      } else if (/software|developer|coding|web|full stack|cloud|it\b|ai\b|data/i.test(target)) {
         templateKey = "software";
       }
 
       if (templateKey && FALLBACK_ROADMAPS[templateKey]) {
         const tmpl = JSON.parse(JSON.stringify(FALLBACK_ROADMAPS[templateKey]));
         tmpl.target_role = target;
-        tmpl.pace = paceObj?.label || "12-Week Comprehensive";
-        tmpl.estimated_hours_per_week = paceObj?.hours || "10-12 hrs/week";
+        tmpl.pace = paceObj?.label || "6-Month Fast-Track";
+        tmpl.estimated_hours_per_week = paceObj?.hours || "12-14 hrs/week";
         tmpl.academic_level = ACADEMIC_LEVELS.find((a) => a.id === selectedAcademic)?.label || tmpl.academic_level;
         tmpl.phases.forEach((p, idx) => {
-          if (weekRanges[idx]) p.weeks = weekRanges[idx];
+          if (phaseDurations[idx]) p.weeks = phaseDurations[idx];
         });
         setRoadmap(tmpl);
         setSelectedRole(target);
         setCustomRoleInput("");
+
+        // Start cooldown
+        try {
+          const storageKey = `pmis_last_roadmap_time_${user?.user_id || "guest"}`;
+          localStorage.setItem(storageKey, Date.now().toString());
+          setCooldownRemaining(COOLDOWN_SECONDS);
+        } catch {}
         return;
       }
 
@@ -694,26 +826,31 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
       }
 
       // Construct dynamic fallback with exact user-selected pace
+      const isAdvanced = selectedPace === "15-month";
+      const isFastTrack = selectedPace === "6-month";
+
       const fallback = {
         target_role: target,
         target_sector: "PM Internship Corporate Sector",
         academic_level: ACADEMIC_LEVELS.find((a) => a.id === selectedAcademic)?.label,
-        pace: paceObj?.label || "12-Week Comprehensive",
-        estimated_hours_per_week: paceObj?.hours || "10-12 hrs/week",
-        summary: `Custom ${totalWeeks}-week career roadmap (${paceObj?.hours || "10-12 hrs/wk"}) specifically mapped for ${target}. Master foundational tools, construct verifiable production portfolio projects, and optimize your ATS profile for PM Internship Scheme corporate selections.`,
+        pace: paceObj?.label || "6-Month Fast-Track",
+        estimated_hours_per_week: paceObj?.hours || "12-14 hrs/week",
+        summary: `Custom ${paceObj?.label || "curriculum"} (${paceObj?.hours || "12-14 hrs/wk"}) specifically mapped for ${target}. Master foundational tools, construct verifiable production portfolio projects, and optimize your ATS profile for PM Internship Scheme corporate selections.`,
         key_competencies_mastered: [
           `${target} Core Competencies`,
           "Industry-standard Tool Stack",
-          "Production Portfolio Projects",
+          isAdvanced ? "Advanced Cloud & Industry 4.0 Architecture" : "Production Portfolio Projects",
           "ATS Resume Alignment",
           "STAR Method Technical Interviewing",
         ],
         phases: [
           {
             phase_number: 1,
-            title: "Phase 1: Core Foundation & Tool Stack Mastery",
-            weeks: weekRanges[0],
-            goal: `Master core tools, standards, and domain workflows for ${target}.`,
+            title: isFastTrack ? "Phase 1: High-Yield Fundamentals & Core Tooling" : "Phase 1: Core Foundation & Tool Stack Mastery",
+            weeks: phaseDurations[0],
+            goal: isFastTrack
+              ? `Concise mastery of high-yield core concepts and essential daily tools for ${target}.`
+              : `Master comprehensive tools, standard operating procedures, and domain workflows for ${target}.`,
             milestones: [
               `Set up the professional / analytical environment tailored to ${target}.`,
               "Master primary tool workflows, standard operating procedures, and industry protocols.",
@@ -728,11 +865,13 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
           },
           {
             phase_number: 2,
-            title: "Phase 2: Production Portfolio Projects",
-            weeks: weekRanges[1],
-            goal: "Build 2 high-impact, verifiable projects demonstrating end-to-end execution.",
+            title: isFastTrack ? "Phase 2: Applied Internship Capstone Project" : "Phase 2: Production Portfolio Projects & Architecture",
+            weeks: phaseDurations[1],
+            goal: isFastTrack
+              ? "Build a focused, verifiable end-to-end capstone solving a corporate problem."
+              : "Build 2 high-impact, verifiable projects demonstrating end-to-end multi-tier execution.",
             milestones: [
-              `Project 1: Develop a comprehensive prototype or audit solving an industry problem in ${target}.`,
+              `Project 1: Develop a comprehensive prototype solving an industry problem in ${target}.`,
               "Project 2: Implement advanced quality checks, error limits, and measurable benchmarks.",
               "Document findings in a crisp 2-page executive summary or slide deck.",
               "Write a compelling technical case study detailing decision trade-offs and business impact.",
@@ -745,16 +884,22 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
           },
           {
             phase_number: 3,
-            title: "Phase 3: Industry Rigor & Quality Standards",
-            weeks: weekRanges[2],
-            goal: "Apply enterprise verification, quality benchmarks, and industry compliance.",
+            title: isAdvanced ? "Phase 3: Next-Gen In-Demand Technologies & Automation" : "Phase 3: Industry Rigor & Quality Standards",
+            weeks: phaseDurations[2],
+            goal: isAdvanced
+              ? "Integrate high-demand cutting-edge technologies (AI, automation, Industry 4.0)."
+              : "Apply enterprise verification, quality benchmarks, and industry compliance.",
             milestones: [
               "Conduct peer reviews or audit against national industrial quality norms.",
+              isAdvanced
+                ? "Integrate high-demand AI-assisted automation, telemetry models, and cloud-native architecture."
+                : "Integrate standard domain analytical tooling and statistical process controls.",
               "Test edge cases, safety tolerances, and regulatory adherence.",
-              "Participate in a corporate problem-solving sprint or professional workshop.",
-              "Publish an insightful summary breaking down your project's methodology and results.",
+              "Publish an insightful technical brief breaking down your methodology and business results.",
             ],
-            recommended_tools: ["Quality Audit Sheets", "Regulatory Guidelines", "Statistical Analysis"],
+            recommended_tools: isAdvanced
+              ? [...sectorTools, "Modern AI/Automation Tooling", "Cloud Architecture"]
+              : sectorTools,
             free_resources: [
               { name: "National Quality Council Standards", url: "https://qcin.org" },
               { name: "PM Internship Scheme Portal", url: "https://pminternship.mca.gov.in" },
@@ -762,9 +907,9 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
           },
           {
             phase_number: 4,
-            title: "Phase 4: ATS Resume & Corporate Interview Mastery",
-            weeks: weekRanges[3],
-            goal: "Align your resume with PMIS top corporate evaluators and excel in interview rounds.",
+            title: isAdvanced ? "Phase 4: Executive Portfolio Defense & Tier-1 Placement" : "Phase 4: ATS Resume & Corporate Interview Mastery",
+            weeks: phaseDurations[3],
+            goal: "Align your profile with PMIS corporate screeners and clear technical rounds with confidence.",
             milestones: [
               `Target resume bullet points to mirror exact competencies of ${target}.`,
               "Run ATS compliance audit to ensure single-column clean parsing with actionable metrics.",
@@ -781,6 +926,13 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
       };
       setRoadmap(fallback);
       setSelectedRole(target);
+
+      // Start cooldown
+      try {
+        const storageKey = `pmis_last_roadmap_time_${user?.user_id || "guest"}`;
+        localStorage.setItem(storageKey, Date.now().toString());
+        setCooldownRemaining(COOLDOWN_SECONDS);
+      } catch {}
     } finally {
       setIsLoading(false);
       setGenerationStep("");
@@ -831,9 +983,9 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
                   1. Select Target Job / Role from PMIS Tracks
                 </label>
 
-                {/* Popular Pill Shortcuts */}
+                {/* Popular Pill Shortcuts (Top 10 Diverse PMIS Roles) */}
                 <div className="flex flex-wrap gap-2 mb-3">
-                  {POPULAR_ROLES.slice(0, 6).map((r) => {
+                  {POPULAR_ROLES.slice(0, 10).map((r) => {
                     const isSelected = selectedRole === r.title;
                     return (
                       <button
@@ -950,25 +1102,39 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
                 <label className="block text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
                   3. Roadmap Timeline & Pace
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   {PACES.map((p) => {
                     const isSelected = selectedPace === p.id;
                     return (
                       <button
                         key={p.id}
+                        type="button"
                         onClick={() => {
                           setSelectedPace(p.id);
                           setRoadmap(null);
                         }}
-                        className={`rounded-xl p-2.5 text-center border transition cursor-pointer ${
+                        className={`rounded-2xl p-2.5 text-left border transition cursor-pointer flex flex-col justify-between ${
                           isSelected
-                            ? "bg-orange-50 dark:bg-orange-950/50 border-orange-500 text-orange-900 dark:text-orange-200 shadow-xs"
+                            ? "bg-orange-50/90 dark:bg-orange-950/40 border-orange-500 text-orange-950 dark:text-orange-200 shadow-sm ring-1 ring-orange-500/30"
                             : "bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
                         }`}
                       >
-                        <div className="text-[11px] font-black truncate">{p.label}</div>
-                        <div className="text-[9px] font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
-                          {p.hours}
+                        <div>
+                          <div className="flex items-center justify-between gap-1 mb-1">
+                            <span className="text-xs font-black">{p.label}</span>
+                            <span className="text-[8px] font-black uppercase px-1 py-0.5 rounded-md bg-orange-500/15 text-orange-700 dark:text-orange-300 border border-orange-500/20">
+                              {p.intensity}
+                            </span>
+                          </div>
+                          <div className="text-[10px] font-bold text-slate-900 dark:text-white leading-tight">
+                            {p.sublabel}
+                          </div>
+                          <p className="text-[9px] text-slate-500 dark:text-slate-400 mt-1 font-medium leading-snug">
+                            {p.description}
+                          </p>
+                        </div>
+                        <div className="text-[9px] font-bold text-orange-600 dark:text-orange-400 mt-2 pt-1 border-t border-slate-200/60 dark:border-slate-700/60">
+                          ⏱ {p.hours}
                         </div>
                       </button>
                     );
@@ -979,13 +1145,36 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
               {/* Action Trigger Button */}
               <div className="pt-2">
                 <button
+                  type="button"
                   onClick={() => handleGenerateRoadmap()}
                   disabled={isLoading}
-                  className="w-full sheen inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-orange-500 text-white px-6 py-3.5 text-sm font-black shadow-lg shadow-indigo-500/25 hover:brightness-110 active:scale-98 transition cursor-pointer disabled:opacity-60"
+                  className={`w-full sheen inline-flex items-center justify-center gap-2 rounded-2xl px-6 py-3.5 text-sm font-black shadow-lg transition cursor-pointer disabled:opacity-60 ${
+                    cooldownRemaining > 0
+                      ? "bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-amber-500/20 hover:brightness-105"
+                      : "bg-gradient-to-r from-indigo-600 via-purple-600 to-orange-500 text-white shadow-indigo-500/25 hover:brightness-110 active:scale-98"
+                  }`}
                 >
-                  <Sparkles className="h-4 w-4" />
-                  <span>{isLoading ? "Generating with AI..." : "Generate AI Career Roadmap"}</span>
+                  {cooldownRemaining > 0 ? (
+                    <>
+                      <Clock className="h-4 w-4 animate-pulse" />
+                      <span>Roadmap Cooldown ({formatCooldown(cooldownRemaining)})</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4" />
+                      <span>{isLoading ? "Generating with AI..." : "Generate AI Career Roadmap"}</span>
+                    </>
+                  )}
                 </button>
+
+                {cooldownRemaining > 0 && (
+                  <div className="mt-2.5 rounded-xl bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/25 p-2.5 text-center">
+                    <p className="text-[11px] font-bold text-amber-800 dark:text-amber-200">
+                      ⏳ Focus &amp; Absorption Active: Review your current roadmap milestones. Next generation unlocks in {formatCooldown(cooldownRemaining)}.
+                    </p>
+                  </div>
+                )}
+
                 {isLoading && generationStep && (
                   <p className="mt-2 text-center text-xs font-bold text-indigo-600 dark:text-indigo-400 animate-pulse">
                     {generationStep}
@@ -1040,7 +1229,7 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
                     </span>
                     <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 dark:bg-orange-900/60 text-orange-800 dark:text-orange-300 px-3 py-1 text-xs font-black">
                       <Clock className="h-3.5 w-3.5" />
-                      {roadmap.pace || "12-Week Track"} ({roadmap.estimated_hours_per_week || "10-12 hrs/wk"})
+                      {roadmap.pace || "12 Months Track"} ({roadmap.estimated_hours_per_week || "8-10 hrs/wk"})
                     </span>
                   </div>
 
@@ -1114,6 +1303,34 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
                   ))}
                 </div>
               )}
+
+              {/* Motivational Action & Execution Banner */}
+              <div className="mt-5 rounded-2xl bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/30 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-start gap-3.5">
+                  <div className="h-9 w-9 rounded-2xl bg-amber-500/20 text-amber-600 dark:text-amber-400 grid place-items-center shrink-0 mt-0.5 shadow-2xs">
+                    <Sparkles className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs sm:text-sm font-black text-amber-950 dark:text-amber-100 italic leading-snug">
+                      &ldquo;Knowing is not enough; we must apply. Willing is not enough; we must do.&rdquo;
+                    </p>
+                    <p className="text-[11px] text-amber-800/90 dark:text-amber-300/90 font-semibold mt-1">
+                      You have generated your tailored roadmap. Instead of repeatedly switching plans, focus on mastering Phase 1 milestones and building real project experience.
+                    </p>
+                  </div>
+                </div>
+                {cooldownRemaining > 0 ? (
+                  <span className="shrink-0 text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-full bg-amber-500/20 text-amber-800 dark:text-amber-200 border border-amber-500/30 flex items-center gap-1.5">
+                    <Clock className="h-3 w-3 animate-pulse" />
+                    <span>Focus Period: {formatCooldown(cooldownRemaining)}</span>
+                  </span>
+                ) : (
+                  <span className="shrink-0 text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-full bg-emerald-500/20 text-emerald-800 dark:text-emerald-200 border border-emerald-500/30 flex items-center gap-1.5">
+                    <CheckCircle2 className="h-3 w-3" />
+                    <span>Roadmap Active</span>
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* 4 Phases Timeline Grid */}
@@ -1277,6 +1494,93 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
           </div>
         )}
       </div>
+
+      {/* COOLDOWN PROTECTION & MOTIVATIONAL REFLECTION MODAL */}
+      {isCooldownModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-lg rounded-3xl border-2 border-amber-500/30 bg-white dark:bg-slate-900 shadow-2xl p-6 sm:p-8 space-y-6">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="h-10 w-10 rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400 grid place-items-center">
+                  <ShieldCheck className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-display text-base font-black text-slate-900 dark:text-white">
+                    Roadmap Focus &amp; Execution Guard
+                  </h3>
+                  <p className="text-[11px] font-semibold text-slate-500">
+                    Continuous back-to-back roadmap generation is paused
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsCooldownModalOpen(false)}
+                className="h-8 w-8 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 grid place-items-center transition cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Motivational Quote Card */}
+            <div className="rounded-2xl bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent border border-amber-500/25 p-5 space-y-3">
+              <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
+                <Sparkles className="h-4 w-4" />
+                <span className="text-xs font-black uppercase tracking-wider">Words to Act On</span>
+              </div>
+              <blockquote className="text-sm sm:text-base font-bold italic text-slate-800 dark:text-slate-100 leading-relaxed">
+                &ldquo;{MOTIVATIONAL_QUOTES[activeQuoteIndex].quote}&rdquo;
+              </blockquote>
+              <div className="flex items-center justify-between pt-1">
+                <span className="text-xs font-black text-amber-600 dark:text-amber-400">
+                  — {MOTIVATIONAL_QUOTES[activeQuoteIndex].author}
+                </span>
+                <span className="text-[10px] font-semibold text-slate-400">
+                  PMIS Career Philosophy
+                </span>
+              </div>
+              <div className="pt-2 border-t border-amber-500/15">
+                <p className="text-[11px] text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
+                  💡 <em>{MOTIVATIONAL_QUOTES[activeQuoteIndex].hindiNote}</em>
+                </p>
+              </div>
+            </div>
+
+            {/* Reason explanation */}
+            <div className="space-y-2 text-xs font-medium text-slate-600 dark:text-slate-400">
+              <p>
+                A career roadmap creates real results only when you spend time <strong>executing its milestones</strong>. Frequently regenerating new plans creates confusion and delays practical skill building.
+              </p>
+              <div className="flex items-center justify-between rounded-xl bg-slate-100 dark:bg-slate-800/80 px-4 py-2.5 font-bold">
+                <span className="text-slate-700 dark:text-slate-300">Next generation unlocked in:</span>
+                <span className="font-mono text-sm text-amber-600 dark:text-amber-400">
+                  {formatCooldown(cooldownRemaining)}
+                </span>
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex flex-col sm:flex-row gap-2.5 pt-2">
+              <button
+                onClick={() => {
+                  setIsCooldownModalOpen(false);
+                  if (roadmapResultRef.current) {
+                    roadmapResultRef.current.scrollIntoView({ behavior: "smooth" });
+                  }
+                }}
+                className="flex-1 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-black py-2.5 text-xs shadow-md hover:brightness-105 transition cursor-pointer"
+              >
+                Study Active Roadmap Milestones
+              </button>
+              <button
+                onClick={() => setIsCooldownModalOpen(false)}
+                className="rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold px-4 py-2.5 text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition cursor-pointer"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
