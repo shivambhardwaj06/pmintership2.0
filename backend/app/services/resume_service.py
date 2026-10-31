@@ -194,7 +194,30 @@ class ResumeService:
 
         # Sort descending by score, tie-break on record_num
         scored_jobs.sort(key=lambda x: (x["score"], -x["job"].get("record_num", 0)), reverse=True)
-        top_slice = scored_jobs[:limit]
+
+        # Pick top scoring jobs ensuring healthy multi-sector diversity (at most 2 for primary branch, at most 1 for others)
+        selected_items = []
+        sector_counts = {}
+        has_specific_boost = any(s["score"] >= 30 for s in scored_jobs)
+        max_per_sector = 2 if has_specific_boost else 1
+
+        for item in scored_jobs:
+            if len(selected_items) >= limit:
+                break
+            sec = item["job"].get("sector") or "General"
+            if sector_counts.get(sec, 0) < max_per_sector:
+                sector_counts[sec] = sector_counts.get(sec, 0) + 1
+                selected_items.append(item)
+
+        # Fill remaining slots if limit not reached
+        if len(selected_items) < limit:
+            for item in scored_jobs:
+                if len(selected_items) >= limit:
+                    break
+                if item not in selected_items:
+                    selected_items.append(item)
+
+        top_slice = selected_items
         max_score = top_slice[0]["score"] if top_slice and top_slice[0]["score"] > 0 else 1
 
         top_matches = []
@@ -637,6 +660,69 @@ JSON FORMAT:
                     "Step 2: Add quantitative metrics to bullet points showing engineering impact.",
                     "Step 3: Apply to top PMIS IT & Software Development corporate roles at TCS and Infosys."
                 ]
+            },
+            "multi_disciplinary": {
+                "branch_name": "Multi-Disciplinary / Corporate Operations",
+                "keywords": ["management", "operations", "coordination", "leadership", "analysis", "reporting"],
+                "tech_pool": ["Operational Coordination", "Data & Financial Tracking", "Quality Management", "Corporate Communication", "Analytical Problem Solving", "Process Improvement"],
+                "tools_pool": ["Microsoft Excel", "Power BI", "ERP Systems", "Google Workspace", "Documentation Standards"],
+                "roles": [
+                    {
+                        "role": "Operations & Vehicle Dynamics Intern",
+                        "company": "Maruti Suzuki",
+                        "sector": "Automotive",
+                        "match_score": 94,
+                        "internship_id": "PMIS-046",
+                        "reason": "High analytical capability, operational excellence, and cross-functional team coordination."
+                    },
+                    {
+                        "role": "Corporate Banking & Credit Operations Intern",
+                        "company": "HDFC Bank",
+                        "sector": "Banking & Financial Services",
+                        "match_score": 92,
+                        "internship_id": "PMIS-006",
+                        "reason": "Structured problem solving, data accuracy, and corporate risk governance fundamentals."
+                    },
+                    {
+                        "role": "Project Infrastructure & Planning Intern",
+                        "company": "Larsen & Toubro (L&T)",
+                        "sector": "Infrastructure & Construction",
+                        "match_score": 90,
+                        "internship_id": "PMIS-031",
+                        "reason": "Project scheduling, quality control methodology, and engineering documentation rigor."
+                    },
+                    {
+                        "role": "Quality Assurance & Formulations Intern",
+                        "company": "Sun Pharmaceutical Industries",
+                        "sector": "Pharmaceuticals",
+                        "match_score": 88,
+                        "internship_id": "PMIS-051",
+                        "reason": "Standards compliance, analytical testing procedures, and structured research documentation."
+                    },
+                    {
+                        "role": "Energy Operations & Power Plant Intern",
+                        "company": "NTPC",
+                        "sector": "Power & Energy",
+                        "match_score": 86,
+                        "internship_id": "PMIS-111",
+                        "reason": "Systems monitoring, industrial safety protocols, and operational efficiency analysis."
+                    }
+                ],
+                "strengths": [
+                    "Versatile cross-functional problem solving and strong professional communication.",
+                    "Strict 1-page layout compliant with official PM Internship corporate criteria.",
+                    "Broad academic foundation adaptable across multiple high-growth industry sectors."
+                ],
+                "gaps": [
+                    "Highlight specific sector-aligned tools (e.g. CAD/Excel/ERP/Safety Standards) relevant to your target industry.",
+                    "Quantify project results and leadership impact with clear numeric outcomes.",
+                    "Specify your target PMIS industry sector to receive priority recruiter alignment."
+                ],
+                "roadmap": [
+                    "Step 1: Customize your 1-page resume with measurable accomplishments and industry tools.",
+                    "Step 2: Complete the sector-specific interview preparation guide for your chosen field.",
+                    "Step 3: Apply to top corporate internship openings across Automotive, Banking, Infrastructure, and Energy."
+                ]
             }
         }
 
@@ -647,7 +733,7 @@ JSON FORMAT:
 
         best_domain_key = max(scores, key=scores.get)
         if scores[best_domain_key] == 0:
-            best_domain_key = "computer_science"
+            best_domain_key = "multi_disciplinary"
 
         cfg = domain_definitions[best_domain_key]
 

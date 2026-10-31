@@ -44,7 +44,7 @@ export default function BannerCarousel({ onExploreClick, onOpenAuth }) {
       alt: "AI 1-Page Resume Audit & Top 5 Database Matching",
       tag: "AI Recruiter Engine 2.0",
       title: "AI 1-Page Resume Audit & Top 5 Database Jobs",
-      subtitle: "Instant ATS compliance score, branch alignment, and verified matching across 260 official PM Scheme positions.",
+      subtitle: "Instant ATS compliance score, branch alignment, and verified matching across 260 official PM Scheme positions in 24 corporate sectors.",
       linkAction: () => {
         if (onOpenAuth) onOpenAuth("register");
         else if (onExploreClick) onExploreClick();
@@ -162,7 +162,7 @@ export default function BannerCarousel({ onExploreClick, onOpenAuth }) {
 
                       <div className="hidden md:inline-flex items-center gap-1 text-[11px] text-slate-300 font-semibold bg-white/10 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-white/15">
                         <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
-                        <span>Strict 1-Page ATS Standard</span>
+                        <span>Strict 1-Page ATS Standard • 24 Sectors</span>
                       </div>
                     </div>
                   </div>

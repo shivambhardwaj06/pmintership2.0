@@ -29,7 +29,7 @@ const INITIAL_JOB_NEWS = [
     source_name: "Press Information Bureau (PIB)",
     source_url: "https://pib.gov.in",
     date: "Official Update",
-    summary: "Phase-1 of the PM Internship Scheme opens 12-month paid training across India's top 500 corporate leaders including Tata, Reliance, L&T, Infosys, and HDFC Bank.",
+    summary: "Phase-1 of the PM Internship Scheme opens 12-month paid training across India's top 500 corporate leaders across 24 industry sectors including Tata Motors, Reliance, L&T, Maruti Suzuki, Sun Pharma, and HDFC Bank.",
     company: "Ministry of Corporate Affairs (MCA)",
     sector: "All Industry Sectors"
   },

@@ -58,7 +58,7 @@ function getDishaGroundedReply(text) {
         "We have **paid corporate internships across 24 sectors** right now!\n\n" +
         "• **Stipends:** ₹8,000–₹15,000/month (sample prototype listings).\n" +
         "• **Modes:** Hybrid, On-site, and Remote options in Karnataka, Maharashtra, Tamil Nadu, Delhi/NCR, and Pan-India.\n" +
-        "• **Top Companies:** TCS, Infosys, HDFC, Maruti Suzuki, Tata Motors, L&T, Sun Pharma, NTPC, etc.\n\n" +
+        "• **Top Companies:** Maruti Suzuki, Tata Motors, HDFC Bank, Larsen & Toubro, Sun Pharma, Reliance, NTPC, TCS, etc.\n\n" +
         "👉 *Scroll to our **Explore Internships** section to filter by your State, Mode, and Sector!*",
       sources: [{ title: "Explore Internships Section", url: "#explore-internships" }],
     };

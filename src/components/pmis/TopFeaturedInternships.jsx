@@ -14,12 +14,12 @@ import CompanyLogo from "./CompanyLogo";
 
 // Top 6 diverse, high-demand corporate opportunities across major sectors
 const TOP_SELECTION_IDS = [
-  "PMIS-001", // TCS - IT & Software
-  "PMIS-006", // HDFC Bank - Banking & Finance
   "PMIS-046", // Maruti Suzuki - Automotive
+  "PMIS-006", // HDFC Bank - Banking & Finance
   "PMIS-031", // Larsen & Toubro - Infrastructure
   "PMIS-051", // Sun Pharma - Pharmaceuticals
   "PMIS-111", // NTPC - Power & Energy
+  "PMIS-001", // TCS - IT & Software
 ];
 
 export default function TopFeaturedInternships({

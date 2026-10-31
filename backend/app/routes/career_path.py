@@ -170,6 +170,228 @@ DOMAIN_ROADMAP_TEMPLATES = {
                 ]
             }
         ]
+    },
+    "finance": {
+        "role_badge": "Banking, Finance & Corporate Risk Management",
+        "estimated_hours_per_week": "10-12 hrs/week",
+        "phases": [
+            {
+                "phase_number": 1,
+                "title": "Phase 1: Financial Accounting & Advanced Spreadsheet Modeling",
+                "weeks": "Weeks 1 - 3",
+                "goal": "Build mathematical speed, dynamic Excel modeling fluency, and financial statement comprehension.",
+                "milestones": [
+                    "Master dynamic Excel formulas: XLOOKUP, INDEX-MATCH, nested IFs, Goal Seek, and Data Tables.",
+                    "Analyze annual reports and audited balance sheets of 5 major Indian banking and industrial corporations.",
+                    "Calculate 25+ essential financial ratios: Current, Quick, Debt-to-Equity, Interest Coverage, ROE, and ROCE.",
+                    "Build dynamic working capital and bank reconciliation schedules."
+                ],
+                "recommended_tools": ["Microsoft Excel", "TallyPrime", "BSE/NSE Annual Reports"],
+                "free_resources": [
+                    {"name": "Corporate Finance Institute Free Guides", "url": "https://corporatefinanceinstitute.com"},
+                    {"name": "NPTEL Financial Accounting (IIT Bombay)", "url": "https://nptel.ac.in"}
+                ]
+            },
+            {
+                "phase_number": 2,
+                "title": "Phase 2: 3-Statement Modeling & Credit Risk Appraisal",
+                "weeks": "Weeks 4 - 7",
+                "goal": "Construct integrated forecast models and assess borrower creditworthiness.",
+                "milestones": [
+                    "Build a dynamic 3-statement financial model linking Income Statement, Balance Sheet, and Cash Flow.",
+                    "Conduct credit appraisal of corporate loan portfolios: DSCR calculations, collateral valuation, and sensitivity analysis.",
+                    "Model discounted cash flows (DCF) with weighted average cost of capital (WACC) calculations.",
+                    "Perform variance analysis comparing quarterly operating budgets against actual ledger disbursements."
+                ],
+                "recommended_tools": ["Financial Model Templates", "Excel What-If Analysis", "Ratio Sheets"],
+                "free_resources": [
+                    {"name": "Aswath Damodaran Corporate Valuation", "url": "https://pages.stern.nyu.edu/~adamodar"},
+                    {"name": "Khan Academy Finance & Capital Markets", "url": "https://www.khanacademy.org"}
+                ]
+            },
+            {
+                "phase_number": 3,
+                "title": "Phase 3: Banking Regulatory Norms & Power BI Reporting",
+                "weeks": "Weeks 8 - 10",
+                "goal": "Master banking operations, statutory compliance guidelines, and executive dashboards.",
+                "milestones": [
+                    "Study RBI guidelines on KYC, Anti-Money Laundering (AML), and Non-Performing Asset (NPA) provisioning.",
+                    "Build an interactive Power BI dashboard tracking loan disbursement quality and delinquency risk buckets.",
+                    "Review retail asset workflows: Retail credit scoring, Letter of Credit (LC) terms, and Bank Guarantees.",
+                    "Gain familiarity with statutory banking audit checklists and treasury operations."
+                ],
+                "recommended_tools": ["Power BI", "Excel Data Models", "RBI Guidelines"],
+                "free_resources": [
+                    {"name": "Reserve Bank of India (RBI) Bulletins", "url": "https://rbi.org.in"},
+                    {"name": "Microsoft Power BI Guided Training", "url": "https://learn.microsoft.com"}
+                ]
+            },
+            {
+                "phase_number": 4,
+                "title": "Phase 4: Banking ATS Resume & Panel Interview Defense",
+                "weeks": "Weeks 11 - 12",
+                "goal": "Perfect a 1-page banking ATS profile and clear credit analysis interview rounds.",
+                "milestones": [
+                    "Condense achievements into strict 1-page format with verified quantitative financial modeling metrics.",
+                    "Practice 10 mock interviews tackling cash flow adjustments, working capital shocks, and credit risk scenarios.",
+                    "Prepare macroeconomic analysis: Repo rate changes, inflation trends, and corporate lending dynamics.",
+                    "Submit direct applications to top PMIS banking institutions (HDFC Bank, State Bank of India, ICICI Bank)."
+                ],
+                "recommended_tools": ["ATS Resume Checker", "PMIS Portal"],
+                "free_resources": [
+                    {"name": "Banking Interview Preparation Video", "url": "https://youtu.be/QBX7RkhuyCA"},
+                    {"name": "PM Internship Scheme Portal", "url": "https://pminternship.mca.gov.in"}
+                ]
+            }
+        ]
+    },
+    "civil": {
+        "role_badge": "Civil Engineering & Heavy Infrastructure",
+        "estimated_hours_per_week": "10-12 hrs/week",
+        "phases": [
+            {
+                "phase_number": 1,
+                "title": "Phase 1: Structural Drafting & IS Code Standards",
+                "weeks": "Weeks 1 - 3",
+                "goal": "Master structural drafting, architectural blueprint interpretation, and building codes.",
+                "milestones": [
+                    "Draft 30+ detailed foundation, beam, and column structural drawings in AutoCAD Civil 3D.",
+                    "Study national structural standards: IS 456:2000 (Plain & Reinforced Concrete) and IS 800:2007 (Steel).",
+                    "Understand soil bearing capacity test reports, standard penetration tests, and foundation selection.",
+                    "Build a 1-click drawing portfolio link highlighting reinforcement details and building elevation sections."
+                ],
+                "recommended_tools": ["AutoCAD Civil 3D", "IS 456 / IS 800 Codes", "Drafting Templates"],
+                "free_resources": [
+                    {"name": "NPTEL Design of RCC Structures (IIT Kharagpur)", "url": "https://nptel.ac.in"},
+                    {"name": "CPWD Specifications and Standards", "url": "https://cpwd.gov.in"}
+                ]
+            },
+            {
+                "phase_number": 2,
+                "title": "Phase 2: Structural Analysis & Quantity Surveying",
+                "weeks": "Weeks 4 - 7",
+                "goal": "Analyze multi-story frames and calculate precise structural material takeoffs.",
+                "milestones": [
+                    "Analyze a G+4 framed building in STAAD.Pro or ETABS under dead, live, and IS 1893 seismic load combinations.",
+                    "Compute complete quantity estimates: concrete volume, formwork area, and structural steel tonnage.",
+                    "Prepare detailed Bar Bending Schedules (BBS) for continuous beams, columns, and raft footings in Excel.",
+                    "Review concrete mix design calculations (M25/M30) following IS 10262 guidelines."
+                ],
+                "recommended_tools": ["STAAD.Pro / ETABS", "Excel BBS Worksheets", "Quantity Surveying Sheets"],
+                "free_resources": [
+                    {"name": "STAAD.Pro Official Tutorials", "url": "https://bentley.com"},
+                    {"name": "Civil Engineering Project Estimations (NPTEL)", "url": "https://nptel.ac.in"}
+                ]
+            },
+            {
+                "phase_number": 3,
+                "title": "Phase 3: Construction Scheduling & Site Safety (EHS)",
+                "weeks": "Weeks 8 - 10",
+                "goal": "Master construction milestone management, heavy equipment coordination, and safety norms.",
+                "milestones": [
+                    "Create construction baseline Gantt charts with Critical Path Method (CPM) milestones in MS Project.",
+                    "Coordinate site equipment logistics: batching plants, transit mixers, boom placers, and tower cranes.",
+                    "Implement Environmental Health & Safety (EHS) protocols: excavation shoring, scaffolding inspections, and PPE.",
+                    "Review green building rating parameters under IGBC and GRIHA standards."
+                ],
+                "recommended_tools": ["MS Project", "Site Safety Checklists", "BIM Viewer"],
+                "free_resources": [
+                    {"name": "Construction Project Management (NPTEL)", "url": "https://nptel.ac.in"},
+                    {"name": "Indian Green Building Council Standards", "url": "https://igbc.in"}
+                ]
+            },
+            {
+                "phase_number": 4,
+                "title": "Phase 4: Site Portfolio Defense & Infrastructure Selections",
+                "weeks": "Weeks 11 - 12",
+                "goal": "Present structural blueprints and secure positions at premier infrastructure conglomerates.",
+                "milestones": [
+                    "Format strict 1-page resume with embedded link to CAD drawings and STAAD.Pro calculation summaries.",
+                    "Practice answering technical structural detailing and concrete curing questions in mock interviews.",
+                    "Prepare site situational responses: resolving concrete honeycombing, handling contractor delays, and material quality checks.",
+                    "Submit direct applications to top PMIS infrastructure developers (Larsen & Toubro, Tata Projects, Afcons Infrastructure)."
+                ],
+                "recommended_tools": ["Drawing Portfolio", "PMIS Portal"],
+                "free_resources": [
+                    {"name": "L&T Infrastructure Interview Breakdown", "url": "https://youtu.be/QBX7RkhuyCA"},
+                    {"name": "PM Internship Scheme Portal", "url": "https://pminternship.mca.gov.in"}
+                ]
+            }
+        ]
+    },
+    "pharma": {
+        "role_badge": "Pharmaceutical Sciences & Healthcare QA",
+        "estimated_hours_per_week": "10-12 hrs/week",
+        "phases": [
+            {
+                "phase_number": 1,
+                "title": "Phase 1: Analytical Chemistry & Lab Instrumentation",
+                "weeks": "Weeks 1 - 3",
+                "goal": "Master high-precision pharmaceutical equipment, assay principles, and lab safety standards.",
+                "milestones": [
+                    "Study High-Performance Liquid Chromatography (HPLC) instrumentation: pumps, columns, detectors, and mobile phases.",
+                    "Understand UV-Vis spectrophotometry principles: Beer-Lambert law, wavelength calibration, and standard curves.",
+                    "Review dissolution apparatus (Type I Basket & Type II Paddle) operation protocols and release rate curves.",
+                    "Master Good Laboratory Practices (GLP): volumetric calibration, analytical weighing, and reagent labeling."
+                ],
+                "recommended_tools": ["HPLC Simulators", "UV-Vis Calibration Sheets", "Lab ChemDraw", "IP / USP Standards"],
+                "free_resources": [
+                    {"name": "NPTEL Industrial Pharmacy & Drug Delivery", "url": "https://nptel.ac.in"},
+                    {"name": "Indian Pharmacopoeia Commission Resources", "url": "https://ipc.gov.in"}
+                ]
+            },
+            {
+                "phase_number": 2,
+                "title": "Phase 2: Formulation R&D, Stability & Assay Testing",
+                "weeks": "Weeks 4 - 7",
+                "goal": "Conduct dosage formulation evaluations, stability protocols, and active pharmaceutical ingredient (API) assays.",
+                "milestones": [
+                    "Develop a comprehensive quality assay protocol for a solid oral dosage tablet according to IP standards.",
+                    "Design accelerated stability testing schedules (40°C / 75% RH) following ICH Q1A guidelines.",
+                    "Draft complete Batch Manufacturing Records (BMR) and Batch Packaging Records (BPR).",
+                    "Analyze physical parameters: tablet hardness, friability, disintegration time, and weight variation."
+                ],
+                "recommended_tools": ["Stability Matrix Sheets", "BMR Documentation Templates", "Excel Biostatistics"],
+                "free_resources": [
+                    {"name": "ICH Official Quality Guidelines", "url": "https://www.ich.org"},
+                    {"name": "US FDA Good Manufacturing Practice Guidance", "url": "https://www.fda.gov"}
+                ]
+            },
+            {
+                "phase_number": 3,
+                "title": "Phase 3: cGMP Regulatory Compliance & Quality Audits",
+                "weeks": "Weeks 8 - 10",
+                "goal": "Master industrial regulatory compliance, cleanroom protocols, and pharmaceutical quality assurance.",
+                "milestones": [
+                    "Deep-dive into Current Good Manufacturing Practices (cGMP) guidelines (Schedule M and WHO-GMP).",
+                    "Draft Standard Operating Procedures (SOPs) for instrument operation, cleaning validation, and calibration.",
+                    "Understand cleanroom HVAC classifications (ISO Class 5 to 8) and microbial air sampling methods.",
+                    "Learn Out of Specification (OOS) and Out of Trend (OOT) root cause investigation frameworks."
+                ],
+                "recommended_tools": ["SOP Templates", "OOS Investigation Worksheets", "Cleanroom Protocols"],
+                "free_resources": [
+                    {"name": "WHO Good Manufacturing Practices Guidelines", "url": "https://who.int"},
+                    {"name": "Pharmaguideline Regulatory QA Knowledgebase", "url": "https://www.pharmaguideline.com"}
+                ]
+            },
+            {
+                "phase_number": 4,
+                "title": "Phase 4: Pharma ATS Profile & Regulatory Interview Prep",
+                "weeks": "Weeks 11 - 12",
+                "goal": "Tailor your 1-page ATS resume with exact lab instrument keywords and clear corporate pharma interviews.",
+                "milestones": [
+                    "Condense resume into strict 1-page layout highlighting hands-on HPLC, UV, and cGMP compliance experience.",
+                    "Practice 10 mock technical interviews covering mobile phase preparation, retention times, and validation parameters.",
+                    "Review regulatory audit questions: explain handling of contamination, deviations, and documentation integrity (ALCOA+).",
+                    "Submit direct applications to top PMIS pharmaceutical corporations (Sun Pharma, Dr. Reddy's Laboratories, Cipla, Lupin)."
+                ],
+                "recommended_tools": ["ATS Resume Checker", "PMIS Student Dashboard", "Mock Pharma Rounds"],
+                "free_resources": [
+                    {"name": "Pharmaceutical Quality Interview Preparation", "url": "https://youtu.be/QBX7RkhuyCA"},
+                    {"name": "PM Internship Scheme MCA Portal", "url": "https://pminternship.mca.gov.in"}
+                ]
+            }
+        ]
     }
 }
 
@@ -188,8 +410,16 @@ def get_weeks_for_pace(pace: str) -> List[str]:
 def _get_fallback_roadmap(role: str, sector: str, pace: str) -> Dict[str, Any]:
     """Generates an accurate, highly structured career roadmap based on domain keywords and pace."""
     r_lower = role.lower()
-    template_key = "software"
-    if any(k in r_lower for k in ["mech", "auto", "design", "cad", "manufacturing", "thermal"]):
+    template_key = "mechanical"
+    if any(k in r_lower for k in ["finan", "bank", "account", "audit", "tax", "wealth", "credit"]):
+        template_key = "finance"
+    elif any(k in r_lower for k in ["civil", "infra", "construct", "struct", "survey", "bim"]):
+        template_key = "civil"
+    elif any(k in r_lower for k in ["pharma", "drug", "health", "biochem", "formulat", "clinic"]):
+        template_key = "pharma"
+    elif any(k in r_lower for k in ["software", "developer", "coding", "web", "full stack", "cloud", "it", "data science"]):
+        template_key = "software"
+    elif any(k in r_lower for k in ["mech", "auto", "design", "cad", "manufacturing", "thermal", "vehicle"]):
         template_key = "mechanical"
 
     tmpl = DOMAIN_ROADMAP_TEMPLATES[template_key]

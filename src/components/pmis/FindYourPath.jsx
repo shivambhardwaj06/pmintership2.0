@@ -32,16 +32,16 @@ const BACKEND_URL = RAW_BACKEND_URL.replace(/\/+$/, "");
 
 // Popular PMIS target role suggestions
 const POPULAR_ROLES = [
-  { title: "Software Development Intern", sector: "IT & Software Development", icon: Cpu },
-  { title: "Data Analyst & Business Intelligence Intern", sector: "IT & Analytics", icon: TrendingUp },
-  { title: "AI & Machine Learning Research Intern", sector: "IT & Artificial Intelligence", icon: Sparkles },
-  { title: "Automotive Engineering Intern", sector: "Automotive & Electric Vehicles", icon: Briefcase },
-  { title: "Renewable Energy & Solar Project Intern", sector: "Oil, Gas & Energy", icon: Award },
-  { title: "Corporate Finance & Equity Research Intern", sector: "Banking & Financial Services", icon: TrendingUp },
+  { title: "Automotive & EV Engineering Intern", sector: "Automotive & Electric Vehicles", icon: Briefcase },
+  { title: "Corporate Finance & Banking Operations Intern", sector: "Banking & Financial Services", icon: TrendingUp },
   { title: "Civil Site & Infrastructure Planning Intern", sector: "Infrastructure & Construction", icon: Layers },
-  { title: "VLSI & Semiconductor Verification Intern", sector: "Semiconductor & Electronics", icon: Cpu },
-  { title: "Supply Chain & Logistics Operations Intern", sector: "Supply Chain & Retail", icon: Compass },
   { title: "Pharmaceutical Quality Assurance Intern", sector: "Pharmaceuticals & Healthcare", icon: Award },
+  { title: "Renewable Energy & Solar Project Intern", sector: "Oil, Gas & Energy", icon: Award },
+  { title: "Software & Digital Systems Intern", sector: "IT & Software Development", icon: Cpu },
+  { title: "Supply Chain & Logistics Operations Intern", sector: "Supply Chain & Retail", icon: Compass },
+  { title: "Data Analyst & Business Intelligence Intern", sector: "Analytics & Management", icon: TrendingUp },
+  { title: "VLSI & Semiconductor Verification Intern", sector: "Semiconductor & Electronics", icon: Cpu },
+  { title: "Mechanical Design & Manufacturing Intern", sector: "Manufacturing & Heavy Industries", icon: Briefcase },
 ];
 
 const ACADEMIC_LEVELS = [
@@ -56,10 +56,359 @@ const PACES = [
   { id: "16-week", label: "16-Week Deep Mastery", hours: "6-8 hrs/wk", intensity: "Steady & Thorough" },
 ];
 
-// Fallback robust templates matching various engineering, business, and tech sectors
+// Fallback robust templates matching diverse engineering, manufacturing, business, healthcare, and tech sectors
 const FALLBACK_ROADMAPS = {
+  automotive: {
+    target_role: "Automotive & EV Engineering Intern",
+    target_sector: "Automotive & Electric Vehicles",
+    academic_level: "Pre-Final Year (3rd Year)",
+    pace: "12-Week Comprehensive",
+    estimated_hours_per_week: "10-12 hrs/week",
+    summary:
+      "A structured 12-week roadmap designed to take you from 3D CAD modeling and vehicle dynamics to structural FEA simulation, electric powertrain design, and clearing technical rounds at Tata Motors, Maruti Suzuki, and Mahindra.",
+    key_competencies_mastered: [
+      "SolidWorks & AutoCAD Parametric 3D CAD",
+      "Geometric Dimensioning & Tolerancing (GD&T)",
+      "ANSYS Mechanical FEA Stress & Modal Analysis",
+      "EV Battery Thermal & Powertrain Basics",
+      "Shop-floor Quality Standards (Six Sigma, DFMEA)",
+      "STAR Interview Method & CAD Portfolio Defense",
+    ],
+    phases: [
+      {
+        phase_number: 1,
+        title: "Phase 1: 3D CAD Modeling & Tolerancing Standards",
+        weeks: "Weeks 1 - 3",
+        goal: "Master parametric mechanical part design, 2D drafting standards, and GD&T principles.",
+        milestones: [
+          "Complete 40+ complex part and assembly models in SolidWorks or AutoCAD complying with ISO/ASME standards.",
+          "Master Geometric Dimensioning & Tolerancing (GD&T): datums, runout, true position, and surface flatness.",
+          "Review vehicle dynamics fundamentals: suspension kinematics, steering geometry, and braking torque.",
+          "Build a digital CAD portfolio link (GrabCAD / cloud folder) highlighting 3D exploded assembly renders.",
+        ],
+        recommended_tools: ["SolidWorks", "AutoCAD", "MATLAB", "GrabCAD"],
+        free_resources: [
+          { name: "SolidWorks Official Tutorials", url: "https://www.solidworks.com" },
+          { name: "NPTEL Strength of Materials (IIT Kharagpur)", url: "https://nptel.ac.in" },
+          { name: "SAE India Engineering Lecture Series", url: "https://saeindia.org" },
+        ],
+      },
+      {
+        phase_number: 2,
+        title: "Phase 2: FEA Structural Simulation & Manufacturing Drawings",
+        weeks: "Weeks 4 - 7",
+        goal: "Perform structural stress calculations and produce production-ready manufacturing blueprints.",
+        milestones: [
+          "Run linear static stress, modal, and fatigue simulations in ANSYS Mechanical with mesh convergence checks.",
+          "Design an automotive subsystem (e.g., control arm, chassis bracket, or reduction gearbox) with factor of safety >= 1.5.",
+          "Specify sheet metal fabrication tolerances, weldment callouts, and CNC machining parameters.",
+          "Create complete 2D manufacturing drawings with detailed Bill of Materials (BOM) and revision blocks.",
+        ],
+        recommended_tools: ["ANSYS Mechanical", "SolidWorks Simulation", "Excel Engineering Calculators"],
+        free_resources: [
+          { name: "Cornell Ansys FEA Free SimCafe", url: "https://confluence.cornell.edu" },
+          { name: "MIT OpenCourseWare Machine Design", url: "https://ocw.mit.edu" },
+        ],
+      },
+      {
+        phase_number: 3,
+        title: "Phase 3: EV Powertrains & Industrial Quality Systems",
+        weeks: "Weeks 8 - 10",
+        goal: "Equip yourself with high-demand Electric Vehicle (EV) systems and Lean manufacturing competencies.",
+        milestones: [
+          "Study EV battery pack structural enclosures, thermal management circuits, and regenerative braking.",
+          "Apply Design for Manufacturing and Assembly (DFMA) and Failure Mode & Effect Analysis (DFMEA).",
+          "Complete a Lean Six Sigma project analyzing plant cycle time reduction and scrap minimization.",
+          "Review plant safety standards (OSHA / ISO 45001) and automotive supply chain traceability.",
+        ],
+        recommended_tools: ["MATLAB Simulink", "FMEA Quality Matrices", "Excel Statistical Sheets"],
+        free_resources: [
+          { name: "EV Powertrain Fundamentals (NPTEL)", url: "https://nptel.ac.in" },
+          { name: "Lean Six Sigma Yellow Belt Overview", url: "https://www.coursera.org" },
+        ],
+      },
+      {
+        phase_number: 4,
+        title: "Phase 4: CAD Defense & Automotive Corporate Selections",
+        weeks: "Weeks 11 - 12",
+        goal: "Refine your 1-page ATS resume with direct portfolio hyperlinks and clear automotive panel interviews.",
+        milestones: [
+          "Condense resume into strict 1-page layout with clickable CAD portfolio and FSAE/BAJA project metrics.",
+          "Practice 10 mock technical interviews defending FEA mesh choices, material selections, and GD&T callouts.",
+          "Prepare plant situational responses: explain how you handle assembly line bottlenecks and quality defects.",
+          "Submit direct applications to top PMIS automotive leaders (Tata Motors, Maruti Suzuki, Mahindra, Hero MotoCorp).",
+        ],
+        recommended_tools: ["GrabCAD Portfolio", "PMIS Student Dashboard", "Mock Interview Prep"],
+        free_resources: [
+          { name: "Automotive Technical Interview Guide", url: "https://youtu.be/3CvKe1P30jA" },
+          { name: "PM Internship Scheme MCA Portal", url: "https://pminternship.mca.gov.in" },
+        ],
+      },
+    ],
+  },
+  finance: {
+    target_role: "Corporate Finance & Banking Operations Intern",
+    target_sector: "Banking & Financial Services",
+    academic_level: "Pre-Final Year (3rd Year)",
+    pace: "12-Week Comprehensive",
+    estimated_hours_per_week: "10-12 hrs/week",
+    summary:
+      "A structured 12-week roadmap covering financial statement analysis, 3-statement financial modeling, credit risk assessment, and banking compliance for premier roles at HDFC Bank, ICICI Bank, and SBI.",
+    key_competencies_mastered: [
+      "Financial Statement Analysis (P&L, Balance Sheet, Cash Flow)",
+      "Dynamic 3-Statement Financial Modeling in Excel",
+      "Ratio Analysis, Working Capital & Credit Risk Assessment",
+      "Retail & Corporate Banking Regulatory Norms (RBI, KYC, AML)",
+      "Power BI Financial Dashboards & Reporting",
+      "Corporate Banking STAR Technical Interviews",
+    ],
+    phases: [
+      {
+        phase_number: 1,
+        title: "Phase 1: Financial Accounting & Advanced Spreadsheet Mastery",
+        weeks: "Weeks 1 - 3",
+        goal: "Build mathematical speed, dynamic Excel modeling fluency, and financial statement comprehension.",
+        milestones: [
+          "Master advanced Excel: INDEX-MATCH, XLOOKUP, dynamic arrays, nested IFs, and Goal Seek.",
+          "Analyze 5 published annual reports of BSE/NSE-listed companies across different sectors.",
+          "Calculate and interpret 25+ key financial ratios: Liquidity, Solvency, Turnover, and Profitability.",
+          "Structure standard corporate balance sheet reconciliations and working capital tracking sheets.",
+        ],
+        recommended_tools: ["Advanced Excel", "TallyPrime", "Google Sheets", "BSE/NSE Annual Reports"],
+        free_resources: [
+          { name: "Corporate Finance Institute (CFI) Free Resources", url: "https://corporatefinanceinstitute.com" },
+          { name: "Khan Academy Finance & Capital Markets", url: "https://www.khanacademy.org" },
+        ],
+      },
+      {
+        phase_number: 2,
+        title: "Phase 2: 3-Statement Modeling & Credit Risk Evaluation",
+        weeks: "Weeks 4 - 7",
+        goal: "Construct integrated financial forecast models and assess corporate creditworthiness.",
+        milestones: [
+          "Project 1: Build a fully dynamic 3-statement financial model linking Income Statement, Balance Sheet, and Cash Flow.",
+          "Project 2: Conduct credit appraisal of an SME borrower: debt-service coverage ratio (DSCR), collateral evaluation, and sensitivity tables.",
+          "Model discounted cash flows (DCF) with weighted average cost of capital (WACC) calculations.",
+          "Automate variance analysis comparing quarterly budgeted figures against actual disbursements.",
+        ],
+        recommended_tools: ["Microsoft Excel", "Financial Modeling Templates", "Statutory Ratio Sheets"],
+        free_resources: [
+          { name: "Aswath Damodaran Corporate Finance Online", url: "https://pages.stern.nyu.edu/~adamodar" },
+          { name: "NPTEL Financial Accounting (IIT Bombay)", url: "https://nptel.ac.in" },
+        ],
+      },
+      {
+        phase_number: 3,
+        title: "Phase 3: Banking Governance, KYC & Power BI Analytics",
+        weeks: "Weeks 8 - 10",
+        goal: "Gain mastery over retail banking operations, statutory compliance, and executive dashboards.",
+        milestones: [
+          "Study RBI master circulars on KYC norms, Anti-Money Laundering (AML), and NPA classifications.",
+          "Build an interactive Power BI dashboard tracking loan portfolio quality, risk brackets, and regional branch disbursements.",
+          "Understand retail asset products: Home Loans, Auto Loans, Working Capital Lines, and Letters of Credit.",
+          "Review audit trail procedures, statutory banking inspection checklists, and fraud detection mechanisms.",
+        ],
+        recommended_tools: ["Power BI", "Excel Data Models", "RBI Master Circulars"],
+        free_resources: [
+          { name: "Reserve Bank of India (RBI) Official Bulletins", url: "https://rbi.org.in" },
+          { name: "Microsoft Power BI Guided Learning", url: "https://learn.microsoft.com" },
+        ],
+      },
+      {
+        phase_number: 4,
+        title: "Phase 4: Banking ATS Profile & Technical Interview Rounds",
+        weeks: "Weeks 11 - 12",
+        goal: "Condense accounting and finance projects into a strict 1-page resume and clear bank recruiter rounds.",
+        milestones: [
+          "Format resume into strict 1-page layout highlighting quantifiable financial modeling outcomes and certifications.",
+          "Practice 10 mock interviews tackling cash flow adjustments, working capital shocks, and credit risk scenarios.",
+          "Review macroeconomic indicators: Repo rate impacts, inflation indices, and current banking trends.",
+          "Submit direct applications to top PMIS banking and financial institutions (HDFC Bank, State Bank of India, ICICI Bank, Axis Bank).",
+        ],
+        recommended_tools: ["ATS Resume Checker", "PMIS Student Dashboard", "Mock Finance Rounds"],
+        free_resources: [
+          { name: "Corporate Banking Interview Questions", url: "https://youtu.be/QBX7RkhuyCA" },
+          { name: "PM Internship Scheme MCA Portal", url: "https://pminternship.mca.gov.in" },
+        ],
+      },
+    ],
+  },
+  civil: {
+    target_role: "Civil Site & Infrastructure Planning Intern",
+    target_sector: "Infrastructure & Construction",
+    academic_level: "Pre-Final Year (3rd Year)",
+    pace: "12-Week Comprehensive",
+    estimated_hours_per_week: "10-12 hrs/week",
+    summary:
+      "A structured 12-week roadmap covering structural drafting, IS 456 / IS 800 code compliance, Bar Bending Schedules (BBS), and site project scheduling for infrastructure roles at Larsen & Toubro, Tata Projects, and Afcons.",
+    key_competencies_mastered: [
+      "AutoCAD Civil 3D & Structural Drafting",
+      "STAAD.Pro / ETABS Structural Modeling",
+      "IS Code Compliance (IS 456 Concrete, IS 800 Steel)",
+      "Bar Bending Schedule (BBS) & Quantity Surveying",
+      "MS Project Construction Scheduling & Site Safety",
+      "Infrastructure Site Management & STAR Interviews",
+    ],
+    phases: [
+      {
+        phase_number: 1,
+        title: "Phase 1: Structural Drafting & Code Fundamentals",
+        weeks: "Weeks 1 - 3",
+        goal: "Master architectural drafting, structural plan reading, and national building code standards.",
+        milestones: [
+          "Draft 30+ detailed foundation, column, and beam reinforcement layouts in AutoCAD Civil 3D.",
+          "Master Indian Standard structural design codes: IS 456:2000 (RCC) and IS 800:2007 (Steel).",
+          "Study soil mechanics reports: bearing capacity calculations, settlement limits, and footing selections.",
+          "Interpret complex site structural blueprints, elevation profiles, and cross-sectional details.",
+        ],
+        recommended_tools: ["AutoCAD Civil 3D", "IS 456 / IS 800 Codebooks", "Drafting Templates"],
+        free_resources: [
+          { name: "NPTEL Design of Reinforced Concrete Structures (IIT Kharagpur)", url: "https://nptel.ac.in" },
+          { name: "Autodesk Civil 3D Free Student Guide", url: "https://autodesk.com/education" },
+        ],
+      },
+      {
+        phase_number: 2,
+        title: "Phase 2: Structural Analysis & Quantity Surveying",
+        weeks: "Weeks 4 - 7",
+        goal: "Model framed structures under dead, live, and seismic loads, and compute material take-offs.",
+        milestones: [
+          "Project 1: Analyze a G+4 residential/commercial RCC building in STAAD.Pro or ETABS under IS 1893 seismic criteria.",
+          "Project 2: Calculate complete structural quantity estimations: concrete volume, formwork area, and brickwork count.",
+          "Generate comprehensive Bar Bending Schedules (BBS) for slabs, beams, and isolated footings in Excel.",
+          "Perform slump tests, cube compressive strength evaluations, and sieve gradation analyses on paper.",
+        ],
+        recommended_tools: ["STAAD.Pro / ETABS", "Excel BBS Worksheets", "Quantity Surveying Sheets"],
+        free_resources: [
+          { name: "STAAD.Pro Official Learning Tutorials", url: "https://bentley.com" },
+          { name: "CPWD Specifications & Measurement Standards", url: "https://cpwd.gov.in" },
+        ],
+      },
+      {
+        phase_number: 3,
+        title: "Phase 3: Construction Project Scheduling & Site Safety",
+        weeks: "Weeks 8 - 10",
+        goal: "Master construction project milestones, equipment logistics, and site safety management.",
+        milestones: [
+          "Develop a Gantt chart project schedule with Critical Path Method (CPM) milestones in MS Project.",
+          "Study plant equipment logistics: RMC batching plants, tower cranes, transit mixers, and concrete pumps.",
+          "Complete safety checklist training: scaffolding inspection, excavation shoring, and PPE compliance.",
+          "Learn Environmental Health and Safety (EHS) and green building certification norms (IGBC / GRIHA).",
+        ],
+        recommended_tools: ["MS Project / Primavera", "Site Safety Checklists", "BIM Viewer"],
+        free_resources: [
+          { name: "Construction Project Management (NPTEL)", url: "https://nptel.ac.in" },
+          { name: "Indian Green Building Council (IGBC) Resources", url: "https://igbc.in" },
+        ],
+      },
+      {
+        phase_number: 4,
+        title: "Phase 4: Site Portfolio & Infrastructure Selections",
+        weeks: "Weeks 11 - 12",
+        goal: "Present structural drawings in a digital portfolio and secure placements at premier infrastructure giants.",
+        milestones: [
+          "Compile a 1-page ATS resume featuring sample AutoCAD drawings and STAAD.Pro calculation summaries.",
+          "Practice 10 mock interviews explaining bar detailing, mix design grades (M25/M30), and curing protocols.",
+          "Prepare site case studies: discuss how you would address concrete honeycombing or project delays.",
+          "Submit direct applications to top PMIS infrastructure developers (Larsen & Toubro, Tata Projects, Afcons Infrastructure).",
+        ],
+        recommended_tools: ["Drawing Portfolio Link", "PMIS Student Dashboard", "Mock Interview Prep"],
+        free_resources: [
+          { name: "L&T Civil Interview Preparation Insights", url: "https://youtu.be/QBX7RkhuyCA" },
+          { name: "PM Internship Scheme MCA Portal", url: "https://pminternship.mca.gov.in" },
+        ],
+      },
+    ],
+  },
+  pharma: {
+    target_role: "Pharmaceutical Quality Assurance Intern",
+    target_sector: "Pharmaceuticals & Healthcare",
+    academic_level: "Pre-Final Year (3rd Year)",
+    pace: "12-Week Comprehensive",
+    estimated_hours_per_week: "10-12 hrs/week",
+    summary:
+      "A structured 12-week masterplan covering drug formulation, analytical chemistry instrumentation (HPLC, UV-Vis), cGMP compliance, and QA/QC documentation for top pharma leaders like Sun Pharma, Cipla, and Dr. Reddy's.",
+    key_competencies_mastered: [
+      "HPLC, UV-Vis Spectrophotometry & Dissolution Testing",
+      "Good Manufacturing Practices (cGMP) & GLP Compliance",
+      "Indian Pharmacopoeia (IP) & US FDA Regulatory Standards",
+      "Standard Operating Procedure (SOP) Formulation & Audits",
+      "Batch Manufacturing Records (BMR) & Stability Testing",
+      "Pharmaceutical QA/QC Technical STAR Interviews",
+    ],
+    phases: [
+      {
+        phase_number: 1,
+        title: "Phase 1: Analytical Chemistry & Lab Instrumentation",
+        weeks: "Weeks 1 - 3",
+        goal: "Master high-precision pharmaceutical analysis equipment, chemical assay principles, and lab safety.",
+        milestones: [
+          "Study High-Performance Liquid Chromatography (HPLC) instrumentation: pumps, columns, detectors, and mobile phases.",
+          "Understand UV-Vis spectrophotometry principles: Beer-Lambert law, wavelength calibration, and standard curves.",
+          "Review dissolution apparatus (Type I Basket & Type II Paddle) operation protocols and release rate curves.",
+          "Master Good Laboratory Practices (GLP): volumetric calibration, analytical weighing, and reagent labeling.",
+        ],
+        recommended_tools: ["HPLC Simulators", "UV-Vis Calibration Sheets", "Lab ChemDraw", "IP / USP Standards"],
+        free_resources: [
+          { name: "NPTEL Industrial Pharmacy & Drug Delivery (IIT BHU)", url: "https://nptel.ac.in" },
+          { name: "Indian Pharmacopoeia Commission Resources", url: "https://ipc.gov.in" },
+        ],
+      },
+      {
+        phase_number: 2,
+        title: "Phase 2: Formulation R&D, Stability & Assay Testing",
+        weeks: "Weeks 4 - 7",
+        goal: "Conduct dosage formulation evaluations, stability protocols, and active pharmaceutical ingredient (API) assays.",
+        milestones: [
+          "Project 1: Develop a comprehensive quality assay protocol for a solid oral dosage tablet according to IP standards.",
+          "Project 2: Design accelerated stability testing schedules (40°C / 75% RH) following ICH Q1A guidelines.",
+          "Draft complete Batch Manufacturing Records (BMR) and Batch Packaging Records (BPR).",
+          "Analyze physical parameters: tablet hardness, friability, disintegration time, and weight variation.",
+        ],
+        recommended_tools: ["Stability Matrix Sheets", "BMR Documentation Templates", "Excel Biostatistics"],
+        free_resources: [
+          { name: "ICH Official Quality Guidelines", url: "https://www.ich.org" },
+          { name: "US FDA Good Manufacturing Practice Guidance", url: "https://www.fda.gov" },
+        ],
+      },
+      {
+        phase_number: 3,
+        title: "Phase 3: cGMP Regulatory Compliance & Quality Audits",
+        weeks: "Weeks 8 - 10",
+        goal: "Master industrial regulatory compliance, cleanroom protocols, and pharmaceutical quality assurance.",
+        milestones: [
+          "Deep-dive into Current Good Manufacturing Practices (cGMP) guidelines (Schedule M and WHO-GMP).",
+          "Draft Standard Operating Procedures (SOPs) for instrument operation, cleaning validation, and calibration.",
+          "Understand cleanroom HVAC classifications (ISO Class 5 to 8) and microbial air sampling methods.",
+          "Learn Out of Specification (OOS) and Out of Trend (OOT) root cause investigation frameworks.",
+        ],
+        recommended_tools: ["SOP Templates", "OOS Investigation Worksheets", "Cleanroom Protocols"],
+        free_resources: [
+          { name: "WHO Good Manufacturing Practices Guidelines", url: "https://who.int" },
+          { name: "Pharmaguideline Regulatory QA Knowledgebase", url: "https://www.pharmaguideline.com" },
+        ],
+      },
+      {
+        phase_number: 4,
+        title: "Phase 4: Pharma ATS Profile & Regulatory Interview Prep",
+        weeks: "Weeks 11 - 12",
+        goal: "Tailor your 1-page ATS resume with exact lab instrument keywords and clear corporate pharma interviews.",
+        milestones: [
+          "Condense resume into strict 1-page layout highlighting hands-on HPLC, UV, and cGMP compliance experience.",
+          "Practice 10 mock technical interviews covering mobile phase preparation, retention times, and validation parameters.",
+          "Review regulatory audit questions: explain handling of contamination, deviations, and documentation integrity (ALCOA+).",
+          "Submit direct applications to top PMIS pharmaceutical corporations (Sun Pharma, Dr. Reddy's Laboratories, Cipla, Lupin).",
+        ],
+        recommended_tools: ["ATS Resume Checker", "PMIS Student Dashboard", "Mock Pharma Rounds"],
+        free_resources: [
+          { name: "Pharmaceutical Quality Interview Preparation", url: "https://youtu.be/QBX7RkhuyCA" },
+          { name: "PM Internship Scheme MCA Portal", url: "https://pminternship.mca.gov.in" },
+        ],
+      },
+    ],
+  },
   software: {
-    target_role: "Software Development Intern",
+    target_role: "Software & Digital Systems Intern",
     target_sector: "IT & Software Development",
     academic_level: "Pre-Final Year (3rd Year)",
     pace: "12-Week Comprehensive",
@@ -138,7 +487,7 @@ const FALLBACK_ROADMAPS = {
           "Condense resume into strict 1-page single-column ATS layout with measurable metrics (e.g. 'Reduced latency 35%').",
           "Practice 10 mock technical interviews using the STAR method for past project challenges.",
           "Prepare system architecture breakdowns: explain database trade-offs, caching, and auth tokens.",
-          "Submit direct applications to top PMIS technology partners (TCS, Infosys, Wipro, Google, HDFC).",
+          "Submit direct applications to top PMIS corporate partners (Maruti Suzuki, HDFC Bank, L&T, Sun Pharma, Tata Group).",
         ],
         recommended_tools: ["ATS Resume Checker", "LeetCode Mock Rounds", "PMIS Portal"],
         free_resources: [
@@ -162,7 +511,7 @@ function getWeekRanges(paceId) {
 }
 
 export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore }) {
-  const [selectedRole, setSelectedRole] = useState("Software Development Intern");
+  const [selectedRole, setSelectedRole] = useState("Automotive & EV Engineering Intern");
   const [customRoleInput, setCustomRoleInput] = useState("");
   const [selectedAcademic, setSelectedAcademic] = useState("pre_final");
   const [selectedPace, setSelectedPace] = useState("12-week");
@@ -301,6 +650,49 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
       const weekRanges = getWeekRanges(selectedPace);
       const totalWeeks = selectedPace === "8-week" ? 8 : selectedPace === "16-week" ? 16 : 12;
 
+      // Check if we have an explicit structured roadmap in FALLBACK_ROADMAPS first
+      let templateKey = null;
+      if (/auto|mech|vehicle|powertrain|cad|fea|manufacturing/i.test(target)) {
+        templateKey = "automotive";
+      } else if (/finan|bank|account|audit|tax|wealth|credit/i.test(target)) {
+        templateKey = "finance";
+      } else if (/civil|infra|construct|struct|survey|bim/i.test(target)) {
+        templateKey = "civil";
+      } else if (/pharma|drug|health|biochem|formulat|clinic/i.test(target)) {
+        templateKey = "pharma";
+      } else if (/software|developer|coding|web|full stack|cloud|it\b/i.test(target)) {
+        templateKey = "software";
+      }
+
+      if (templateKey && FALLBACK_ROADMAPS[templateKey]) {
+        const tmpl = JSON.parse(JSON.stringify(FALLBACK_ROADMAPS[templateKey]));
+        tmpl.target_role = target;
+        tmpl.pace = paceObj?.label || "12-Week Comprehensive";
+        tmpl.estimated_hours_per_week = paceObj?.hours || "10-12 hrs/week";
+        tmpl.academic_level = ACADEMIC_LEVELS.find((a) => a.id === selectedAcademic)?.label || tmpl.academic_level;
+        tmpl.phases.forEach((p, idx) => {
+          if (weekRanges[idx]) p.weeks = weekRanges[idx];
+        });
+        setRoadmap(tmpl);
+        setSelectedRole(target);
+        setCustomRoleInput("");
+        return;
+      }
+
+      // General multi-sector fallback tailored to the candidate's target field
+      let sectorTools = ["Domain Professional Suite", "MS Excel / Spreadsheets", "Technical Standards Codebook", "Project Collaboration Suite"];
+      let sectorPartners = "Maruti Suzuki, HDFC Bank, Larsen & Toubro, Sun Pharma, Tata Group";
+      if (/energy|solar|power|oil|gas/i.test(target)) {
+        sectorTools = ["P&ID Modeling", "Energy Audit Software", "Excel Plant Sheets", "Safety Checklists"];
+        sectorPartners = "Reliance Industries, NTPC, Adani Power, Indian Oil Corporation";
+      } else if (/supply chain|logistics|retail/i.test(target)) {
+        sectorTools = ["ERP Systems (SAP/Tally)", "Advanced Excel", "Warehouse Management Tools", "Inventory Metrics"];
+        sectorPartners = "Flipkart, ITC Limited, Tata Consumer Products, Reliance Retail";
+      } else if (/semiconductor|vlsi|electronics/i.test(target)) {
+        sectorTools = ["Verilog / VHDL", "KiCad PCB Design", "MATLAB Simulink", "Oscilloscopes"];
+        sectorPartners = "Tata Electronics, Bharat Electronics Limited (BEL), Schneider Electric";
+      }
+
       // Construct dynamic fallback with exact user-selected pace
       const fallback = {
         target_role: target,
@@ -323,49 +715,49 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
             weeks: weekRanges[0],
             goal: `Master core tools, standards, and domain workflows for ${target}.`,
             milestones: [
-              `Set up the production development / analytical environment tailored to ${target}.`,
-              "Master primary tool syntax, standard libraries, and workflow automation.",
+              `Set up the professional / analytical environment tailored to ${target}.`,
+              "Master primary tool workflows, standard operating procedures, and industry protocols.",
               "Review 20+ real-world case studies and PMIS corporate job descriptions in this domain.",
-              "Document foundational learnings in a dedicated GitHub repository or Notion portfolio.",
+              "Document foundational learnings in a structured technical notebook or digital portfolio.",
             ],
-            recommended_tools: ["VS Code / Domain IDE", "Git", "PostgreSQL / Excel", "Postman / Figma"],
+            recommended_tools: sectorTools,
             free_resources: [
-              { name: "Official Documentation & Reference Guides", url: "https://developer.mozilla.org" },
-              { name: "FreeCodeCamp & Open Courseware", url: "https://www.freecodecamp.org" },
+              { name: "Official Documentation & Reference Guides", url: "https://pminternship.mca.gov.in" },
+              { name: "NPTEL & Open Courseware Hub", url: "https://nptel.ac.in" },
             ],
           },
           {
             phase_number: 2,
             title: "Phase 2: Production Portfolio Projects",
             weeks: weekRanges[1],
-            goal: "Build 2 end-to-end, high-impact projects that demonstrate end-to-end execution.",
+            goal: "Build 2 high-impact, verifiable projects demonstrating end-to-end execution.",
             milestones: [
-              `Project 1: Develop a comprehensive prototype solving a real-world problem in ${target}.`,
-              "Project 2: Implement advanced features, error boundaries, and performance benchmarks.",
-              "Host project demo live or record a 2-minute video walkthrough on LinkedIn.",
-              "Write a compelling technical case study detailing architecture decisions and trade-offs.",
+              `Project 1: Develop a comprehensive prototype or audit solving an industry problem in ${target}.`,
+              "Project 2: Implement advanced quality checks, error limits, and measurable benchmarks.",
+              "Document findings in a crisp 2-page executive summary or slide deck.",
+              "Write a compelling technical case study detailing decision trade-offs and business impact.",
             ],
-            recommended_tools: ["GitHub", "Docker / Cloud Hosting", "Analytics Suite"],
+            recommended_tools: sectorTools,
             free_resources: [
-              { name: "Full Stack Open / Open Source Guides", url: "https://fullstackopen.com" },
-              { name: "GitHub Student Developer Pack", url: "https://education.github.com/pack" },
+              { name: "PM Internship Scheme MCA Portal", url: "https://pminternship.mca.gov.in" },
+              { name: "Harvard Case & Action Method Guide", url: "https://careerservices.fas.harvard.edu" },
             ],
           },
           {
             phase_number: 3,
             title: "Phase 3: Industry Rigor & Quality Standards",
             weeks: weekRanges[2],
-            goal: "Apply automated verification, enterprise quality benchmarks, and industry compliance.",
+            goal: "Apply enterprise verification, quality benchmarks, and industry compliance.",
             milestones: [
-              "Conduct code reviews or peer audits against enterprise best practices.",
-              "Test edge cases, stress limits, and security vulnerabilities.",
-              "Participate in a national level hackathon or open-source community sprint.",
-              "Publish an insightful article or breakdown explaining your project's technical architecture.",
+              "Conduct peer reviews or audit against national industrial quality norms.",
+              "Test edge cases, safety tolerances, and regulatory adherence.",
+              "Participate in a corporate problem-solving sprint or professional workshop.",
+              "Publish an insightful summary breaking down your project's methodology and results.",
             ],
-            recommended_tools: ["CI/CD Pipelines", "Automated Testing", "Performance Profilers"],
+            recommended_tools: ["Quality Audit Sheets", "Regulatory Guidelines", "Statistical Analysis"],
             free_resources: [
-              { name: "AWS Free Tier & Cloud Architecture", url: "https://aws.amazon.com/training" },
-              { name: "Google Developers Free Workshops", url: "https://developers.google.com" },
+              { name: "National Quality Council Standards", url: "https://qcin.org" },
+              { name: "PM Internship Scheme Portal", url: "https://pminternship.mca.gov.in" },
             ],
           },
           {
@@ -376,12 +768,12 @@ export default function FindYourPath({ user, onRequireAuth, onNavigateToExplore 
             milestones: [
               `Target resume bullet points to mirror exact competencies of ${target}.`,
               "Run ATS compliance audit to ensure single-column clean parsing with actionable metrics.",
-              "Practice 8 mock interview rounds using the STAR method for technical behavioral questions.",
-              "Submit PMIS applications to top 500 partner companies actively recruiting in this role.",
+              "Practice 8 mock interview rounds using the STAR method for behavioral and domain questions.",
+              `Submit PMIS applications to top corporate partners (${sectorPartners}).`,
             ],
             recommended_tools: ["ATS Checker", "PMIS Student Dashboard", "Mock Interview Prep"],
             free_resources: [
-              { name: "Interview Round Strategies (Kushal Vijay & Fraz)", url: "https://youtu.be/QBX7RkhuyCA" },
+              { name: "Interview Round Strategies Guide", url: "https://youtu.be/QBX7RkhuyCA" },
               { name: "PM Internship Scheme MCA Portal", url: "https://pminternship.mca.gov.in" },
             ],
           },

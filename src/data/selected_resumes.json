@@ -1,45 +1,5 @@
 [
   {
-    "id": "res_cse_01",
-    "branch_category": "Computer Science / IT",
-    "candidate": "Priya Sharma (Shortlisted)",
-    "role": "Software Development Intern",
-    "company": "Tata Consultancy Services (TCS)",
-    "sector": "IT & Software Development",
-    "college": "State Technological University",
-    "cgpa": "8.4 / 10",
-    "academic_degree": "B.Tech Computer Science & Engineering (3rd Year)",
-    "match_score": "96% Selection Match",
-    "shortlist_factors": [
-      "Strict 1-page layout highlighting verifiable GitHub repositories with live demo links.",
-      "Showcased 2 practical full-stack projects using Python, FastAPI, and Git with quantifiable outcomes.",
-      "Demonstrated unit testing rigor (pytest) and basic database optimization (indexing & query tuning).",
-      "Clear section on data structures with hackathon problem-solving credentials."
-    ],
-    "highlighted_skills": ["Python", "FastAPI", "Git", "Data Structures", "SQL", "Unit Testing", "React"],
-    "recruiter_feedback": "Corporate tech screeners spend under 15 seconds. Highlighting 3 core tools with live code repositories got her straight into Round 1."
-  },
-  {
-    "id": "res_cse_01_dev",
-    "branch_category": "Computer Science / IT",
-    "candidate": "Dev Raj Singh (Shortlisted)",
-    "role": "Full Stack Developer / Software Engineer",
-    "company": "Leading Enterprise Software Firm",
-    "sector": "IT & Software Development",
-    "college": "Maulana Abul Kalam Azad University of Technology (TMSL)",
-    "cgpa": "8.6 / 10",
-    "academic_degree": "B.Tech. in Computer Science and Engineering",
-    "match_score": "98% Selection Match",
-    "shortlist_factors": [
-      "Strict 1-page layout with high-impact single-column hierarchy and zero ATS formatting issues.",
-      "Proven production full-stack SaaS project metrics: 'reduced deployment times by 50%', 'reduced AWS costing and DB calls by 40%'.",
-      "Live deployment links (Render/Vercel) and public GitHub code repositories embedded directly in project headers.",
-      "600+ LeetCode/HackerRank algorithmic problems solved with national hackathon podium finishes (Smart India Hackathon, SFSU Hacks)."
-    ],
-    "highlighted_skills": ["Full stack development", "REST API", "SQL", "JavaScript", "TypeScript", "Next.js", "Python", "PostgreSQL", "Redis", "React", "MongoDB", "Node.js", "Docker", "AWS", "CI/CD & DevOps"],
-    "recruiter_feedback": "Corporate tech evaluators spend under 15 seconds per CV. Having measurable production metrics (e.g. 50% deployment speedup) and live GitHub links guaranteed immediate progression to the final interview round."
-  },
-  {
     "id": "res_mech_02",
     "branch_category": "Mechanical & Automobile",
     "candidate": "Rohan Deshmukh (Shortlisted)",
@@ -58,66 +18,6 @@
     ],
     "highlighted_skills": ["SolidWorks", "AutoCAD", "Thermodynamics", "EV Powertrains", "Finite Element Analysis", "Lean Basics"],
     "recruiter_feedback": "Candidates with actual CAD portfolios and FSAE/BAJA fabrication experience receive immediate priority over pure textbook applicants."
-  },
-  {
-    "id": "res_ece_03",
-    "branch_category": "Electrical & Electronics (ECE / EEE)",
-    "candidate": "Aditya Sengupta (Shortlisted)",
-    "role": "Engineering & Technical Documentation Intern",
-    "company": "Bharat Electronics Limited (BEL)",
-    "sector": "Aviation & Defence",
-    "college": "National Institute of Technology (NIT)",
-    "cgpa": "8.2 / 10",
-    "academic_degree": "B.Tech Electronics & Communication (3rd Year)",
-    "match_score": "95% Selection Match",
-    "shortlist_factors": [
-      "Demonstrated hands-on microcontroller programming (STM32, Arduino) and PCB layout in KiCad.",
-      "Documented circuit debugging methodology, oscilloscope signal tracing, and RF basics.",
-      "Highlighted thorough technical documentation skills adhering to defence communication standards.",
-      "Coursework certifications in Embedded C and Digital Signal Processing (DSP)."
-    ],
-    "highlighted_skills": ["Embedded C", "KiCad PCB Design", "Circuit Debugging", "Microcontrollers", "MATLAB", "Technical Documentation"],
-    "recruiter_feedback": "Defence and public electronics units value circuit tracing diligence, safety protocols, and structured test documentation above all else."
-  },
-  {
-    "id": "res_civil_04",
-    "branch_category": "Civil & Infrastructure",
-    "candidate": "Ananya Patel (Shortlisted)",
-    "role": "Project Planning Intern",
-    "company": "Larsen & Toubro (L&T)",
-    "sector": "Infrastructure & Construction",
-    "college": "State Engineering Institute",
-    "cgpa": "8.6 / 10",
-    "academic_degree": "B.Tech Civil Engineering (Final Year)",
-    "match_score": "97% Selection Match",
-    "shortlist_factors": [
-      "Demonstrated proficiency in MS Project and Primavera P6 for construction milestone scheduling.",
-      "Quantified site internship experiences: Concrete volume estimation, Bar Bending Schedules (BBS), and slump tests.",
-      "Certified in Environmental Health & Safety (EHS) and green building rating norms.",
-      "Accurate structural drawing interpretation skills and total station survey fundamentals."
-    ],
-    "highlighted_skills": ["MS Project", "AutoCAD Civil 3D", "Bar Bending Schedule (BBS)", "Quantity Surveying", "Site Safety", "Quality Audits"],
-    "recruiter_feedback": "L&T reviewers seek civil students who already understand site safety checklists and how to read structural blueprints without hand-holding."
-  },
-  {
-    "id": "res_chem_05",
-    "branch_category": "Chemical & Materials",
-    "candidate": "Vikram Choudhary (Shortlisted)",
-    "role": "Energy Operations & Sustainability Intern",
-    "company": "Indian Oil Corporation (IOCL)",
-    "sector": "Oil, Gas & Energy",
-    "college": "University Institute of Chemical Technology",
-    "cgpa": "8.1 / 10",
-    "academic_degree": "B.Tech Chemical Engineering (3rd Year)",
-    "match_score": "93% Selection Match",
-    "shortlist_factors": [
-      "Deep understanding of mass and energy balance calculations and P&ID (Piping & Instrumentation) schematics.",
-      "Simulated distillation column parameters using Aspen Plus with carbon emission reduction calculations.",
-      "Industrial plant safety awareness (HAZOP analysis, PPE compliance, and OSHA standards).",
-      "Strong spreadsheet modeling for refinery operational data tracking."
-    ],
-    "highlighted_skills": ["Aspen Plus", "P&ID Reading", "Mass & Energy Balance", "HAZOP Safety", "Data Recording", "Process Optimization"],
-    "recruiter_feedback": "Chemical process plants prioritize process safety compliance (HAZOP) and familiarity with P&ID drawings."
   },
   {
     "id": "res_finance_06",
@@ -140,6 +40,26 @@
     "recruiter_feedback": "Financial institutions screen heavily for data entry accuracy and mathematical agility in spreadsheets."
   },
   {
+    "id": "res_civil_04",
+    "branch_category": "Civil & Infrastructure",
+    "candidate": "Ananya Patel (Shortlisted)",
+    "role": "Project Planning Intern",
+    "company": "Larsen & Toubro (L&T)",
+    "sector": "Infrastructure & Construction",
+    "college": "State Engineering Institute",
+    "cgpa": "8.6 / 10",
+    "academic_degree": "B.Tech Civil Engineering (Final Year)",
+    "match_score": "97% Selection Match",
+    "shortlist_factors": [
+      "Demonstrated proficiency in MS Project and Primavera P6 for construction milestone scheduling.",
+      "Quantified site internship experiences: Concrete volume estimation, Bar Bending Schedules (BBS), and slump tests.",
+      "Certified in Environmental Health & Safety (EHS) and green building rating norms.",
+      "Accurate structural drawing interpretation skills and total station survey fundamentals."
+    ],
+    "highlighted_skills": ["MS Project", "AutoCAD Civil 3D", "Bar Bending Schedule (BBS)", "Quantity Surveying", "Site Safety", "Quality Audits"],
+    "recruiter_feedback": "L&T reviewers seek civil students who already understand site safety checklists and how to read structural blueprints without hand-holding."
+  },
+  {
     "id": "res_pharma_07",
     "branch_category": "Biotechnology & Healthcare",
     "candidate": "Drithi Nair (Shortlisted)",
@@ -158,6 +78,86 @@
     ],
     "highlighted_skills": ["HPLC Operation", "GMP / GLP Norms", "Quality Control", "Spectrophotometry", "SOP Documentation", "Data Tracking"],
     "recruiter_feedback": "Pharmaceutical QC teams immediately shortlist candidates who can cite exact GMP norms and HPLC experience."
+  },
+  {
+    "id": "res_cse_01",
+    "branch_category": "Computer Science / IT",
+    "candidate": "Priya Sharma (Shortlisted)",
+    "role": "Software Development Intern",
+    "company": "Tata Consultancy Services (TCS)",
+    "sector": "IT & Software Development",
+    "college": "State Technological University",
+    "cgpa": "8.4 / 10",
+    "academic_degree": "B.Tech Computer Science & Engineering (3rd Year)",
+    "match_score": "96% Selection Match",
+    "shortlist_factors": [
+      "Strict 1-page layout highlighting verifiable GitHub repositories with live demo links.",
+      "Showcased 2 practical full-stack projects using Python, FastAPI, and Git with quantifiable outcomes.",
+      "Demonstrated unit testing rigor (pytest) and basic database optimization (indexing & query tuning).",
+      "Clear section on data structures with hackathon problem-solving credentials."
+    ],
+    "highlighted_skills": ["Python", "FastAPI", "Git", "Data Structures", "SQL", "Unit Testing", "React"],
+    "recruiter_feedback": "Corporate tech screeners spend under 15 seconds. Highlighting 3 core tools with live code repositories got her straight into Round 1."
+  },
+  {
+    "id": "res_agri_09",
+    "branch_category": "Agriculture & Life Sciences",
+    "candidate": "Manish Jat (Shortlisted)",
+    "role": "Agriculture Research & Field Data Intern",
+    "company": "Godrej Agrovet",
+    "sector": "Agriculture & Allied Industries",
+    "college": "State Agricultural University",
+    "cgpa": "8.3 / 10",
+    "academic_degree": "B.Sc Agriculture (3rd Year)",
+    "match_score": "94% Selection Match",
+    "shortlist_factors": [
+      "Conducted supervised field trials assessing hybrid seed drought resistance and fertilizer efficacy.",
+      "Organized farmer survey datasets across 12 villages with local language communication skills.",
+      "Demonstrated knowledge of precision agriculture, soil pH telemetry, and integrated pest management (IPM).",
+      "Strong report writing and statistical data organization in Excel."
+    ],
+    "highlighted_skills": ["Field Trial Protocols", "Agronomy Basics", "Soil Science", "Data Collection", "Farmer Communication", "Report Writing"],
+    "recruiter_feedback": "Agri-business companies hire students who combine scientific field observation with practical data recording."
+  },
+  {
+    "id": "res_chem_05",
+    "branch_category": "Chemical & Materials",
+    "candidate": "Vikram Choudhary (Shortlisted)",
+    "role": "Energy Operations & Sustainability Intern",
+    "company": "Indian Oil Corporation (IOCL)",
+    "sector": "Oil, Gas & Energy",
+    "college": "University Institute of Chemical Technology",
+    "cgpa": "8.1 / 10",
+    "academic_degree": "B.Tech Chemical Engineering (3rd Year)",
+    "match_score": "93% Selection Match",
+    "shortlist_factors": [
+      "Deep understanding of mass and energy balance calculations and P&ID (Piping & Instrumentation) schematics.",
+      "Simulated distillation column parameters using Aspen Plus with carbon emission reduction calculations.",
+      "Industrial plant safety awareness (HAZOP analysis, PPE compliance, and OSHA standards).",
+      "Strong spreadsheet modeling for refinery operational data tracking."
+    ],
+    "highlighted_skills": ["Aspen Plus", "P&ID Reading", "Mass & Energy Balance", "HAZOP Safety", "Data Recording", "Process Optimization"],
+    "recruiter_feedback": "Chemical process plants prioritize process safety compliance (HAZOP) and familiarity with P&ID drawings."
+  },
+  {
+    "id": "res_ece_03",
+    "branch_category": "Electrical & Electronics (ECE / EEE)",
+    "candidate": "Aditya Sengupta (Shortlisted)",
+    "role": "Engineering & Technical Documentation Intern",
+    "company": "Bharat Electronics Limited (BEL)",
+    "sector": "Aviation & Defence",
+    "college": "National Institute of Technology (NIT)",
+    "cgpa": "8.2 / 10",
+    "academic_degree": "B.Tech Electronics & Communication (3rd Year)",
+    "match_score": "95% Selection Match",
+    "shortlist_factors": [
+      "Demonstrated hands-on microcontroller programming (STM32, Arduino) and PCB layout in KiCad.",
+      "Documented circuit debugging methodology, oscilloscope signal tracing, and RF basics.",
+      "Highlighted thorough technical documentation skills adhering to defence communication standards.",
+      "Coursework certifications in Embedded C and Digital Signal Processing (DSP)."
+    ],
+    "highlighted_skills": ["Embedded C", "KiCad PCB Design", "Circuit Debugging", "Microcontrollers", "MATLAB", "Technical Documentation"],
+    "recruiter_feedback": "Defence and public electronics units value circuit tracing diligence, safety protocols, and structured test documentation above all else."
   },
   {
     "id": "res_mining_08",
@@ -180,23 +180,23 @@
     "recruiter_feedback": "Heavy industry recruiters value ground plant resilience, physical testing familiarity, and safety discipline."
   },
   {
-    "id": "res_agri_09",
-    "branch_category": "Agriculture & Life Sciences",
-    "candidate": "Manish Jat (Shortlisted)",
-    "role": "Agriculture Research & Field Data Intern",
-    "company": "Godrej Agrovet",
-    "sector": "Agriculture & Allied Industries",
-    "college": "State Agricultural University",
-    "cgpa": "8.3 / 10",
-    "academic_degree": "B.Sc Agriculture (3rd Year)",
-    "match_score": "94% Selection Match",
+    "id": "res_cse_01_dev",
+    "branch_category": "Computer Science / IT",
+    "candidate": "Dev Raj Singh (Shortlisted)",
+    "role": "Full Stack Developer / Software Engineer",
+    "company": "Leading Enterprise Software Firm",
+    "sector": "IT & Software Development",
+    "college": "Maulana Abul Kalam Azad University of Technology (TMSL)",
+    "cgpa": "8.6 / 10",
+    "academic_degree": "B.Tech. in Computer Science and Engineering",
+    "match_score": "98% Selection Match",
     "shortlist_factors": [
-      "Conducted supervised field trials assessing hybrid seed drought resistance and fertilizer efficacy.",
-      "Organized farmer survey datasets across 12 villages with local language communication skills.",
-      "Demonstrated knowledge of precision agriculture, soil pH telemetry, and integrated pest management (IPM).",
-      "Strong report writing and statistical data organization in Excel."
+      "Strict 1-page layout with high-impact single-column hierarchy and zero ATS formatting issues.",
+      "Proven production full-stack SaaS project metrics: 'reduced deployment times by 50%', 'reduced AWS costing and DB calls by 40%'.",
+      "Live deployment links (Render/Vercel) and public GitHub code repositories embedded directly in project headers.",
+      "600+ LeetCode/HackerRank algorithmic problems solved with national hackathon podium finishes (Smart India Hackathon, SFSU Hacks)."
     ],
-    "highlighted_skills": ["Field Trial Protocols", "Agronomy Basics", "Soil Science", "Data Collection", "Farmer Communication", "Report Writing"],
-    "recruiter_feedback": "Agri-business companies hire students who combine scientific field observation with practical data recording."
+    "highlighted_skills": ["Full stack development", "REST API", "SQL", "JavaScript", "TypeScript", "Next.js", "Python", "PostgreSQL", "Redis", "React", "MongoDB", "Node.js", "Docker", "AWS", "CI/CD & DevOps"],
+    "recruiter_feedback": "Corporate tech evaluators spend under 15 seconds per CV. Having measurable production metrics (e.g. 50% deployment speedup) and live GitHub links guaranteed immediate progression to the final interview round."
   }
 ]

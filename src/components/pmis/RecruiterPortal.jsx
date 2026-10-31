@@ -68,25 +68,11 @@ const PMIS_SECTORS = [
 
 const PREMIER_DEMO_RECRUITERS = [
   {
-    company_name: "Tata Consultancy Services",
-    recruiter_name: "Anand Deshpande",
-    designation: "Head of Campus Talent Acquisition",
-    email: "recruiter@tcs.com",
-    sector: "IT & Software Development"
-  },
-  {
     company_name: "Tata Motors",
     recruiter_name: "Suresh K. Nair",
     designation: "Lead Technical Talent Acquisition",
     email: "recruiter@tatamotors.com",
     sector: "Automotive"
-  },
-  {
-    company_name: "Larsen & Toubro",
-    recruiter_name: "Kavita S. Rao",
-    designation: "Strategic Infrastructure Talent Partner",
-    email: "recruiter@lt.com",
-    sector: "Infrastructure & Construction"
   },
   {
     company_name: "HDFC Bank",
@@ -96,11 +82,25 @@ const PREMIER_DEMO_RECRUITERS = [
     sector: "Banking & Financial Services"
   },
   {
+    company_name: "Larsen & Toubro",
+    recruiter_name: "Kavita S. Rao",
+    designation: "Strategic Infrastructure Talent Partner",
+    email: "recruiter@lt.com",
+    sector: "Infrastructure & Construction"
+  },
+  {
     company_name: "Sun Pharmaceutical Industries",
     recruiter_name: "Dr. Rajesh Gupta",
     designation: "Pharma R&D Talent Partner",
     email: "recruiter@sunpharma.com",
     sector: "Pharmaceuticals"
+  },
+  {
+    company_name: "Tata Consultancy Services",
+    recruiter_name: "Anand Deshpande",
+    designation: "Head of Campus Talent Acquisition",
+    email: "recruiter@tcs.com",
+    sector: "IT & Software Development"
   },
   {
     company_name: "Infosys",
@@ -124,9 +124,9 @@ export default function RecruiterPortal() {
   const [activeCompany, setActiveCompany] = useState(() => {
     try {
       const saved = localStorage.getItem("pmis_recruiter_user");
-      return saved ? JSON.parse(saved).company_name : "Tata Consultancy Services";
+      return saved ? JSON.parse(saved).company_name : "Tata Motors";
     } catch {
-      return "Tata Consultancy Services";
+      return "Tata Motors";
     }
   });
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -135,7 +135,7 @@ export default function RecruiterPortal() {
   const [authPassword, setAuthPassword] = useState("Pmis@2026");
   const [authName, setAuthName] = useState("");
   const [authDesignation, setAuthDesignation] = useState("Talent Acquisition Manager");
-  const [authCompany, setAuthCompany] = useState("Tata Consultancy Services");
+  const [authCompany, setAuthCompany] = useState("Tata Motors");
   const [authError, setAuthError] = useState("");
 
   // Portal tabs: "pipeline" | "post" | "openings"
@@ -174,14 +174,14 @@ export default function RecruiterPortal() {
 
   // Post Internship Form State
   const [postTitle, setPostTitle] = useState("");
-  const [postSector, setPostSector] = useState("IT & Software Development");
-  const [postLocation, setPostLocation] = useState("Bengaluru, Karnataka");
-  const [postMode, setPostMode] = useState("Hybrid");
+  const [postSector, setPostSector] = useState("Automotive");
+  const [postLocation, setPostLocation] = useState("Pune, Maharashtra");
+  const [postMode, setPostMode] = useState("On-site");
   const [postStipend, setPostStipend] = useState("₹5,000 / month");
   const [postDuration, setPostDuration] = useState("12 Months");
   const [postVacancies, setPostVacancies] = useState("15");
-  const [postSkills, setPostSkills] = useState("Python, FastAPI, SQL, Git");
-  const [postEligibility, setPostEligibility] = useState("B.Tech / MCA / B.Sc (Final / Pre-final Year)");
+  const [postSkills, setPostSkills] = useState("CAD Modeling, Vehicle Dynamics, MATLAB, Problem Solving");
+  const [postEligibility, setPostEligibility] = useState("B.Tech / Diploma (Mechanical / Automobile / Production)");
   const [postDescription, setPostDescription] = useState("");
   const [postingLoading, setPostingLoading] = useState(false);
   const [postSuccess, setPostSuccess] = useState(false);

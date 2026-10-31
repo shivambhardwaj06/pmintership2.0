@@ -36,7 +36,7 @@ export default function StudentDashboardShowcase({ user, onOpenAuth, onNavigateT
       iconBg: "bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400",
       icon: FileCheck2,
       description:
-        "Instant compliance score evaluating single-page executive formatting, keyword density, and technical tool extraction under 15 seconds.",
+        "Instant compliance score evaluating single-page executive formatting, keyword density, and technical tool extraction under 15 seconds across engineering, commerce, sciences, and humanities.",
       highlights: ["Under 15s speed test", "Zero multi-page rejection"],
       cta: "Audit My Resume",
     },
@@ -49,8 +49,8 @@ export default function StudentDashboardShowcase({ user, onOpenAuth, onNavigateT
       iconBg: "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400",
       icon: Target,
       description:
-        "Automated algorithmic alignment against 260 official PM Scheme vacancies at top companies based on your academic branch and extracted skills.",
-      highlights: ["Tata, Infosys, L&T fit", "₹5,000/mo stipend roles"],
+        "Automated algorithmic alignment against 260 official PM Scheme vacancies at top companies across 24 sectors based on your academic discipline and extracted competencies.",
+      highlights: ["Auto, BFSI, Infra & Pharma fit", "24 diversified corporate sectors"],
       cta: "View Matching Jobs",
     },
     {
@@ -62,7 +62,7 @@ export default function StudentDashboardShowcase({ user, onOpenAuth, onNavigateT
       iconBg: "bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400",
       icon: Award,
       description:
-        "Learn from authentic 1-page resumes selected by recruiters at TCS, Tata Motors, and HDFC Bank with curated technical and HR interview guides.",
+        "Learn from authentic 1-page resumes selected by recruiters at Maruti Suzuki, HDFC Bank, L&T, Sun Pharma, and Tata Motors with curated technical and HR interview guides.",
       highlights: ["Real selected CV samples", "Round-by-round interview guides"],
       cta: "Explore Winning CVs",
     },

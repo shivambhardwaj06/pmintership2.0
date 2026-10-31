@@ -45,7 +45,7 @@ const RAW_BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:80
 const BACKEND_URL = RAW_BACKEND_URL.replace(/\/+$/, "");
 
 export function mapUserBranchToCategory(branch) {
-  if (!branch) return "Computer Science / IT";
+  if (!branch) return "All Branches";
   const b = branch.toLowerCase();
   if (/mech|auto|thermal|manufacturing|cad|design|aero/i.test(b)) {
     return "Mechanical & Automobile";
@@ -71,7 +71,10 @@ export function mapUserBranchToCategory(branch) {
   if (/agri|crop|horticulture|soil|farm|forestry/i.test(b)) {
     return "Agriculture & Life Sciences";
   }
-  return "Computer Science / IT";
+  if (/comp|cse|it|software|code|program|developer|web|algorithm|data science|ai|cyber/i.test(b)) {
+    return "Computer Science / IT";
+  }
+  return "All Branches";
 }
 
 const BRANCH_CATEGORIES = [
@@ -156,7 +159,35 @@ function getTopDatabaseJobMatchesClient(skills = [], branch = "", limit = 5) {
     return (a.job.record_num || 0) - (b.job.record_num || 0);
   });
 
-  const top = scored.slice(0, limit);
+  // Pick top scoring jobs with sector diversity
+  const selected = [];
+  const sectorCount = {};
+  // If candidate has a specific branch with boosted scores (>= 30), allow up to 2 from that primary sector.
+  // Otherwise (broad/general profile), cap at 1 per sector to showcase true PMIS corporate diversity.
+  const hasSpecificBranchBoost = scored.some((s) => s.score >= 30);
+  const maxPerSector = hasSpecificBranchBoost ? 2 : 1;
+
+  for (const item of scored) {
+    if (selected.length >= limit) break;
+    const sec = item.job.sector || "General";
+    const currentCount = sectorCount[sec] || 0;
+    if (currentCount < maxPerSector) {
+      sectorCount[sec] = currentCount + 1;
+      selected.push(item);
+    }
+  }
+
+  // Fill remaining slots if limit not reached
+  if (selected.length < limit) {
+    for (const item of scored) {
+      if (selected.length >= limit) break;
+      if (!selected.includes(item)) {
+        selected.push(item);
+      }
+    }
+  }
+
+  const top = selected;
   const maxScore = top[0]?.score || 1;
 
   return top.map((item, idx) => {
@@ -188,11 +219,11 @@ function getTopDatabaseJobMatchesClient(skills = [], branch = "", limit = 5) {
 }
 
 // Helper to construct a complete, structured AI resume audit dynamically adapted to the candidate's branch & skills
-function generateComprehensiveReview(candidateName, branch = "Computer Science / IT", skills = []) {
-  const safeSkills = skills.length ? skills : ["Python", "Git", "Problem Solving", "Communication"];
+function generateComprehensiveReview(candidateName, branch = "All Disciplines / Multi-Disciplinary", skills = []) {
+  const safeSkills = skills.length ? skills : ["Problem Solving", "Data Analysis", "Project Management", "Professional Communication"];
   const combinedStr = `${branch} ${safeSkills.join(" ")}`.toLowerCase();
 
-  let domain = "computer_science";
+  let domain = "multi_disciplinary";
   if (/mech|solidworks|cad|cam|ansys|autocad|thermo|cnc|automobile|automotive|catia|fea|vehicle/i.test(combinedStr)) {
     domain = "mechanical";
   } else if (/civil|structural|construct|revit|survey|concrete|staad|infrastruct|geotech/i.test(combinedStr)) {
@@ -203,9 +234,71 @@ function generateComprehensiveReview(candidateName, branch = "Computer Science /
     domain = "pharma";
   } else if (/electr|vlsi|embedded|iot|circuit|verilog|power systems|microcontroller|arduino/i.test(combinedStr)) {
     domain = "electrical";
+  } else if (/comp|cse|software|coding|developer|react|fastapi|python|java|web dev|full stack/i.test(combinedStr)) {
+    domain = "computer_science";
   }
 
   const domainConfigs = {
+    multi_disciplinary: {
+      detectedBranch: branch && !branch.toLowerCase().includes("computer") ? branch : "Multi-Disciplinary / Corporate Operations",
+      targetRoles: [
+        {
+          role: "Operations & Vehicle Dynamics Intern",
+          company: "Maruti Suzuki",
+          sector: "Automotive",
+          match_score: 95,
+          internship_id: "PMIS-046",
+          reason: "High analytical capability, operational excellence, and cross-functional team coordination.",
+        },
+        {
+          role: "Corporate Banking & Credit Operations Intern",
+          company: "HDFC Bank",
+          sector: "Banking & Financial Services",
+          match_score: 93,
+          internship_id: "PMIS-006",
+          reason: "Structured problem solving, data accuracy, and corporate risk governance fundamentals.",
+        },
+        {
+          role: "Project Infrastructure & Planning Intern",
+          company: "Larsen & Toubro (L&T)",
+          sector: "Infrastructure & Construction",
+          match_score: 91,
+          internship_id: "PMIS-031",
+          reason: "Project scheduling, quality control methodology, and engineering documentation rigor.",
+        },
+        {
+          role: "Quality Assurance & Formulations Intern",
+          company: "Sun Pharmaceutical Industries",
+          sector: "Pharmaceuticals",
+          match_score: 89,
+          internship_id: "PMIS-051",
+          reason: "Standards compliance, analytical testing procedures, and structured research documentation.",
+        },
+        {
+          role: "Energy Operations & Power Plant Intern",
+          company: "NTPC",
+          sector: "Power & Energy",
+          match_score: 87,
+          internship_id: "PMIS-111",
+          reason: "Systems monitoring, industrial safety protocols, and operational efficiency analysis.",
+        },
+      ],
+      strengths: [
+        "Versatile cross-functional problem solving and strong professional communication.",
+        "Strict 1-page layout compliant with official PM Internship corporate criteria.",
+        "Broad academic foundation adaptable across multiple high-growth industry sectors.",
+      ],
+      gaps: [
+        "Highlight specific sector-aligned tools (e.g., CAD/Excel/ERP/Safety Standards) relevant to your target industry.",
+        "Quantify project results and leadership impact with clear numeric outcomes.",
+        "Specify your target PMIS industry sector to receive priority recruiter alignment.",
+      ],
+      roadmap: [
+        "Step 1: Customize your 1-page resume with measurable accomplishments and industry tools.",
+        "Step 2: Complete the sector-specific interview preparation guide for your chosen field.",
+        "Step 3: Apply to top corporate internship openings across Automotive, Banking, Infrastructure, and Energy.",
+      ],
+    },
     mechanical: {
       detectedBranch: branch && !branch.toLowerCase().includes("computer") ? branch : "Mechanical Engineering & Automotive",
       targetRoles: [
@@ -472,7 +565,7 @@ function generateComprehensiveReview(candidateName, branch = "Computer Science /
     },
   };
 
-  const selectedConfig = domainConfigs[domain] || domainConfigs.computer_science;
+  const selectedConfig = domainConfigs[domain] || domainConfigs.multi_disciplinary;
   const tech = safeSkills.filter(
     (s) => !["Communication", "Problem Solving", "Leadership", "Teamwork"].includes(s)
   );
@@ -608,7 +701,7 @@ async function parseResumePdfClientSide(file) {
   }
 
   // 6. Branch Detection
-  let branch = "Computer Science & Engineering";
+  let branch = "Engineering & Corporate Operations";
   if (/\b(mechanical|automobile|cad|cam|ansys|solidworks|catia|thermal|machining|fea|automotive|thermodynamics)\b/i.test(textClean)) {
     branch = "Mechanical Engineering & Automotive";
   } else if (/\b(civil|structural|revit|staad|construction|surveying|concrete|geotechnical|infrastructure)\b/i.test(textClean)) {
@@ -621,6 +714,8 @@ async function parseResumePdfClientSide(file) {
     branch = "Pharmaceutical & Healthcare Sciences";
   } else if (/\b(data science|machine learning|deep learning|data analyst|big data|analytics)\b/i.test(textClean)) {
     branch = "Data Science & Artificial Intelligence";
+  } else if (/\b(computer|software|coding|developer|react|node|fastapi|python|java|web dev|full stack)\b/i.test(textClean)) {
+    branch = "Computer Science & Engineering";
   }
 
   // 7. College / University Detection
@@ -726,7 +821,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
   // Real-time Profile state (Dynamically initialized & updated from uploaded resume)
   const [profile, setProfile] = useState({
     name: user?.name && user.name !== "Candidate" ? user.name : getInitialName(),
-    branch: user?.branch || "Computer Science & Engineering",
+    branch: user?.branch || "Multi-Disciplinary / Corporate Operations",
     degree: user?.degree || "B.Tech / B.E.",
     college: user?.college || "State University / College of Engineering",
     state: user?.state || "National",
@@ -754,12 +849,16 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
   const userBranchCategory = mapUserBranchToCategory(profile.branch);
   const currentBranchGuide =
     BRANCH_INTERVIEW_GUIDES[userBranchCategory] ||
+    BRANCH_INTERVIEW_GUIDES["Mechanical & Automobile"] ||
+    BRANCH_INTERVIEW_GUIDES["Commerce, Finance & Management"] ||
     BRANCH_INTERVIEW_GUIDES["Computer Science / IT"];
 
   const [pastResumes, setPastResumes] = useState(() => {
-    return localSelectedResumes.filter(
-      (r) => r.branch_category === "Computer Science / IT"
-    );
+    if (userBranchCategory && userBranchCategory !== "All Branches") {
+      const match = localSelectedResumes.filter((r) => r.branch_category === userBranchCategory);
+      if (match.length) return match;
+    }
+    return localSelectedResumes;
   });
   const [resumesLoading, setResumesLoading] = useState(false);
 
@@ -843,7 +942,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
 
       // Restore AI review if resume is present
       if (user.resume_name && !aiAnalysis) {
-        setAiAnalysis(generateComprehensiveReview(displayName, user.branch, activeSkills.length ? activeSkills : ["Python", "Git", "Problem Solving"]));
+        setAiAnalysis(generateComprehensiveReview(displayName, user.branch, activeSkills.length ? activeSkills : ["Problem Solving", "Data Analysis", "Project Management"]));
       }
 
       // Load applications for this specific user

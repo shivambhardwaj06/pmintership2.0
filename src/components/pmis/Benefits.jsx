@@ -165,7 +165,7 @@ export default function Benefits({ onNavigateToExplore, onOpenAuth, user }) {
                 <tr>
                   <td className="py-3 font-bold text-slate-900 dark:text-white">Host Companies</td>
                   <td className="py-3 text-rose-600 dark:text-rose-400">Unverified startups or agencies</td>
-                  <td className="py-3 font-bold text-emerald-600 dark:text-emerald-400">India&apos;s Top 500 Corporates (Tata, L&T, Infosys)</td>
+                  <td className="py-3 font-bold text-emerald-600 dark:text-emerald-400">India&apos;s Top 500 Corporates across 24 Sectors (Tata, Maruti Suzuki, HDFC Bank, L&T, Sun Pharma)</td>
                 </tr>
                 <tr>
                   <td className="py-3 font-bold text-slate-900 dark:text-white">Insurance & Safety</td>
