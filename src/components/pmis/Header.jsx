@@ -76,7 +76,7 @@ function MobileMenu({ onClose, user, onOpenAuth, onSetView, onLogout, activeView
         {
           id: "dashboard",
           label: "Student Dashboard",
-          subtitle: "AI 1-Page Resume & Applications",
+          subtitle: "AI Resume & Applications",
           icon: LayoutDashboard,
           color: "text-emerald-500",
           authRequired: true,

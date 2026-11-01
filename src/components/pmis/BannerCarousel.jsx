@@ -41,9 +41,9 @@ export default function BannerCarousel({ onExploreClick, onOpenAuth }) {
     },
     {
       type: "custom",
-      alt: "AI 1-Page Resume Audit & Smart Internship Matching",
+      alt: "AI Resume Audit & Smart Internship Matching",
       tag: "AI Resume & Internship Match",
-      title: "AI 1-Page Resume Audit & Top 5 Matched Internships",
+      title: "AI Resume Audit & Top 5 Matched Internships",
       subtitle: "Instant ATS compliance score, branch alignment, and verified matching across 260 official PM Scheme positions in 24 corporate sectors.",
       linkAction: () => {
         if (onOpenAuth) onOpenAuth("register");
@@ -136,7 +136,7 @@ export default function BannerCarousel({ onExploreClick, onOpenAuth }) {
                     </div>
 
                     <h2 className="font-display text-base sm:text-2xl lg:text-3xl font-black text-white leading-tight">
-                      AI 1-Page Resume Audit &amp;{" "}
+                      AI Resume Audit &amp;{" "}
                       <span className="text-transparent bg-clip-text bg-gradient-to-r from-saffron to-amber-300">
                         Top 5 Matched Internships
                       </span>
@@ -162,7 +162,7 @@ export default function BannerCarousel({ onExploreClick, onOpenAuth }) {
 
                       <div className="hidden md:inline-flex items-center gap-1 text-[11px] text-slate-300 font-semibold bg-white/10 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-white/15">
                         <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
-                        <span>Strict 1-Page ATS Standard • 24 Sectors</span>
+                        <span>ATS Standard • 24 Sectors</span>
                       </div>
                     </div>
                   </div>
@@ -198,7 +198,7 @@ export default function BannerCarousel({ onExploreClick, onOpenAuth }) {
                         </div>
                       </div>
                       <div className="rounded-lg bg-emerald-950/70 border border-emerald-800/80 px-2 py-0.5 text-[10px] font-bold text-emerald-300">
-                        ✓ 1-Page PDF Verified
+                        ✓ ATS PDF Verified
                       </div>
                     </div>
                   </div>

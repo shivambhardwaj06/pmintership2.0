@@ -53,8 +53,8 @@ def test_full_portal_flow():
         assert update_res.status_code == 200
         print("[PASS] Profile updated with branch and goals:", update_res.json()["user"]["branch"])
 
-        print("\n5. Testing 1-Page PDF Strict Validation on Resume Upload")
-        # Generate a dummy single page PDF in memory using pypdf
+        print("\n5. Testing PDF Resume Upload & Multi-page Support (Zero Barriers)")
+        # Generate a dummy test PDF in memory using pypdf
         from pypdf import PdfWriter
         writer_1 = PdfWriter()
         writer_1.add_blank_page(width=612, height=792)
@@ -65,15 +65,15 @@ def test_full_portal_flow():
         upload_res = client.post(
             f"/api/user/upload-resume",
             data={"user_id": user_id},
-            files={"file": ("single_page_resume.pdf", pdf_bytes_1, "application/pdf")}
+            files={"file": ("candidate_resume.pdf", pdf_bytes_1, "application/pdf")}
         )
-        assert upload_res.status_code == 200, f"1-page resume upload failed: {upload_res.text}"
+        assert upload_res.status_code == 200, f"Resume upload failed: {upload_res.text}"
         upload_data = upload_res.json()
-        print("[PASS] 1-Page resume accepted & processed!")
+        print("[PASS] Resume accepted & processed!")
         print(f"  CDN URL: {upload_data['cloudinary_url']}")
         print(f"  AI Resume Score: {upload_data['analysis']['resume_score']}/100")
 
-        # Now verify multi-page PDF rejection
+        # Now verify multi-page PDF is seamlessly accepted without any page restriction
         writer_multi = PdfWriter()
         writer_multi.add_blank_page(width=612, height=792)
         writer_multi.add_blank_page(width=612, height=792)
@@ -86,8 +86,8 @@ def test_full_portal_flow():
             data={"user_id": user_id},
             files={"file": ("multi_page_resume.pdf", pdf_bytes_multi, "application/pdf")}
         )
-        assert multi_res.status_code == 400, "Multi-page resume should be strictly rejected!"
-        print(f"[PASS] Strict 1-Page Limit enforced! Rejected multi-page PDF: '{multi_res.json()['detail']}'")
+        assert multi_res.status_code == 200, f"Multi-page resume should be accepted without restriction! {multi_res.text}"
+        print(f"[PASS] Multi-page resume successfully processed (No page barrier)! Status: {multi_res.status_code}")
 
         print("\n6. Testing Branch-Filtered Shortlisted Resumes (9 Academic Disciplines)")
         branches_to_check = [

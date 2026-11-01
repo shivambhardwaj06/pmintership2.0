@@ -804,7 +804,7 @@ function generateComprehensiveReview(
     grade: calcScore >= 90 ? "Grade A+: Premier Shortlist Ready" : "Grade A: High Shortlist Potential",
     career_summary: careerSummary,
     layout_review: {
-      page_length: "1 Page Strict Compliance (Verified)",
+      page_length: "ATS Structure Verified",
       ats_score: `${calcScore} / 100 (ATS Friendly)`,
       structure_rating: "Excellent (Standard Section Hierarchy)",
       formatting_feedback:
@@ -1474,13 +1474,13 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
     if (!file) return;
 
     if (!file.name.toLowerCase().endsWith(".pdf")) {
-      setUploadError("Only 1-page PDF resumes are accepted. Please select a .pdf file.");
+      setUploadError("Only PDF resumes are accepted. Please select a .pdf file.");
       return;
     }
 
     setUploadError(null);
     setUploadingResume(true);
-    setUploadStep("Scanning 1-Page PDF & Extracting Real Skills...");
+    setUploadStep("Scanning PDF Resume & Extracting Real Skills...");
 
     const immediateBlobUrl = URL.createObjectURL(file);
     const targetUserId = profile.user_id || user?.user_id || "PMIS-CANDIDATE";
@@ -1718,7 +1718,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
             }`}
           >
             <FileText className="h-4 w-4 text-orange-500" />
-            <span>1-Page Resume & ATS Audit</span>
+            <span>Resume & ATS Audit</span>
             <span className="ml-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-600 text-white">
               {currentAtsScore}/100
             </span>
@@ -2047,7 +2047,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                       onClick={() => setDashboardTab("resume_ats")}
                       className="text-xs font-extrabold text-orange-600 dark:text-orange-400 hover:underline flex items-center gap-1 cursor-pointer ml-auto"
                     >
-                      <span>Proceed to 1-Page Resume & ATS Audit</span>
+                      <span>Proceed to Resume & ATS Audit</span>
                       <ArrowRight className="h-3.5 w-3.5" />
                     </button>
                   </div>
@@ -2238,12 +2238,12 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
         )}
 
         {/* ================================================================ */}
-        {/* TAB 2: 1-PAGE RESUME & REAL-TIME ATS AUDIT                         */}
+        {/* TAB 2: RESUME & REAL-TIME ATS AUDIT                                */}
         {/* ================================================================ */}
         {dashboardTab === "resume_ats" && (
           <div className="space-y-6 animate-in fade-in duration-200">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              {/* Left Column: 1-Page PDF Upload Card (5 cols) */}
+              {/* Left Column: PDF Upload Card (5 cols) */}
               <div className="lg:col-span-5 rounded-3xl p-6 sm:p-8 bg-white dark:bg-slate-900 border-2 border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between space-y-6">
                 <div>
                   <div className="flex items-center gap-2 mb-2">
@@ -2251,12 +2251,12 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                       <FileText className="h-4 w-4" />
                     </span>
                     <h3 className="font-display text-base font-black text-slate-900 dark:text-white">
-                      Strict 1-Page PDF Resume
+                      Upload & Audit PDF Resume
                     </h3>
                   </div>
 
                   <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
-                    Upload your strictly <strong>1-page PDF</strong>. Our browser engine decompresses text streams, extracts
+                    Upload your <strong>PDF resume</strong>. Our AI engine decompresses text streams, extracts
                     candidate contact info, skills, and goals in real time, and computes your live ATS score.
                   </p>
 
@@ -2283,10 +2283,10 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                         </div>
                         <div>
                           <p className="text-xs font-black text-slate-900 dark:text-white">
-                            Upload 1-Page PDF Resume
+                            Upload PDF Resume
                           </p>
                           <p className="text-[10px] text-slate-500 font-bold mt-0.5">
-                            Strict 1 Page • Max 5MB • Instant Real-Time ATS Score
+                            PDF Format • Max 5MB • Instant Real-Time ATS Score
                           </p>
                         </div>
                       </div>
@@ -2311,7 +2311,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                           </span>
                         </div>
                         <span className="rounded-full bg-emerald-100 text-emerald-900 text-[10px] font-black px-2 py-0.5 border border-emerald-300">
-                          1-Page Verified
+                          ATS Verified
                         </span>
                       </div>
 
@@ -2394,10 +2394,10 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="p-3.5 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-300 dark:border-emerald-800">
                     <div className="text-[10px] font-black text-emerald-800 dark:text-emerald-300 uppercase">
-                      Page Format
+                      Layout Standard
                     </div>
-                    <div className="text-sm font-black text-emerald-950 dark:text-white mt-0.5">Strict 1-Page Pass</div>
-                    <div className="text-[10px] text-emerald-700 dark:text-emerald-400 mt-1">Zero multi-page drop</div>
+                    <div className="text-sm font-black text-emerald-950 dark:text-white mt-0.5">ATS Structured Pass</div>
+                    <div className="text-[10px] text-emerald-700 dark:text-emerald-400 mt-1">Single-column clean hierarchy</div>
                   </div>
 
                   <div className="p-3.5 rounded-2xl bg-blue-50/60 dark:bg-blue-950/20 border border-blue-300 dark:border-blue-800">
@@ -2799,7 +2799,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                   No Active Applications Yet
                 </h4>
                 <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                  Audit your 1-page resume to unlock top corporate openings, then apply with 1 click to track recruiters live.
+                  Audit your resume to unlock top corporate openings, then apply with 1 click to track recruiters live.
                 </p>
                 <button
                   onClick={() => setDashboardTab("matched_jobs")}
@@ -3036,7 +3036,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                               className="inline-flex items-center gap-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 px-4 py-2 text-xs font-bold hover:bg-slate-50 transition cursor-pointer"
                             >
                               <FileText className="h-3.5 w-3.5" />
-                              <span>Optimize 1-Page Resume</span>
+                              <span>Optimize Resume</span>
                             </button>
                           </div>
                         </div>
@@ -3125,7 +3125,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                           </div>
                           <p className="text-slate-600 dark:text-slate-400 text-[11px] leading-relaxed">
                             {app.recruiter_notes ||
-                              `Your verified 1-page resume has been submitted to the talent portal at ${app.company}. The corporate AI candidate screener bot will evaluate your application against other submissions.`}
+                              `Your verified resume has been submitted to the talent portal at ${app.company}. The corporate AI candidate screener bot will evaluate your application against other submissions.`}
                           </p>
                         </div>
                       )}
@@ -3226,7 +3226,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                           rel="noreferrer"
                           className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-900 dark:text-white text-xs font-bold transition cursor-pointer"
                         >
-                          <FileText className="h-3.5 w-3.5 text-primary" /> View Sample 1-Page PDF
+                          <FileText className="h-3.5 w-3.5 text-primary" /> View Sample Resume PDF
                         </a>
                       </div>
                     )}

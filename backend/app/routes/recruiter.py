@@ -462,7 +462,7 @@ def _evaluate_application_for_role(app: Dict[str, Any], job: Dict[str, Any]) -> 
     improvement_tips = [
         f"Build a standalone project demonstrating practical implementation of {top_missing[0] if top_missing else 'required frameworks'}.",
         "Include measurable results and metrics (e.g. latency, users served, system accuracy) in your project descriptions.",
-        "Update your 1-page resume and re-apply to relevant corporate openings across other PMIS sectors."
+        "Update your resume and re-apply to relevant corporate openings across other PMIS sectors."
     ]
 
     # Quick LLM enhancement if active

@@ -1937,7 +1937,7 @@ export default function RecruiterPortal() {
                     {resumeModalApp.candidate_name || "Youth Candidate"}
                   </span>
                   <span className="inline-flex items-center rounded-md bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 px-2 py-0.5 text-[10px] font-black border border-blue-200 dark:border-blue-800">
-                    Verified 1-Page Resume
+                    Verified Resume
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 font-semibold truncate max-w-md">
@@ -1990,7 +1990,7 @@ export default function RecruiterPortal() {
             <div className="flex-1 bg-slate-200 dark:bg-slate-950 p-2 overflow-hidden relative">
               <iframe
                 src={getCdnResumeUrl(resumeModalApp.resume_url)}
-                title="Candidate 1-Page PDF Resume"
+                title="Candidate PDF Resume"
                 className="w-full h-full rounded-2xl border border-slate-300 dark:border-slate-800 bg-white"
               />
             </div>

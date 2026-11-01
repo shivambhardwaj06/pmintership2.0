@@ -30,14 +30,14 @@ export default function StudentDashboardShowcase({ user, onOpenAuth, onNavigateT
     {
       id: "resume-audit",
       tab: "profile",
-      title: "1-Page ATS Resume Audit",
-      badge: "Strict 1-Page Check",
+      title: "ATS Resume Audit",
+      badge: "Instant ATS Check",
       badgeColor: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800",
       iconBg: "bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400",
       icon: FileCheck2,
       description:
-        "Instant ATS evaluation verifying single-page corporate formatting, keyword density, and key competencies across engineering, commerce, sciences, and humanities.",
-      highlights: ["Single-Page Verified", "Instant ATS Score"],
+        "Instant ATS evaluation verifying corporate formatting, keyword density, and key competencies across engineering, commerce, sciences, and humanities.",
+      highlights: ["ATS Layout Verified", "Instant ATS Score"],
       cta: "Audit My Resume",
     },
     {
@@ -62,7 +62,7 @@ export default function StudentDashboardShowcase({ user, onOpenAuth, onNavigateT
       iconBg: "bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400",
       icon: Award,
       description:
-        "Learn from authentic 1-page resumes selected by recruiters at Maruti Suzuki, HDFC Bank, L&T, Sun Pharma, and Tata Motors with curated technical and HR interview guides.",
+        "Learn from authentic selected resumes reviewed by recruiters at Maruti Suzuki, HDFC Bank, L&T, Sun Pharma, and Tata Motors with curated technical and HR interview guides.",
       highlights: ["Real selected CV samples", "Round-by-round interview guides"],
       cta: "Explore Winning CVs",
     },
@@ -97,7 +97,7 @@ export default function StudentDashboardShowcase({ user, onOpenAuth, onNavigateT
             Your Complete PMIS Career Hub
           </h2>
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-            Everything you need to secure your 12-month corporate internship: 1-page ATS compliance audit,
+            Everything you need to secure your 12-month corporate internship: comprehensive ATS compliance audit,
             instant job matchmaking against 260+ openings, winning resume blueprints, and real-time recruiter tracking.
           </p>
         </div>

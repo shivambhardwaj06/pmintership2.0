@@ -231,13 +231,13 @@ SELECTED_RESUMES = [
         "academic_degree": "B.Tech Computer Science & Engineering (3rd Year)",
         "match_score": "96% Selection Match",
         "shortlist_factors": [
-            "Strict 1-page layout highlighting verifiable GitHub repositories with live demo links.",
+            "Structured ATS-compliant layout highlighting verifiable GitHub repositories with live demo links.",
             "Showcased 2 practical full-stack projects using Python, FastAPI, and Git with quantifiable outcomes.",
             "Demonstrated unit testing rigor (pytest) and basic database optimization (indexing & query tuning).",
             "Clear section on data structures with hackathon problem-solving credentials."
         ],
         "highlighted_skills": ["Python", "FastAPI", "Git", "Data Structures", "SQL", "Unit Testing", "React"],
-        "recruiter_feedback": "Corporate recruiters prioritize structured 1-page CVs with verifiable project links and domain-specific tools."
+        "recruiter_feedback": "Corporate recruiters prioritize structured resumes with verifiable project links and domain-specific tools."
     },
     {
         "id": "res_agri_09",
@@ -331,7 +331,7 @@ SELECTED_RESUMES = [
         "academic_degree": "B.Tech. in Computer Science and Engineering",
         "match_score": "98% Selection Match",
         "shortlist_factors": [
-            "Strict 1-page layout with high-impact single-column hierarchy and zero ATS formatting issues.",
+            "Structured ATS-compliant layout with high-impact single-column hierarchy and zero formatting issues.",
             "Proven production full-stack SaaS project metrics: 'reduced deployment times by 50%', 'reduced AWS costing and DB calls by 40%'.",
             "Live deployment links (Render/Vercel) and public GitHub code repositories embedded directly in project headers.",
             "600+ LeetCode/HackerRank algorithmic problems solved with national hackathon podium finishes (Smart India Hackathon, SFSU Hacks)."
@@ -882,17 +882,17 @@ async def upload_and_analyze_resume(
 ):
     """
     Real-time Resume Processing:
-    1. Validates strictly that the resume is a 1-page PDF.
+    1. Validates uploaded PDF resume.
     2. Uploads the document to Cloudinary (returns Cloudinary secure URL).
     3. Runs AI Recruiter Audit to extract candidate skills and branch.
     4. Automatically updates candidate skills in MongoDB.
     """
     if not file.filename.lower().endswith(".pdf"):
-        raise HTTPException(status_code=400, detail="Only PDF format is supported. Please upload a 1-page PDF resume.")
+        raise HTTPException(status_code=400, detail="Only PDF format is supported. Please upload a valid PDF resume.")
 
     file_bytes = await file.read()
 
-    # 1. Validate 1-page limit & extract text
+    # 1. Extract text and pages
     num_pages, resume_text = resume_service.validate_and_extract_pdf(file_bytes)
 
     # 2. Upload to Cloudinary (or local static fallback)
@@ -952,7 +952,7 @@ async def upload_and_analyze_resume(
 
     return {
         "status": "success",
-        "message": "1-Page Resume successfully processed by AI Recruiter Engine!",
+        "message": "Resume successfully processed by AI Recruiter Engine!",
         "cloudinary_url": cloudinary_url,
         "filename": file.filename,
         "file_name": file.filename,

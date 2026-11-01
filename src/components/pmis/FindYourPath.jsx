@@ -192,9 +192,9 @@ const FALLBACK_ROADMAPS = {
         phase_number: 4,
         title: "Phase 4: CAD Defense & Automotive Corporate Selections",
         weeks: "Weeks 11 - 12",
-        goal: "Refine your 1-page ATS resume with direct portfolio hyperlinks and clear automotive panel interviews.",
+        goal: "Refine your ATS resume with direct portfolio hyperlinks and clear automotive panel interviews.",
         milestones: [
-          "Condense resume into strict 1-page layout with clickable CAD portfolio and FSAE/BAJA project metrics.",
+          "Format resume into a structured ATS layout with clickable CAD portfolio and FSAE/BAJA project metrics.",
           "Practice 10 mock technical interviews defending FEA mesh choices, material selections, and GD&T callouts.",
           "Prepare plant situational responses: explain how you handle assembly line bottlenecks and quality defects.",
           "Submit direct applications to top PMIS automotive leaders (Tata Motors, Maruti Suzuki, Mahindra, Hero MotoCorp).",
@@ -279,9 +279,9 @@ const FALLBACK_ROADMAPS = {
         phase_number: 4,
         title: "Phase 4: Banking ATS Profile & Technical Interview Rounds",
         weeks: "Weeks 11 - 12",
-        goal: "Condense accounting and finance projects into a strict 1-page resume and clear bank recruiter rounds.",
+        goal: "Refine accounting and finance projects into an ATS-optimized resume and clear bank recruiter rounds.",
         milestones: [
-          "Format resume into strict 1-page layout highlighting quantifiable financial modeling outcomes and certifications.",
+          "Format resume into a structured ATS layout highlighting quantifiable financial modeling outcomes and certifications.",
           "Practice 10 mock interviews tackling cash flow adjustments, working capital shocks, and credit risk scenarios.",
           "Review macroeconomic indicators: Repo rate impacts, inflation indices, and current banking trends.",
           "Submit direct applications to top PMIS banking and financial institutions (HDFC Bank, State Bank of India, ICICI Bank, Axis Bank).",
@@ -368,7 +368,7 @@ const FALLBACK_ROADMAPS = {
         weeks: "Weeks 11 - 12",
         goal: "Present structural drawings in a digital portfolio and secure placements at premier infrastructure giants.",
         milestones: [
-          "Compile a 1-page ATS resume featuring sample AutoCAD drawings and STAAD.Pro calculation summaries.",
+          "Compile an ATS-optimized resume featuring sample AutoCAD drawings and STAAD.Pro calculation summaries.",
           "Practice 10 mock interviews explaining bar detailing, mix design grades (M25/M30), and curing protocols.",
           "Prepare site case studies: discuss how you would address concrete honeycombing or project delays.",
           "Submit direct applications to top PMIS infrastructure developers (Larsen & Toubro, Tata Projects, Afcons Infrastructure).",
@@ -453,9 +453,9 @@ const FALLBACK_ROADMAPS = {
         phase_number: 4,
         title: "Phase 4: Pharma ATS Profile & Regulatory Interview Prep",
         weeks: "Weeks 11 - 12",
-        goal: "Tailor your 1-page ATS resume with exact lab instrument keywords and clear corporate pharma interviews.",
+        goal: "Tailor your ATS resume with exact lab instrument keywords and clear corporate pharma interviews.",
         milestones: [
-          "Condense resume into strict 1-page layout highlighting hands-on HPLC, UV, and cGMP compliance experience.",
+          "Format resume into a structured ATS layout highlighting hands-on HPLC, UV, and cGMP compliance experience.",
           "Practice 10 mock technical interviews covering mobile phase preparation, retention times, and validation parameters.",
           "Review regulatory audit questions: explain handling of contamination, deviations, and documentation integrity (ALCOA+).",
           "Submit direct applications to top PMIS pharmaceutical corporations (Sun Pharma, Dr. Reddy's Laboratories, Cipla, Lupin).",
@@ -545,7 +545,7 @@ const FALLBACK_ROADMAPS = {
         weeks: "Weeks 11 - 12",
         goal: "Perfect your corporate PMIS application package and clear behavioral and system design interview rounds.",
         milestones: [
-          "Condense resume into strict 1-page single-column ATS layout with measurable metrics (e.g. 'Reduced latency 35%').",
+          "Format resume into a structured ATS single-column layout with measurable metrics (e.g. 'Reduced latency 35%').",
           "Practice 10 mock technical interviews using the STAR method for past project challenges.",
           "Prepare system architecture breakdowns: explain database trade-offs, caching, and auth tokens.",
           "Submit direct applications to top PMIS corporate partners (Maruti Suzuki, HDFC Bank, L&T, Sun Pharma, Tata Group).",
@@ -568,7 +568,7 @@ function getPhaseDurations(paceId) {
       "Months 1 - 2 (Core Fundamentals & Essential Tools)",
       "Months 3 - 4 (Applied Internship Capstone & Execution)",
       "Month 5 (Corporate Quality Benchmarks & Production Practice)",
-      "Month 6 (ATS 1-Page Resume & PMIS Interview Ready)",
+      "Month 6 (ATS Resume & PMIS Interview Ready)",
     ];
   } else if (p.includes("15")) {
     return [

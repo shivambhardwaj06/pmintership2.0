@@ -1,7 +1,7 @@
 # 🇮🇳 PM Internship Scheme (PMIS) 2.0 — AI Career Readiness & Intelligence Platform
 
 > **Official AI-Powered Companion for the Prime Minister's Internship Scheme (Ministry of Corporate Affairs, Govt. of India)**  
-> Seamlessly bridging India's ambitious youth with 1.25 Lakh paid corporate opportunities across top 500 enterprises using **NVIDIA Nemotron 120B**, **Reciprocal Rank Fusion Hybrid RAG**, **Strict 1-Page AI Resume Auditing**, **Dynamic Career Roadmapping**, and **Real-Time Job Intelligence**.
+> Seamlessly bridging India's ambitious youth with 1.25 Lakh paid corporate opportunities across top 500 enterprises using **NVIDIA Nemotron 120B**, **Reciprocal Rank Fusion Hybrid RAG**, **Comprehensive AI Resume Auditing**, **Dynamic Career Roadmapping**, and **Real-Time Job Intelligence**.
 
 ---
 
@@ -21,7 +21,7 @@
 1. [Executive Summary & National Vision](#-executive-summary--national-vision)
 2. [Key Innovations & Features](#-key-innovations--features)
    - [1. Disha AI — Student Career Mascot](#1-disha-ai--student-career-mascot)
-   - [2. Strict 1-Page AI Resume Analyzer & Recruiter Audit](#2-strict-1-page-ai-resume-analyzer--recruiter-audit)
+   - [2. AI Resume Analyzer & Recruiter Audit](#2-ai-resume-analyzer--recruiter-audit)
    - [3. "Find Your Path" — Dynamic AI Career Navigator](#3-find-your-path--dynamic-ai-career-navigator)
    - [4. "Don't Fall in the Trap" — Daily Verified Hiring Feed](#4-dont-fall-in-the-trap--daily-verified-hiring-feed)
    - [5. "Learn from Past Selection" & Branch Interview Hub](#5-learn-from-past-selection--branch-interview-hub)
@@ -67,7 +67,7 @@ First-generation collegiate applicants and youth from Tier-2/Tier-3 colleges fac
 - **Preparation Gap:** Lack of mock interview exposure and actionable roadmaps tailored to specific corporate disciplines.
 
 ### Our Solution
-**PM Internship Scheme 2.0** provides an end-to-end AI career intelligence and application suite. From strict 1-page resume optimization and branch-specific mock interview simulations to live hiring streams and hybrid semantic search, the portal elevates students into shortlist-ready candidates.
+**PM Internship Scheme 2.0** provides an end-to-end AI career intelligence and application suite. From comprehensive ATS resume optimization and branch-specific mock interview simulations to live hiring streams and hybrid semantic search, the portal elevates students into shortlist-ready candidates.
 
 ---
 
@@ -82,8 +82,8 @@ First-generation collegiate applicants and youth from Tier-2/Tier-3 colleges fac
   3. *"Ask about an internship"* &rarr; Explores available roles across 24 sectors and all Indian states.
 - **Dual Mode Operation:** Cloud LLM streaming with deterministic offline fallbacks to ensure 100% uptime even without network connectivity.
 
-### 2. Strict 1-Page AI Resume Analyzer & Recruiter Audit
-- **Strict 1-Page Limit Enforcer:** Uses `pypdf` to validate uploaded resumes. Multi-page resumes are automatically caught with constructive instructions explaining why corporate evaluators insist on a single page.
+### 2. AI Resume Analyzer & Recruiter Audit
+- **Deep Document Extraction:** Uses PyMuPDF and `pypdf` to parse and analyze PDF resumes. Multipage or single-page resumes are seamlessly parsed and evaluated.
 - **AI Recruiter Scoring (0–100 & Letter Grades):** Evaluates typography, white-space hierarchy, action verbs, and quantifiable impact metrics.
 - **Automatic Academic Branch Detection:** Intelligently maps the candidate into one of 9 core disciplines (e.g., *Computer Science & IT*, *Mechanical & Automobile*, *Electrical & Electronics*, *Civil & Infrastructure*, *Commerce & Finance*, *Pharmaceutical Sciences*, etc.).
 - **Live Role Matching:** Matches resume contents directly with official PMIS corporate openings (e.g., Tata Motors, TCS, HDFC Bank, Sun Pharma, L&T) with personalized match percentages.
@@ -185,7 +185,7 @@ flowchart TD
             HybridRetriever["Hybrid Retriever (RRF + Acronym Boost)"]
             BM25["Okapi BM25 Lexical Engine"]
             VectorStore["Qdrant Vector Database (Embedded / Cloud)"]
-            ResumeService["PyPDF Strict 1-Page Resume Evaluator"]
+            ResumeService["PyMuPDF Resume Evaluator"]
             GapService["Skill Gap Analyzer Engine"]
         end
     end
@@ -262,9 +262,9 @@ sequenceDiagram
     Backend->>DB: Persist Candidate Record
     Backend-->>Portal: JWT / Session Token + PMIS ID
 
-    Candidate->>Portal: Upload 1-Page Resume (PDF)
+    Candidate->>Portal: Upload Resume (PDF)
     Portal->>Backend: POST /api/user/profile/resume
-    Backend->>Backend: PyPDF Page-Count Validation (Must be 1 Page)
+    Backend->>Backend: PyMuPDF Section & Skill Extraction
     Backend->>AI: Extract Contact, Branch, Skills & Match Target Roles
     AI-->>Backend: JSON ATS Audit (Score, Grade, Skills, Gaps)
     Backend-->>Portal: Render Candidate Dashboard & Match Cards
@@ -328,7 +328,7 @@ The portal ingests **120 structured corporate records** derived directly from th
 ### Backend Architecture
 - **Framework:** FastAPI (`fastapi` >= 0.115.0) on ASGI Uvicorn (`uvicorn[standard]` >= 0.30.0)
 - **Validation & Models:** Pydantic v2 (`pydantic` >= 2.8.0, `pydantic-settings` >= 2.4.0)
-- **PDF Processing:** PyPDF (`pypdf` >= 5.0.0) with strict 1-page layout parsing
+- **PDF Processing:** PyMuPDF (`pymupdf`) & PyPDF (`pypdf` >= 5.0.0) with high-accuracy layout parsing
 - **Cloud Media Management:** Cloudinary Python SDK (`cloudinary` >= 1.46.0)
 - **Database & Storage:**
   - **Vector DB:** Qdrant Client (`qdrant-client` >= 1.11.0) with embedded container disk persistence (no external cluster required).
@@ -374,7 +374,7 @@ Base URL: `http://localhost:8000` (Local) or Render Web Service URL.
 | `POST` | `/api/auth/reset-password` | `{"user_id": str}` | Generates OTP reset sequence for registered user |
 | `GET` | `/api/user/profile` | Query: `user_id` | Fetches candidate academic profile and skills |
 | `PUT` | `/api/user/profile` | Query: `user_id`, Body: `ProfileUpdateRequest` | Updates college, degree, branch, state, skills |
-| `POST` | `/api/user/profile/resume` | Query: `user_id`, Multipart: `file: UploadFile` | Strict 1-page PDF upload, Cloudinary sync, and AI audit |
+| `POST` | `/api/user/profile/resume` | Query: `user_id`, Multipart: `file: UploadFile` | PDF upload, Cloudinary sync, and AI audit |
 
 ### 5. Career Roadmap & Skill Gap Analyzer
 | Method | Endpoint | Request Body | Description |
@@ -407,7 +407,7 @@ pm_intership_refine/
 │   │   │   └── internships.py             # 120 Structured internship filter routes
 │   │   ├── services/
 │   │   │   ├── gap_analyzer_service.py    # AI Skill gap bridge logic
-│   │   │   └── resume_service.py          # PyPDF 1-page validator & AI ATS audit
+│   │   │   └── resume_service.py          # Resume validator & AI ATS audit
 │   │   ├── config.py                      # Pydantic BaseSettings environment loader
 │   │   ├── db.py                          # Thread-safe JSON store persistence
 │   │   ├── document_parser.py             # Official dataset chunking & metadata parser
@@ -597,7 +597,7 @@ The portal will open at `http://localhost:3000` (or `http://localhost:5173`).
 ## 🧪 Automated Testing & Verification
 
 ### Running Backend Tests
-Execute the end-to-end integration test verifying authentication, profile creation, PyPDF 1-page validation, Google OAuth, and application flows:
+Execute the end-to-end integration test verifying authentication, profile creation, PDF resume validation, Google OAuth, and application flows:
 
 ```bash
 cd backend
@@ -620,9 +620,9 @@ Expected output:
 4. Testing Profile Update
 [PASS] Profile updated successfully
 
-5. Testing PyPDF Strict 1-Page Resume Upload
-[PASS] Valid 1-page PDF passed validation: 1 pages detected
-[PASS] Multi-page rejection verified! Correctly blocked 2-page resume with HTTP 400
+5. Testing PDF Resume Upload & Multi-page Support (Zero Barriers)
+[PASS] Resume accepted & processed!
+[PASS] Multi-page resume successfully processed (No page barrier)! Status: 200
 
 6. Testing AI Gap Analysis
 [PASS] Gap analysis succeeded: 82% match for role
@@ -672,7 +672,7 @@ The project includes an executive presentation suite for presentations, stakehol
 Open `junk/presentation.html` in any web browser to access a sleek, 7-slide presentation:
 - **Slide 1:** Title & Executive Overview (National Mission & 1 Crore Youth Scale).
 - **Slide 2:** Problem Understanding & Existing Limitations vs. PMIS 2.0 Solution Matrix.
-- **Slide 3:** Core Feature 1 &mdash; AI Resume Analyzer & Strict 1-Page Recruiter Audit.
+- **Slide 3:** Core Feature 1 &mdash; AI Resume Analyzer & Recruiter Audit.
 - **Slide 4:** Core Feature 2 &mdash; Career Direction ("Find Your Path") & "Don't Fall in the Trap".
 - **Slide 5:** Core Feature 3 &mdash; Transparency & Assistance (Disha AI & 9-Branch Resumes).
 - **Slide 6:** Engineering Implementation & Hybrid RAG Architecture.

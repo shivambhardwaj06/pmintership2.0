@@ -33,8 +33,8 @@ function getDishaGroundedReply(text) {
   if (t.includes("audit") || t.includes("match") || t.includes("resume") || t.includes("ats")) {
     return {
       answer:
-        "Namaste! Our **AI Resume Recruiter Engine** audits your 1-page corporate resume and matches top corporate roles under the PM Internship Scheme.\n\n" +
-        "• **How to use it:** Open your **Student Dashboard** -> Upload your 1-page PDF resume.\n" +
+        "Namaste! Our **AI Resume Recruiter Engine** audits your corporate resume and matches top corporate roles under the PM Internship Scheme.\n\n" +
+        "• **How to use it:** Open your **Student Dashboard** -> Upload your PDF resume.\n" +
         "• It will instantly evaluate ATS compliance, extract your verified skills, and return your **Top 5 Matched Roles** from 260 official openings!\n\n" +
         "👉 *Navigate to your Student Dashboard to audit your resume now!*",
       sources: [{ title: "Student Dashboard • Resume Audit", url: "#dashboard" }],

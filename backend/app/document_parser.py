@@ -111,7 +111,7 @@ def build_scheme_guidance_chunks() -> List[Dict[str, Any]]:
             "content": (
                 "Selection Factors & Winning Resume Tips:\n"
                 "• Key Selection Factors: Candidate location match with company facility, sector alignment with academic degree, basic proficiency in tools (Excel, Python, Git, CAD depending on sector), and clear career statement.\n"
-                "• Resume Best Practices: Keep it to 1 page, highlight 2-3 relevant projects or coursework, mention practical skills, and ensure correct contact details.\n"
+                "• Resume Best Practices: Maintain clear section hierarchy, highlight 2-3 relevant projects or coursework, mention practical skills, and ensure correct contact details.\n"
                 "• Review Past Resumes: You can check real selected resume formats directly in the 'Past Selected Resumes' section on our portal."
             )
         }

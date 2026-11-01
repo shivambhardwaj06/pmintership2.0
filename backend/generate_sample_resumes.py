@@ -244,7 +244,7 @@ def generate_pdf_resume(c: dict):
 
     dest = RESUMES_DIR / c["filename"]
     doc.save(str(dest))
-    print(f"Generated 1-Page PDF: {dest} (Size: {dest.stat().st_size} bytes)")
+    print(f"Generated PDF: {dest} (Size: {dest.stat().st_size} bytes)")
 
 def main():
     for c in CANDIDATES:

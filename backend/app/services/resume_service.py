@@ -284,8 +284,7 @@ class ResumeService:
 
     def validate_and_extract_pdf(self, file_bytes: bytes) -> Tuple[int, str]:
         """
-        Validates that the uploaded resume is strictly a 1-page PDF and extracts its text.
-        Enforces user requirement: 'PDF aur PDF sirf one page ka rakho resume ka. Limit lagao uski'.
+        Validates uploaded PDF resume and extracts its text across all pages.
         Uses PyMuPDF (fitz) for highest Unicode and layout accuracy with pypdf fallback.
         """
         num_pages = 1
@@ -297,11 +296,6 @@ class ResumeService:
             import pymupdf
             doc = pymupdf.open(stream=file_bytes, filetype="pdf")
             num_pages = len(doc)
-            if num_pages > 1:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Page limit exceeded: Your resume has {num_pages} pages. Please upload a 1-page resume (Industry corporate standard for PM Internship applications)."
-                )
             for page in doc:
                 extracted_text += (page.get_text("text") or "") + "\n"
             pymupdf_success = True
@@ -315,11 +309,6 @@ class ResumeService:
             try:
                 reader = pypdf.PdfReader(io.BytesIO(file_bytes))
                 num_pages = len(reader.pages)
-                if num_pages > 1:
-                    raise HTTPException(
-                        status_code=400,
-                        detail=f"Page limit exceeded: Your resume has {num_pages} pages. Please upload a 1-page resume (Industry corporate standard for PM Internship applications)."
-                    )
                 pypdf_text = ""
                 for page in reader.pages:
                     pypdf_text += (page.extract_text() or "") + "\n"
@@ -530,7 +519,7 @@ class ResumeService:
 
     def analyze_resume_with_ai(self, resume_text: str, filename: str = "") -> Dict[str, Any]:
         """
-        Evaluates the 1-page student resume using AI recruiter models (NVIDIA Nemotron).
+        Evaluates the student resume using AI recruiter models (NVIDIA Nemotron).
         Extracts verified full candidate profile (name, email, phone, college, degree, branch, location),
         skills, layout analysis, top 5 database matching jobs from PMIS MongoDB, and step-by-step roadmap.
         """
@@ -581,10 +570,10 @@ JSON FORMAT:
   "grade": "Grade A: High Shortlist Potential",
   "career_summary": "Crisp 1-2 sentence professional summary of candidate strengths based on their real projects",
   "layout_review": {{
-    "page_length": "1 Page Strict Compliance (Verified)",
+    "page_length": "ATS Structure Verified",
     "ats_score": "95 / 100 (ATS Friendly)",
     "structure_rating": "Excellent (Clear Hierarchy)",
-    "formatting_feedback": "Clean single-column layout, readable bullet points, high recruiter scan speed."
+    "formatting_feedback": "Clean layout, readable bullet points, high recruiter scan speed."
   }},
   "skills_breakdown": {{
     "technical_skills": ["Skill1", "Skill2", "Skill3"],
@@ -703,7 +692,7 @@ JSON FORMAT:
                 ],
                 "strengths": [
                     "Strong mechanical engineering foundations with practical CAD/CAM simulation competencies.",
-                    "Strict 1-page layout compliant with PM Internship corporate standards.",
+                    "Structured, professional ATS layout compliant with corporate recruitment standards.",
                     "Demonstrated project work in design modeling and fabrication fundamentals."
                 ],
                 "gaps": [
@@ -750,7 +739,7 @@ JSON FORMAT:
                 ],
                 "strengths": [
                     "Clear structural engineering focus with standard drafting and modeling skills.",
-                    "Strict 1-page compliance compliant with official PM Internship criteria.",
+                    "Structured ATS format compliant with corporate recruitment criteria.",
                     "Applied knowledge of modern building materials and site surveying procedures."
                 ],
                 "gaps": [
@@ -797,7 +786,7 @@ JSON FORMAT:
                 ],
                 "strengths": [
                     "Verified circuit design and hardware-software interfacing capabilities.",
-                    "Strict 1-page layout compliant with PMIS recruiter scanning standards.",
+                    "High-readability ATS structure compliant with recruiter scanning standards.",
                     "Diverse technical toolkit spanning simulation and physical prototyping."
                 ],
                 "gaps": [
@@ -844,7 +833,7 @@ JSON FORMAT:
                 ],
                 "strengths": [
                     "Strong quantitative and analytical fundamentals in corporate finance and accounting.",
-                    "Strict 1-page layout compliant with corporate banking recruitment norms.",
+                    "Clean ATS layout compliant with corporate banking recruitment norms.",
                     "Practical familiarity with accounting software and financial spreadsheet modeling."
                 ],
                 "gaps": [
@@ -891,7 +880,7 @@ JSON FORMAT:
                 ],
                 "strengths": [
                     "Rigorous scientific training with hands-on pharmaceutical lab competencies.",
-                    "Strict 1-page layout compliant with corporate healthcare standards.",
+                    "Structured ATS format compliant with corporate healthcare standards.",
                     "Accurate technical documentation and attention to regulatory compliance."
                 ],
                 "gaps": [
@@ -938,7 +927,7 @@ JSON FORMAT:
                 ],
                 "strengths": [
                     "Modern technology stack with active programming and database proficiencies.",
-                    "Strict 1-page layout compliant with corporate technology hiring standards.",
+                    "Clean ATS structure compliant with corporate technology hiring standards.",
                     "Demonstrated project building capability with source control integration."
                 ],
                 "gaps": [
@@ -1001,7 +990,7 @@ JSON FORMAT:
                 ],
                 "strengths": [
                     "Versatile cross-functional problem solving and strong professional communication.",
-                    "Strict 1-page layout compliant with official PM Internship corporate criteria.",
+                    "Clean ATS structure compliant with corporate recruitment criteria.",
                     "Broad academic foundation adaptable across multiple high-growth industry sectors."
                 ],
                 "gaps": [
@@ -1010,7 +999,7 @@ JSON FORMAT:
                     "Specify your target PMIS industry sector to receive priority recruiter alignment."
                 ],
                 "roadmap": [
-                    "Step 1: Customize your 1-page resume with measurable accomplishments and industry tools.",
+                    "Step 1: Customize your resume with measurable accomplishments and industry tools.",
                     "Step 2: Complete the sector-specific interview preparation guide for your chosen field.",
                     "Step 3: Apply to top corporate internship openings across Automotive, Banking, Infrastructure, and Energy."
                 ]
@@ -1142,7 +1131,7 @@ JSON FORMAT:
             "grade": "Grade A: High Shortlist Potential",
             "career_summary": f"Targeted {cfg['branch_name']} candidate with proven hands-on capability in {', '.join(detected_tech[:3])}. Well-aligned for premier national corporate internships.",
             "layout_review": {
-                "page_length": "1 Page Strict Compliance (Verified)",
+                "page_length": "ATS Structure Verified",
                 "ats_score": "95 / 100 (ATS Friendly)",
                 "structure_rating": "Excellent (Standard Section Hierarchy)",
                 "formatting_feedback": "Clean single-column layout, clear corporate typography, and optimized for applicant tracking systems and fast recruiter review."

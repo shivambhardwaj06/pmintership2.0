@@ -84,7 +84,7 @@ DOMAIN_ROADMAP_TEMPLATES = {
                 "weeks": "Months 10 - 12 (Portfolio Defense & Placement Rounds)",
                 "goal": "Align your profile with PM Internship Scheme corporate screeners and clear technical rounds.",
                 "milestones": [
-                    "Format resume into strict 1-page single-column layout with live demo URLs and GitHub links.",
+                    "Format resume into a structured ATS single-column layout with live demo URLs and GitHub links.",
                     "Practice 10 mock interviews using the STAR method (Situation, Task, Action, Result).",
                     "Prepare project architecture deep-dives: explain bottlenecks, trade-offs, and security choices.",
                     "Submit applications to top PMIS Corporate Technology roles (TCS, Infosys, Wipro, Google)."
@@ -158,7 +158,7 @@ DOMAIN_ROADMAP_TEMPLATES = {
                 "weeks": "Weeks 11 - 12",
                 "goal": "Prepare drawing walkthroughs, defend FEA assumptions, and apply for core automotive internships.",
                 "milestones": [
-                    "Attach CAD portfolio hyperlink in the header of your strict 1-page PDF resume.",
+                    "Attach CAD portfolio hyperlink in the header of your PDF resume.",
                     "Practice answering technical drawing and tolerancing questions in simulated panel interviews.",
                     "Apply for top PMIS Automotive and Industrial roles (Tata Motors, Maruti Suzuki, BHEL).",
                     "Review shop-floor case scenarios and plant operations adaptability questions."
@@ -230,9 +230,9 @@ DOMAIN_ROADMAP_TEMPLATES = {
                 "phase_number": 4,
                 "title": "Phase 4: Banking ATS Resume & Panel Interview Defense",
                 "weeks": "Weeks 11 - 12",
-                "goal": "Perfect a 1-page banking ATS profile and clear credit analysis interview rounds.",
+                "goal": "Perfect a banking ATS profile and clear credit analysis interview rounds.",
                 "milestones": [
-                    "Condense achievements into strict 1-page format with verified quantitative financial modeling metrics.",
+                    "Highlight achievements with verified quantitative financial modeling metrics in an ATS-optimized format.",
                     "Practice 10 mock interviews tackling cash flow adjustments, working capital shocks, and credit risk scenarios.",
                     "Prepare macroeconomic analysis: Repo rate changes, inflation trends, and corporate lending dynamics.",
                     "Submit direct applications to top PMIS banking institutions (HDFC Bank, State Bank of India, ICICI Bank)."
@@ -306,7 +306,7 @@ DOMAIN_ROADMAP_TEMPLATES = {
                 "weeks": "Weeks 11 - 12",
                 "goal": "Present structural blueprints and secure positions at premier infrastructure conglomerates.",
                 "milestones": [
-                    "Format strict 1-page resume with embedded link to CAD drawings and STAAD.Pro calculation summaries.",
+                    "Format an ATS-optimized resume with embedded link to CAD drawings and STAAD.Pro calculation summaries.",
                     "Practice answering technical structural detailing and concrete curing questions in mock interviews.",
                     "Prepare site situational responses: resolving concrete honeycombing, handling contractor delays, and material quality checks.",
                     "Submit direct applications to top PMIS infrastructure developers (Larsen & Toubro, Tata Projects, Afcons Infrastructure)."
@@ -378,9 +378,9 @@ DOMAIN_ROADMAP_TEMPLATES = {
                 "phase_number": 4,
                 "title": "Phase 4: Pharma ATS Profile & Regulatory Interview Prep",
                 "weeks": "Weeks 11 - 12",
-                "goal": "Tailor your 1-page ATS resume with exact lab instrument keywords and clear corporate pharma interviews.",
+                "goal": "Tailor your ATS resume with exact lab instrument keywords and clear corporate pharma interviews.",
                 "milestones": [
-                    "Condense resume into strict 1-page layout highlighting hands-on HPLC, UV, and cGMP compliance experience.",
+                    "Format resume into a structured ATS layout highlighting hands-on HPLC, UV, and cGMP compliance experience.",
                     "Practice 10 mock technical interviews covering mobile phase preparation, retention times, and validation parameters.",
                     "Review regulatory audit questions: explain handling of contamination, deviations, and documentation integrity (ALCOA+).",
                     "Submit direct applications to top PMIS pharmaceutical corporations (Sun Pharma, Dr. Reddy's Laboratories, Cipla, Lupin)."
@@ -404,7 +404,7 @@ def get_weeks_for_pace(pace: str) -> List[str]:
             "Months 1 - 2 (Core Fundamentals & Essential Tools)",
             "Months 3 - 4 (Applied Internship Capstone & Execution)",
             "Month 5 (Corporate Quality Benchmarks & Production Practice)",
-            "Month 6 (ATS 1-Page Resume & PMIS Interview Ready)"
+            "Month 6 (ATS Resume & PMIS Interview Ready)"
         ]
     elif "15" in p:
         return [

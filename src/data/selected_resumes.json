@@ -91,13 +91,13 @@
     "academic_degree": "B.Tech Computer Science & Engineering (3rd Year)",
     "match_score": "96% Selection Match",
     "shortlist_factors": [
-      "Strict 1-page layout highlighting verifiable GitHub repositories with live demo links.",
+      "Structured ATS layout highlighting verifiable GitHub repositories with live demo links.",
       "Showcased 2 practical full-stack projects using Python, FastAPI, and Git with quantifiable outcomes.",
       "Demonstrated unit testing rigor (pytest) and basic database optimization (indexing & query tuning).",
       "Clear section on data structures with hackathon problem-solving credentials."
     ],
     "highlighted_skills": ["Python", "FastAPI", "Git", "Data Structures", "SQL", "Unit Testing", "React"],
-    "recruiter_feedback": "Corporate recruiters prioritize structured 1-page CVs with verifiable project links and domain-specific tools."
+    "recruiter_feedback": "Corporate recruiters prioritize structured resumes with verifiable project links and domain-specific tools."
   },
   {
     "id": "res_agri_09",
@@ -191,7 +191,7 @@
     "academic_degree": "B.Tech. in Computer Science and Engineering",
     "match_score": "98% Selection Match",
     "shortlist_factors": [
-      "Strict 1-page layout with high-impact single-column hierarchy and zero ATS formatting issues.",
+      "Structured ATS layout with high-impact single-column hierarchy and zero ATS formatting issues.",
       "Proven production full-stack SaaS project metrics: 'reduced deployment times by 50%', 'reduced AWS costing and DB calls by 40%'.",
       "Live deployment links (Render/Vercel) and public GitHub code repositories embedded directly in project headers.",
       "600+ LeetCode/HackerRank algorithmic problems solved with national hackathon podium finishes (Smart India Hackathon, SFSU Hacks)."
