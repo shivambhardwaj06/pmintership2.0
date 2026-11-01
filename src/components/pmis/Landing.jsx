@@ -18,9 +18,7 @@ import AuthModal from "./AuthModal";
 import Footer from "./Footer";
 import { applyTheme, getTheme } from "@/lib/theme";
 import { TrendingUp, Compass, ArrowRight, ShieldCheck, Flame, Sparkles, Gift } from "lucide-react";
-
-const RAW_BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
-const BACKEND_URL = RAW_BACKEND_URL.replace(/\/+$/, "");
+import { BACKEND_URL } from "@/lib/apiConfig";
 
 export default function Landing() {
   const [user, setUser] = useState(null);

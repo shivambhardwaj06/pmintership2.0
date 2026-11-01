@@ -26,9 +26,7 @@ import {
 } from "lucide-react";
 import rawInternships from "@/data/internships.json";
 import CompanyLogo from "./CompanyLogo";
-
-const RAW_BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
-const BACKEND_URL = RAW_BACKEND_URL.replace(/\/+$/, "");
+import { BACKEND_URL } from "@/lib/apiConfig";
 
 /**
  * Safely parses the numerical stipend upper bound from strings like

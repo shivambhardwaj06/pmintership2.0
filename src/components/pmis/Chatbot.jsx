@@ -16,8 +16,7 @@ function Mascot({ className = "h-full w-full" }) {
   );
 }
 
-const RAW_BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
-const BACKEND_URL = RAW_BACKEND_URL.replace(/\/+$/, "");
+import { BACKEND_URL } from "@/lib/apiConfig";
 
 // Exact 3 default questions requested by user:
 const QUICK_PROMPTS = [

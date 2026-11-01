@@ -15,9 +15,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import pmLogo from "@/assets/pm_internship_logo_eng.svg";
-
-const RAW_BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
-const BACKEND_URL = RAW_BACKEND_URL.replace(/\/+$/, "");
+import { BACKEND_URL } from "@/lib/apiConfig";
 
 export default function AuthModal({ isOpen, onClose, initialMode = "login", onAuthSuccess }) {
   const [mode, setMode] = useState(initialMode); // "login" | "register" | "reset" | "google"

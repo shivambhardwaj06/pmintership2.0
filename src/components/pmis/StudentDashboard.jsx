@@ -52,9 +52,7 @@ import CompanyLogo from "./CompanyLogo";
 import rawInternships from "@/data/internships.json";
 import localSelectedResumes from "@/data/selected_resumes.json";
 import { BRANCH_INTERVIEW_GUIDES } from "@/data/branch_interview_prep.js";
-
-const RAW_BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
-const BACKEND_URL = RAW_BACKEND_URL.replace(/\/+$/, "");
+import { BACKEND_URL } from "@/lib/apiConfig";
 
 export function mapUserBranchToCategory(branch) {
   if (!branch) return "All Branches";
