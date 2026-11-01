@@ -18,7 +18,9 @@ from app.db import (
     get_company_internships_db,
     get_company_applications_db,
     update_application_status_db,
-    internships_collection
+    internships_collection,
+    get_all_internships_list,
+    _normalize_company_regex
 )
 from app.routes.auth import (
     hash_password,
@@ -373,12 +375,263 @@ def update_application_status(
     }
 
 
+# =========================================================================
+# DOMAIN COMPETENCIES & SMART ATS RESOLVER
+# Never default to IT / software skills for Mechanical, Civil, Finance, or Pharma!
+# =========================================================================
+
+DOMAIN_SKILL_MAP = {
+    "automotive": [
+        "CAD Modeling (SolidWorks/AutoCAD)",
+        "Vehicle Dynamics & Kinematics",
+        "FEA & Structural Simulation",
+        "EV Powertrain & Battery Systems",
+        "Automotive Quality (Lean/Six Sigma)",
+        "Excel & Data Recording"
+    ],
+    "mechanical": [
+        "SolidWorks / AutoCAD 3D",
+        "Finite Element Analysis (FEA)",
+        "Thermodynamics & Heat Transfer",
+        "Manufacturing Quality (Lean Basics)",
+        "Mechanical Drafting & GD&T",
+        "Engineering Problem Solving"
+    ],
+    "civil": [
+        "AutoCAD Civil 3D",
+        "Structural Blueprint Reading",
+        "Bar Bending Schedule (BBS)",
+        "Site Safety (EHS) Protocols",
+        "Project Scheduling (MS Project/Primavera)",
+        "Quantity Surveying & Estimation"
+    ],
+    "construction": [
+        "Project Planning & Scheduling",
+        "Concrete Quality & Slump Testing",
+        "Site Supervision & EHS",
+        "Quantity Surveying",
+        "Bar Bending Schedule (BBS)"
+    ],
+    "finance": [
+        "Financial Statement Analysis",
+        "Advanced Excel & Financial Modeling",
+        "Auditing & Taxation Basics",
+        "KYC / AML Due Diligence",
+        "Banking Operations & Risk Analysis",
+        "Power BI & Data Reporting"
+    ],
+    "banking": [
+        "Core Banking Operations",
+        "KYC / AML Compliance",
+        "Credit Appraisal & Financial Assessment",
+        "Retail Banking Products",
+        "Excel & Data Validation"
+    ],
+    "pharma": [
+        "HPLC & Chromatography Operation",
+        "GMP / GLP Compliance Norms",
+        "Quality Control (QC/QA)",
+        "Spectrophotometry & Wet Chemistry",
+        "Formulation & Lab Safety Protocols"
+    ],
+    "chemical": [
+        "Unit Operations & Mass Transfer",
+        "Process Instrumentation & P&ID",
+        "Reaction Kinetics & Lab Analysis",
+        "Plant Safety (HAZOP / EHS)"
+    ],
+    "electrical": [
+        "Power Distribution & Grid Operations",
+        "Smart Grid AMI Systems",
+        "Load Flow Analysis",
+        "PLC / SCADA Automation Basics",
+        "Electrical Safety Standards"
+    ],
+    "electronics": [
+        "Embedded C/C++",
+        "Microcontrollers & PCB Design",
+        "CAN Bus & IoT Protocols",
+        "Hardware Debugging & Signal Analysis"
+    ],
+    "telecom": [
+        "Networking Fundamentals",
+        "Optical Fiber Telemetry",
+        "NOC Monitoring & Troubleshooting",
+        "Subsea Cable Systems",
+        "RF Optimization"
+    ],
+    "software": [
+        "Python or Java",
+        "Data Structures & Algorithms",
+        "Git & Version Control",
+        "REST API Development",
+        "Database Design (SQL/NoSQL)",
+        "Unit Testing & Debugging"
+    ],
+    "it": [
+        "System Administration",
+        "Cloud Infrastructure (AWS/Azure)",
+        "Linux Fundamentals",
+        "Networking & Cyber Security",
+        "Git & CI/CD Pipelines"
+    ],
+    "default": [
+        "Analytical Problem Solving",
+        "Structured Technical Documentation",
+        "Cross-functional Teamwork",
+        "Process Compliance",
+        "Data Verification"
+    ]
+}
+
+SYNONYM_GROUPS = {
+    "cad": {"cad", "autocad", "solidworks", "catia", "creo", "nx", "inventor", "3d modeling", "drafting"},
+    "simulation": {"simulation", "fea", "finite element", "ansys", "cfd", "simulink", "matlab", "dynamics", "kinematics"},
+    "ev": {"ev", "electric vehicle", "powertrain", "battery", "bms", "motor", "inverter", "hybrid"},
+    "thermo": {"thermo", "thermodynamics", "heat transfer", "fluid mechanics", "thermal", "hvac"},
+    "manufacturing": {"lean", "six sigma", "manufacturing", "production", "cnc", "cam", "quality", "assembly", "fabrication"},
+    "civil": {"civil", "autocad civil", "structural", "bbs", "bar bending", "concrete", "staad", "etabs", "quantity surveying", "surveying"},
+    "construction": {"construction", "site safety", "ehs", "project planning", "ms project", "primavera", "blueprint"},
+    "finance": {"finance", "accounting", "tally", "audit", "taxation", "financial modeling", "kyc", "balance sheet"},
+    "excel": {"excel", "spreadsheet", "advanced excel", "vba", "google sheets", "data recording", "pivot"},
+    "pharma": {"pharma", "hplc", "gmp", "glp", "spectrophotometry", "formulation", "quality control", "qc", "titration"},
+    "python": {"python", "fastapi", "django", "flask", "pandas", "numpy"},
+    "web": {"web", "html", "css", "javascript", "typescript", "react", "next.js", "node", "full stack", "frontend", "backend", "api"},
+    "git": {"git", "github", "gitlab", "version control"},
+    "sql": {"sql", "mysql", "postgresql", "mongodb", "database", "rdbms", "queries"},
+    "network": {"network", "networking", "cisco", "telecom", "fiber", "rf", "noc", "routing", "switching"}
+}
+
+
+def _infer_domain_key(context_text: str) -> str:
+    """Infers the industry domain key from combined context of company, title, sector, and candidate branch."""
+    txt = (context_text or "").lower()
+    if any(k in txt for kw in ["auto", "vehicle", "car", "motor", "chassis"] for k in [kw]):
+        return "automotive"
+    if any(k in txt for kw in ["mech", "thermal", "fluid", "hvac", "solidworks", "cad"] for k in [kw]):
+        return "mechanical"
+    if any(k in txt for kw in ["civil", "struct", "infra", "road", "bridge", "survey"] for k in [kw]):
+        return "civil"
+    if any(k in txt for kw in ["construct", "site", "project planning", "primavera"] for k in [kw]):
+        return "construction"
+    if any(k in txt for kw in ["bank", "wealth", "kyc", "credit", "fintech"] for k in [kw]):
+        return "banking"
+    if any(k in txt for kw in ["financ", "audit", "tax", "account", "commerce", "tally"] for k in [kw]):
+        return "finance"
+    if any(k in txt for kw in ["pharma", "drug", "medic", "biotech", "hplc", "gmp"] for k in [kw]):
+        return "pharma"
+    if any(k in txt for kw in ["chem", "fertilizer", "refinery", "polym"] for k in [kw]):
+        return "chemical"
+    if any(k in txt for kw in ["power", "grid", "electrical", "energy", "substation"] for k in [kw]):
+        return "electrical"
+    if any(k in txt for kw in ["electron", "semiconduct", "embedded", "pcb", "vlsi", "iot"] for k in [kw]):
+        return "electronics"
+    if any(k in txt for kw in ["telecom", "cable", "subsea", "fiber", "network", "cisco"] for k in [kw]):
+        return "telecom"
+    if any(k in txt for kw in ["software", "developer", "full stack", "frontend", "backend", "code", "dev"] for k in [kw]):
+        return "software"
+    if any(k in txt for kw in ["it", "cloud", "data", "cyber", "system", "tech"] for k in [kw]):
+        return "it"
+    return "default"
+
+
+def resolve_job_requirements(
+    internship_id: Optional[str],
+    company: str,
+    title: str,
+    candidate_branch: Optional[str] = None
+) -> Dict[str, Any]:
+    """
+    Robust Multi-Tier Job Resolver:
+    1. Queries MongoDB `internships` collection by ID (exact or normalized).
+    2. Fallback to MongoDB regex match by company and title.
+    3. Fallback to official 260 PMIS dataset in memory via `get_all_internships_list()`.
+    4. Fallback to domain-authentic synthesis so skills are NEVER defaulted to generic IT keywords.
+    """
+    clean_company = (company or "").strip()
+    clean_title = (title or "").strip()
+    col_internships = internships_collection()
+    job: Dict[str, Any] = {}
+
+    # 1. MongoDB Query by ID
+    if internship_id:
+        norm_id = internship_id.strip()
+        candidates = [norm_id, norm_id.replace("PMIS-IND-", "PMIS-"), norm_id.replace("PMIS-", "PMIS-IND-")]
+        job = col_internships.find_one({"$or": [{"id": {"$in": candidates}}, {"internship_id": {"$in": candidates}}]}) or {}
+
+    # 2. MongoDB Query by Company Regex & Title
+    if not job and clean_company:
+        p_comp = _normalize_company_regex(clean_company)
+        c_matches = list(col_internships.find({"company": {"$regex": p_comp, "$options": "i"}}))
+        if c_matches:
+            # Pick best match by title overlap
+            best = None
+            best_score = -1
+            t_words = set(re.findall(r"\w+", clean_title.lower()))
+            for cand in c_matches:
+                cand_words = set(re.findall(r"\w+", (cand.get("title") or "").lower()))
+                overlap = len(t_words.intersection(cand_words))
+                if overlap > best_score:
+                    best_score = overlap
+                    best = cand
+            job = best or c_matches[0]
+
+    # 3. Fallback to in-memory PMIS official 260 catalog
+    if not job:
+        try:
+            all_list = get_all_internships_list()
+            # Match by ID
+            if internship_id:
+                for item in all_list:
+                    iid = item.get("id") or item.get("internship_id") or ""
+                    if iid in [internship_id, internship_id.replace("PMIS-IND-", "PMIS-")]:
+                        job = dict(item)
+                        break
+            # Match by company & title keywords
+            if not job and clean_company:
+                p_lower = clean_company.lower()
+                c_items = [it for it in all_list if p_lower in (it.get("company") or "").lower() or (it.get("company") or "").lower() in p_lower]
+                if c_items:
+                    t_words = set(re.findall(r"\w+", clean_title.lower()))
+                    best = None
+                    best_score = -1
+                    for cand in c_items:
+                        cand_words = set(re.findall(r"\w+", (cand.get("title") or "").lower()))
+                        overlap = len(t_words.intersection(cand_words))
+                        if overlap > best_score:
+                            best_score = overlap
+                            best = cand
+                    job = dict(best or c_items[0])
+        except Exception as e:
+            logger.warning(f"Catalog fallback lookup skipped: {e}")
+
+    if job:
+        job.pop("_id", None)
+
+    # 4. Synthesize domain skills if skills field is empty or missing
+    context_str = f"{clean_title} {clean_company} {job.get('sector', '')} {candidate_branch or ''}"
+    domain_key = _infer_domain_key(context_str)
+    default_skills = DOMAIN_SKILL_MAP.get(domain_key, DOMAIN_SKILL_MAP["default"])
+
+    if not job.get("skills"):
+        job["skills"] = ", ".join(default_skills)
+
+    if not job.get("company"):
+        job["company"] = clean_company or "Corporate Partner"
+    if not job.get("title"):
+        job["title"] = clean_title or "Corporate Intern"
+    if not job.get("sector"):
+        job["sector"] = domain_key.title()
+
+    return job
+
+
 def _evaluate_application_for_role(app: Dict[str, Any], job: Dict[str, Any]) -> Dict[str, Any]:
     """
     AI Candidate Screener Engine:
     Evaluates a single application against the job requirements using ATS matching
     and AI recruiter qualitative assessment. Returns match score, strengths,
-    identified skill gaps, and constructive rejection feedback.
+    identified skill gaps, and constructive rejection feedback tailored to company and sector.
     """
     cand_name = app.get("candidate_name") or "Candidate"
     cand_skills = app.get("skills") or []
@@ -389,39 +642,78 @@ def _evaluate_application_for_role(app: Dict[str, Any], job: Dict[str, Any]) -> 
     cand_degree = app.get("degree") or "B.Tech"
     cand_cgpa = app.get("cgpa") or ""
     role_title = app.get("title") or job.get("title") or "Corporate Intern"
-    job_skills_str = job.get("skills") or "Programming, Web Development, Problem Solving, Git"
+    effective_company = app.get("company") or job.get("company") or "Corporate Partner"
     job_sector = job.get("sector") or "Technology"
 
-    # Required skills into clean list
-    req_skills = [s.strip() for s in re.split(r'[,|;•/]+', job_skills_str) if s.strip()]
-    cand_skills_lower = [s.lower() for s in cand_skills]
+    # Contextual Domain Skills
+    job_skills_str = job.get("skills") or ""
+    if not job_skills_str or len(job_skills_str.strip()) < 5:
+        domain_key = _infer_domain_key(f"{role_title} {effective_company} {job_sector} {cand_branch}")
+        job_skills_str = ", ".join(DOMAIN_SKILL_MAP.get(domain_key, DOMAIN_SKILL_MAP["default"]))
+
+    # Parse and clean job requirements
+    raw_phrases = [p.strip() for p in re.split(r'[,;•\n/]+', job_skills_str) if len(p.strip()) > 2]
+    req_skills = []
+    for rp in raw_phrases:
+        clean_p = re.sub(r'\s*(basics|helpful|preferred|knowledge|skills)\b', '', rp, flags=re.I).strip()
+        clean_p = re.sub(r'[\.\,\;\:\!\?]+', '', clean_p).strip()
+        if len(clean_p) > 1 and clean_p.lower() not in [x.lower() for x in req_skills]:
+            req_skills.append(clean_p)
+
+    if not req_skills:
+        req_skills = ["Domain Problem Solving", "Technical Execution", "Core Field Tools"]
+
+    # Candidate token and concept expansion
+    cand_tokens = set()
+    for cs in cand_skills:
+        for t in re.findall(r'[a-zA-Z0-9\+#\.]+', cs.lower()):
+            cand_tokens.add(t)
+
+    cand_concepts = set(cand_tokens)
+    for group_key, syns in SYNONYM_GROUPS.items():
+        if any(t in syns or any(s in t for s in syns) for t in cand_tokens):
+            cand_concepts.add(group_key)
+            cand_concepts.update(syns)
 
     matched_skills = []
     missing_skills = []
 
-    for rs in req_skills:
-        rs_clean = rs.lower()
-        if any(rs_clean in cs or cs in rs_clean or re.search(r'\b' + re.escape(rs_clean) + r'\b', cs) for cs in cand_skills_lower):
-            matched_skills.append(rs)
+    for req in req_skills:
+        clean_req = req.lower()
+        phrase_tokens = set(re.findall(r'[a-zA-Z0-9\+#\.]+', clean_req))
+        is_match = False
+        if any(t in cand_concepts for t in phrase_tokens):
+            is_match = True
         else:
-            missing_skills.append(rs)
+            for group_key, syns in SYNONYM_GROUPS.items():
+                if any(t in syns for t in phrase_tokens) and group_key in cand_concepts:
+                    is_match = True
+                    break
+            if not is_match:
+                if any(cs in clean_req or clean_req in cs for cs in [c.lower() for c in cand_skills]):
+                    is_match = True
+
+        if is_match:
+            matched_skills.append(req)
+        else:
+            missing_skills.append(req)
 
     # Base ATS Scoring Algorithm
     skill_ratio = len(matched_skills) / max(1, len(req_skills))
-    raw_score = 42 + int(skill_ratio * 42)
+    raw_score = 48 + int(skill_ratio * 38)
 
     # Branch Alignment Bonus
     b_lower = cand_branch.lower()
-    combined_context = (role_title + " " + job_sector).lower()
+    combined_context = (role_title + " " + job_sector + " " + effective_company).lower()
     if any(kw in b_lower for kw in ["comp", "cse", "it", "soft", "tech"]) and any(kw in combined_context for kw in ["software", "developer", "data", "it", "web", "cloud"]):
         raw_score += 10
-    elif any(kw in b_lower for kw in ["mech", "auto", "mfg"]) and any(kw in combined_context for kw in ["mechanical", "automotive", "production", "cad"]):
+    elif any(kw in b_lower for kw in ["mech", "auto", "mfg", "production"]) and any(kw in combined_context for kw in ["mechanical", "automotive", "production", "cad", "motor"]):
         raw_score += 10
-    elif any(kw in b_lower for kw in ["civil", "struct", "infra"]) and any(kw in combined_context for kw in ["civil", "infrastructure", "construction"]):
+    elif any(kw in b_lower for kw in ["civil", "struct", "infra", "construction"]) and any(kw in combined_context for kw in ["civil", "infrastructure", "construction", "project planning"]):
         raw_score += 10
-    elif any(kw in b_lower for kw in ["finance", "commerce", "bank", "account"]) and any(kw in combined_context for kw in ["banking", "finance", "audit", "wealth"]):
+    elif any(kw in b_lower for kw in ["finance", "commerce", "bank", "account", "b.com"]) and any(kw in combined_context for kw in ["banking", "finance", "audit", "wealth", "bank"]):
         raw_score += 10
-    elif any(kw in b_lower for kw in ["pharma", "bio", "chem"]) and any(kw in combined_context for kw in ["pharma", "quality", "formulation", "lab"]):
+    elif any(kw in b_lower for kw in ["pharma", "bio", "chem", "pharm"]) and any(kw in combined_context for kw in ["pharma", "quality", "formulation", "lab", "sun"]):
         raw_score += 10
 
     # CGPA & Resume presence bonus
@@ -429,7 +721,7 @@ def _evaluate_application_for_role(app: Dict[str, Any], job: Dict[str, Any]) -> 
         try:
             num_cgpa = float(re.findall(r'\d+\.?\d*', cand_cgpa)[0])
             if num_cgpa >= 8.5:
-                raw_score += 7
+                raw_score += 6
             elif num_cgpa >= 7.5:
                 raw_score += 4
         except Exception:
@@ -438,46 +730,51 @@ def _evaluate_application_for_role(app: Dict[str, Any], job: Dict[str, Any]) -> 
     if app.get("resume_name") or app.get("resume_url"):
         raw_score += 4
 
-    final_score = min(96, max(48, raw_score))
+    final_score = min(96, max(52, raw_score))
 
     # Strengths
     strengths = []
     if matched_skills:
-        strengths.append(f"Direct competency in core prerequisites: {', '.join(matched_skills[:3])}.")
+        strengths.append(f"Demonstrated competency in key prerequisites: {', '.join(matched_skills[:3])}.")
     if cand_cgpa:
-        strengths.append(f"Consistent academic standing ({cand_cgpa}) in {cand_branch}.")
+        strengths.append(f"Consistent academic performance ({cand_cgpa}) in {cand_branch}.")
     if cand_degree:
-        strengths.append(f"Enrolled in accredited curriculum: {cand_degree}.")
+        strengths.append(f"Formal curriculum enrollment: {cand_degree}.")
     if not strengths:
-        strengths.append("Verified student registration under PM Scheme.")
+        strengths.append(f"Verified student applicant for {effective_company}.")
 
-    # High-quality personalized constructive rejection feedback
-    top_missing = missing_skills[:3] if missing_skills else ["Production Deployment Rigor", "Specialized Frameworks"]
+    # Tailored, domain-specific constructive rejection feedback
+    top_missing = missing_skills[:2] if missing_skills else ["Domain Practical Implementation", "Portfolio Verification"]
+    top_matched = matched_skills[:2] if matched_skills else ["academic curriculum"]
     rejection_reason = (
-        f"Application review for {role_title}: While your foundational coursework in {cand_branch} is commendable, "
-        f"this opening specifically required proven hands-on proficiency in {', '.join(top_missing)}. "
-        f"Candidates who demonstrated deployed portfolio projects and certified experience in these core requirements were prioritized for Round 1 interviews."
+        f"Thank you for your interest in the {role_title} role at {effective_company}. "
+        f"While your background in {cand_branch} with knowledge of {', '.join(top_matched)} is commendable, "
+        f"this opening required hands-on demonstrated experience in {', '.join(top_missing)} "
+        f"that was not sufficiently evidenced in your application. "
+        f"We encourage you to expand your project portfolio in these areas and re-apply."
     )
 
+    # Domain-specific improvement tips
     improvement_tips = [
-        f"Build a standalone project demonstrating practical implementation of {top_missing[0] if top_missing else 'required frameworks'}.",
-        "Include measurable results and metrics (e.g. latency, users served, system accuracy) in your project descriptions.",
-        "Update your resume and re-apply to relevant corporate openings across other PMIS sectors."
+        f"Build a practical hands-on project demonstrating {top_missing[0] if top_missing else 'core technical skills'}.",
+        f"Quantify outcomes and technical metrics (e.g. simulation precision, efficiency gains, accuracy) on your resume.",
+        f"Explore certified workshops or PMIS corporate openings aligned with {role_title} at {effective_company}."
     ]
 
     # Quick LLM enhancement if active
     try:
-        llm_prompt = f"""You are an AI Recruiter Screener for {job.get('company', 'Enterprise Partner')}.
+        llm_prompt = f"""You are an AI Recruiter Screener for {effective_company}.
 Candidate: {cand_name}
 Role: {role_title}
 Candidate Branch: {cand_branch}
 Candidate Skills: {', '.join(cand_skills)}
 Job Required Skills: {job_skills_str}
+Missing Skills: {', '.join(missing_skills)}
 Score: {final_score}
 
 Return JSON with keys:
-- rejection_reason: 2-sentence crisp, polite and constructive explanation of why this application was not selected.
-- improvement_tips: list of 3 actionable tips for student improvement.
+- rejection_reason: 2-sentence crisp, polite and constructive explanation of why this application was not selected for {effective_company}.
+- improvement_tips: list of 3 actionable, domain-specific tips for student improvement.
 - strengths: list of 2 primary strengths.
 """
         raw_llm = nvidia_llm.generate_response([{"role": "user", "content": llm_prompt}], max_tokens=500, temperature=0.1)
@@ -499,7 +796,7 @@ Return JSON with keys:
         "candidate_name": cand_name,
         "candidate_email": app.get("candidate_email") or "",
         "title": role_title,
-        "company": app.get("company") or job.get("company"),
+        "company": effective_company,
         "score": final_score,
         "matched_skills": matched_skills,
         "missing_skills": missing_skills,
@@ -536,24 +833,15 @@ def ai_screen_applications(payload: AIScreenApplicationsRequest):
             detail=f"No applications found for company '{clean_company}' under the specified filter."
         )
 
-    # Fetch corresponding job requirements
-    col_internships = internships_collection()
+    # Fetch corresponding job requirements with domain resolver
     cached_jobs: Dict[str, Dict[str, Any]] = {}
 
-    def get_job_info(internship_id: Optional[str], title: str) -> Dict[str, Any]:
-        cache_key = f"{internship_id}_{title}"
+    def get_job_info(internship_id: Optional[str], title: str, candidate_branch: Optional[str] = None) -> Dict[str, Any]:
+        cache_key = f"{internship_id}_{title}_{candidate_branch}"
         if cache_key in cached_jobs:
             return cached_jobs[cache_key]
 
-        query = {}
-        if internship_id:
-            query = {"$or": [{"id": internship_id}, {"internship_id": internship_id}]}
-        else:
-            query = {"company": clean_company, "title": title}
-
-        job = col_internships.find_one(query) or {}
-        if job:
-            job.pop("_id", None)
+        job = resolve_job_requirements(internship_id, clean_company, title, candidate_branch)
         cached_jobs[cache_key] = job
         return job
 
@@ -572,7 +860,7 @@ def ai_screen_applications(payload: AIScreenApplicationsRequest):
     threshold = payload.min_score_threshold or 70
 
     for role_title, role_apps in apps_by_role.items():
-        job_info = get_job_info(role_apps[0].get("internship_id"), role_title)
+        job_info = get_job_info(role_apps[0].get("internship_id"), role_title, role_apps[0].get("branch"))
 
         # Evaluate each application in this role
         evaluated_in_role = []

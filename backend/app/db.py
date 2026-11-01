@@ -740,7 +740,7 @@ DEFAULT_SEED_APPLICATIONS = [
         "application_id": "APP-2026-TCS01",
         "id": "APP-2026-TCS01",
         "user_id": "PMIS-YOUTH-01",
-        "internship_id": "PMIS-IND-001",
+        "internship_id": "PMIS-001",
         "company": "Tata Consultancy Services (TCS)",
         "title": "Software Development Intern",
         "sector": "IT & Software Development",
@@ -766,9 +766,9 @@ DEFAULT_SEED_APPLICATIONS = [
         "application_id": "APP-2026-TCS02",
         "id": "APP-2026-TCS02",
         "user_id": "PMIS-YOUTH-02",
-        "internship_id": "PMIS-IND-002",
+        "internship_id": "PMIS-001",
         "company": "Tata Consultancy Services (TCS)",
-        "title": "Full Stack Developer / Software Engineer",
+        "title": "Software Development Intern",
         "sector": "IT & Software Development",
         "location": "Pan-India / Kolkata",
         "stipend": "₹5,000 / month",
@@ -794,9 +794,9 @@ DEFAULT_SEED_APPLICATIONS = [
         "application_id": "APP-2026-TM01",
         "id": "APP-2026-TM01",
         "user_id": "PMIS-YOUTH-03",
-        "internship_id": "PMIS-IND-006",
+        "internship_id": "PMIS-048",
         "company": "Tata Motors",
-        "title": "Automotive Engineering Intern",
+        "title": "Automotive Engineering Intern – Data & Operations",
         "sector": "Automotive",
         "location": "Pune, Maharashtra",
         "stipend": "₹5,000 / month",
@@ -820,9 +820,9 @@ DEFAULT_SEED_APPLICATIONS = [
         "application_id": "APP-2026-LT01",
         "id": "APP-2026-LT01",
         "user_id": "PMIS-YOUTH-04",
-        "internship_id": "PMIS-IND-011",
+        "internship_id": "PMIS-035",
         "company": "Larsen & Toubro (L&T)",
-        "title": "Project Planning Intern",
+        "title": "Project Planning Intern – Business/Technical Analysis",
         "sector": "Infrastructure & Construction",
         "location": "Ahmedabad / Vadodara, Gujarat",
         "stipend": "₹5,000 / month",
@@ -848,7 +848,7 @@ DEFAULT_SEED_APPLICATIONS = [
         "application_id": "APP-2026-HDFC01",
         "id": "APP-2026-HDFC01",
         "user_id": "PMIS-YOUTH-05",
-        "internship_id": "PMIS-IND-018",
+        "internship_id": "PMIS-006",
         "company": "HDFC Bank",
         "title": "Finance & Banking Operations Intern",
         "sector": "Banking & Financial Services",
@@ -874,7 +874,7 @@ DEFAULT_SEED_APPLICATIONS = [
         "application_id": "APP-2026-SP01",
         "id": "APP-2026-SP01",
         "user_id": "PMIS-YOUTH-06",
-        "internship_id": "PMIS-IND-022",
+        "internship_id": "PMIS-015",
         "company": "Sun Pharmaceutical Industries",
         "title": "Pharma Quality & Research Intern",
         "sector": "Pharmaceuticals",
@@ -974,7 +974,10 @@ def add_internship_db(internship_data: Dict[str, Any]) -> Dict[str, Any]:
     return doc
 
 def _normalize_company_regex(company_name: str) -> str:
+    if not company_name:
+        return ""
     clean = re.sub(r"\s*\([^)]*\)", "", company_name).strip()
+    clean = re.sub(r"\b(Private\s+Limited|Pvt\s+Ltd|Limited|Ltd|Corp|Corporation|Industries)\b", "", clean, flags=re.I).strip()
     return re.escape(clean) if clean else re.escape(company_name.strip())
 
 def get_company_internships_db(company_name: str) -> List[Dict[str, Any]]:

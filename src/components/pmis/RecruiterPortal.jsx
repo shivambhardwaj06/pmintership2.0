@@ -267,9 +267,38 @@ export default function RecruiterPortal() {
         });
       }
 
+      let mergedApps = [];
       if (appsRes?.status === "success" && Array.isArray(appsRes.applications)) {
-        setApplications(appsRes.applications);
+        mergedApps = [...appsRes.applications];
       }
+
+      // Merge candidate applications submitted locally from Student Portal for targetComp
+      try {
+        const localKeys = Object.keys(localStorage).filter((k) => k.startsWith("pmis_applications_"));
+        const existingAppIds = new Set(mergedApps.map((a) => a.application_id || a.id));
+        for (const k of localKeys) {
+          const stored = JSON.parse(localStorage.getItem(k) || "[]");
+          if (Array.isArray(stored)) {
+            for (const item of stored) {
+              const compName = (item.company || "").toLowerCase();
+              if (
+                compName.includes(targetComp.toLowerCase()) ||
+                targetComp.toLowerCase().includes(compName)
+              ) {
+                const appId = item.application_id || item.id;
+                if (appId && !existingAppIds.has(appId)) {
+                  mergedApps.unshift(item);
+                  existingAppIds.add(appId);
+                }
+              }
+            }
+          }
+        }
+      } catch {
+        // ignore
+      }
+
+      setApplications(mergedApps);
 
       if (openingsRes?.status === "success" && Array.isArray(openingsRes.internships)) {
         setOpenings(openingsRes.internships);
