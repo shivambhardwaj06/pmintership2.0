@@ -82,15 +82,6 @@ function MobileMenu({ onClose, user, onOpenAuth, onSetView, onLogout, activeView
           authRequired: true,
           badge: "AI Powered",
         },
-        {
-          id: "recruiter",
-          label: "Recruiter Portal",
-          subtitle: "Enterprise Candidate Review Hub",
-          icon: Building2,
-          color: "text-purple-500",
-          href: "/recruiter",
-          badge: "Corporate",
-        },
       ],
     },
     {
@@ -331,14 +322,6 @@ export default function Header({ user, onOpenAuth, onSetView, activeView = "home
             alt="PM Internship Scheme"
             className="h-7 sm:h-9 w-auto shrink-0 group-hover:scale-[1.02] transition-transform"
           />
-          <div className="hidden xl:flex flex-col border-l border-slate-200 dark:border-slate-800 pl-3">
-            <span className="text-[11px] font-black uppercase tracking-wider text-slate-900 dark:text-white">
-              PM Internship Scheme
-            </span>
-            <span className="text-[9px] font-semibold text-slate-500 dark:text-slate-400">
-              Ministry of Corporate Affairs • Govt of India
-            </span>
-          </div>
         </button>
 
         {/* CENTER: Clean, Spacious Desktop Navigation Links */}
@@ -454,16 +437,6 @@ export default function Header({ user, onOpenAuth, onSetView, activeView = "home
               </div>
             )}
           </div>
-
-          {/* Recruiter Portal Dedicated Link */}
-          <a
-            href="/recruiter"
-            className="px-3 py-1.5 rounded-xl text-xs font-black text-amber-600 dark:text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 transition cursor-pointer flex items-center gap-1.5"
-            title="Corporate Recruiter Candidate Management Portal"
-          >
-            <Building2 className="h-3.5 w-3.5 text-amber-500" />
-            <span>Recruiter Portal</span>
-          </a>
         </nav>
 
         {/* RIGHT: Viksit Bharat, Theme Toggle, Auth CTA / User Avatar, Hamburger */}
