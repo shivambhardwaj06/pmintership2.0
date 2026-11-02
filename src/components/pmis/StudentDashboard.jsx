@@ -405,6 +405,8 @@ export function computeDynamicResumeGaps(skills = [], branch = "", careerSummary
       id: "gap-verify-links",
       title: "Missing Clickable Code Repositories & Live Project URLs",
       category: "Code Verification & Portfolio",
+      actionType: "url",
+      actionLabel: "Attach GitHub / Portfolio URL",
       whatIsWrong: "Your resume describes technical projects but lacks clickable GitHub repository links or live deployed application URLs. Corporate recruiters at top tech MNCs (TCS, Wipro, Infosys) cannot verify if your code actually runs or examine your engineering commit history.",
       whatCanDo: "Deploy your web applications on Vercel or Render, push your clean source code to GitHub with a well-structured README (architecture summary, setup instructions), and include direct clickable hyperlinks next to each project title.",
     });
@@ -417,6 +419,8 @@ export function computeDynamicResumeGaps(skills = [], branch = "", careerSummary
       id: "gap-metrics",
       title: "Project Bullet Points Lack Quantified Engineering Impact Metrics",
       category: "Impact Measurement",
+      actionType: "metric",
+      actionLabel: "Confirm Project Metrics Added",
       whatIsWrong: "Your project descriptions use descriptive statements (e.g. 'created an application', 'implemented machine learning model') without measurable performance benchmarks. Recruiter ATS systems prioritize resumes that quantify impact using numbers, percentages, or latency figures.",
       whatCanDo: "Quantify the outcomes of your projects: specify model accuracy (e.g. 'Achieved 94.2% test accuracy'), response time reductions (e.g. 'Reduced query latency by 45%'), or scale (e.g. 'Trained on 10,000+ patient records across 14 clinical features').",
     });
@@ -432,6 +436,9 @@ export function computeDynamicResumeGaps(skills = [], branch = "", careerSummary
         id: "gap-mlops",
         title: "Absence of Production MLOps & Model Serving Pipelines (MLflow / ONNX / Docker)",
         category: "Machine Learning & Production AI",
+        actionType: "skills",
+        skillsToFill: ["MLOps", "MLflow", "Docker", "Model Serving"],
+        actionLabel: "Add MLOps & Docker to Profile",
         whatIsWrong: "While your resume demonstrates machine learning modeling (e.g. Scikit-learn, XGBoost, Deep Learning), it lacks production MLOps tools. Modern AI corporate recruiters at Persistent, Wipro, and LTIMindtree screen for candidates who know how to package, monitor, and serve models at scale rather than just running Jupyter notebooks.",
         whatCanDo: "Containerize your Cardiac Heart Disease Predictor with a FastAPI endpoint using Docker, integrate MLflow or Weights & Biases for experiment tracking, and document API inference latency (<80ms) on your GitHub repository.",
       });
@@ -445,6 +452,9 @@ export function computeDynamicResumeGaps(skills = [], branch = "", careerSummary
         id: "gap-vectordb-rag",
         title: "Missing Vector Database & Enterprise RAG Retrieval Stack (Qdrant / ChromaDB)",
         category: "Generative AI Systems",
+        actionType: "skills",
+        skillsToFill: ["Vector DBs (Qdrant / ChromaDB)", "RAG Pipelines"],
+        actionLabel: "Add Vector DB & RAG to Profile",
         whatIsWrong: "You highlight the Gemini API and Prompt Engineering, but do not showcase hands-on experience with Vector Databases or Retrieval-Augmented Generation (RAG) chunking and embedding pipelines required by PMIS Generative AI & LLM Systems intern roles.",
         whatCanDo: "Build and link a Retrieval-Augmented Generation (RAG) mini-project using your Gemini API with ChromaDB or Qdrant to search over PDF documents, and add 'Vector DBs (Qdrant / ChromaDB)' to your verified technical skills.",
       });
@@ -457,6 +467,9 @@ export function computeDynamicResumeGaps(skills = [], branch = "", careerSummary
         id: "gap-bigdata",
         title: "Data Processing Architecture Limited to In-Memory Pandas Dataframes",
         category: "Data Engineering & Scalability",
+        actionType: "skills",
+        skillsToFill: ["PySpark", "Apache Kafka", "Data Modeling"],
+        actionLabel: "Add PySpark & Data Pipelines to Profile",
         whatIsWrong: "Your data processing relies strictly on in-memory Pandas and NumPy operations. Enterprise HealthTech and Analytics openings at Persistent and TCS look for familiarity with distributed processing or scalable SQL databases capable of processing gigabyte-scale datasets.",
         whatCanDo: "Add a PySpark or DuckDB data ingestion script, or demonstrate advanced PostgreSQL window functions and indexing on large datasets to prove your pipeline can handle data beyond memory limits.",
       });
@@ -473,6 +486,9 @@ export function computeDynamicResumeGaps(skills = [], branch = "", careerSummary
         id: "gap-typescript",
         title: "Missing TypeScript Proficiency in Full-Stack Web Projects",
         category: "Modern Frontend Stack",
+        actionType: "skills",
+        skillsToFill: ["TypeScript"],
+        actionLabel: "Add TypeScript to Profile",
         whatIsWrong: "Your profile lists JavaScript and React but omits TypeScript. Over 80% of corporate frontend and full-stack internships at LTIMindtree, Infosys, and Coforge mandate TypeScript to enforce static type-checking in team codebases.",
         whatCanDo: "Convert at least one of your React or Node.js projects to TypeScript (.tsx/.ts), define strict interfaces for your API data models, and list 'TypeScript' among your core programming languages.",
       });
@@ -485,6 +501,9 @@ export function computeDynamicResumeGaps(skills = [], branch = "", careerSummary
         id: "gap-automated-testing",
         title: "Absence of Automated Unit & Integration Testing (Pytest / Vitest / Jest)",
         category: "Software Quality & Testing",
+        actionType: "skills",
+        skillsToFill: ["Automated Testing (Pytest/Jest)", "Unit Testing"],
+        actionLabel: "Add Unit & Automated Testing to Profile",
         whatIsWrong: "None of your technical projects mention automated testing suites. Top engineering teams filter for candidates who write unit and integration tests to ensure reliable production code.",
         whatCanDo: "Write unit tests for your FastAPI backend endpoints using Pytest (or Jest/Vitest for React components), achieve 80%+ test coverage on your GitHub repository, and list 'Unit Testing (Pytest/Jest)' in your skills.",
       });
@@ -497,6 +516,9 @@ export function computeDynamicResumeGaps(skills = [], branch = "", careerSummary
         id: "gap-caching-redis",
         title: "Missing In-Memory Caching & Session Storage Layer (Redis)",
         category: "Backend Performance & Caching",
+        actionType: "skills",
+        skillsToFill: ["Redis", "In-Memory Caching"],
+        actionLabel: "Add Redis Caching to Profile",
         whatIsWrong: "Your backend projects connect directly to MongoDB/SQL databases without an in-memory caching layer, causing latency bottlenecks under high concurrent user traffic.",
         whatCanDo: "Integrate Redis caching for frequently accessed database queries or session tokens in your FastAPI/Node app, and highlight the resulting API response speedup on your resume.",
       });
@@ -512,6 +534,9 @@ export function computeDynamicResumeGaps(skills = [], branch = "", careerSummary
         id: "gap-mech-fea",
         title: "Absence of FEA Structural or Thermal Simulation Proof (ANSYS / SolidWorks FEA)",
         category: "Mechanical CAE & Simulation",
+        actionType: "skills",
+        skillsToFill: ["FEA Simulation (ANSYS)", "Finite Element Analysis"],
+        actionLabel: "Add FEA (ANSYS) to Profile",
         whatIsWrong: "Your mechanical profile lists 3D CAD modeling but lacks Finite Element Analysis (FEA) or thermal stress simulations required by automotive OEMs (Tata Motors, Hero MotoCorp) to validate component structural integrity.",
         whatCanDo: "Perform a structural or thermal stress simulation in ANSYS or SolidWorks Simulation on your chassis/part, document the minimum Factor of Safety (FOS) and displacement, and list 'FEA Simulation (ANSYS)' on your resume.",
       });
@@ -523,6 +548,9 @@ export function computeDynamicResumeGaps(skills = [], branch = "", careerSummary
         id: "gap-mech-gdt",
         title: "Missing Geometric Dimensioning & Tolerancing (GD&T ASME Y14.5 Standards)",
         category: "Manufacturing & Quality Standards",
+        actionType: "skills",
+        skillsToFill: ["GD&T (ASME Y14.5)", "Tolerance Stack-Up Analysis"],
+        actionLabel: "Add GD&T to Profile",
         whatIsWrong: "Automotive engineering teams screen for production-ready design skills. Claiming CAD proficiency without ASME GD&T symbols and tolerance stack-up analysis limits your shortlist ranking for manufacturing roles.",
         whatCanDo: "Add GD&T datum feature references and tolerance callouts to your component engineering drawings, and document tolerance stack-up analysis in your project descriptions.",
       });
@@ -538,6 +566,9 @@ export function computeDynamicResumeGaps(skills = [], branch = "", careerSummary
         id: "gap-civil-bim",
         title: "Missing Building Information Modeling (BIM / Revit 3D Coordination)",
         category: "Modern Infrastructure Stack",
+        actionType: "skills",
+        skillsToFill: ["Autodesk Revit", "BIM 3D Modeling", "Navisworks"],
+        actionLabel: "Add Revit BIM to Profile",
         whatIsWrong: "Major infrastructure partners like Larsen & Toubro (L&T) and Tata Projects mandate BIM / Revit proficiency for mega project internships. Resumes with only 2D AutoCAD drafting receive lower screening priority.",
         whatCanDo: "Learn Revit BIM for 3D structural coordination and clash detection, and link a sample BIM model portfolio or project sheet on your resume.",
       });
@@ -553,6 +584,9 @@ export function computeDynamicResumeGaps(skills = [], branch = "", careerSummary
         id: "gap-finance-modeling",
         title: "Absence of 3-Statement Financial Modeling & Valuation Frameworks (DCF)",
         category: "Corporate Finance & Valuation",
+        actionType: "skills",
+        skillsToFill: ["3-Statement Financial Modeling", "DCF Valuation"],
+        actionLabel: "Add Financial Modeling to Profile",
         whatIsWrong: "Corporate banking and equity research recruiters at HDFC Bank and ICICI screen for candidates who can build dynamic 3-statement models and DCF valuations, beyond basic textbook accounting.",
         whatCanDo: "Build an integrated 3-statement financial model (Income Statement, Balance Sheet, Cash Flow) with sensitivity tables in Excel for a listed Indian enterprise, and link your workbook on Google Drive.",
       });
@@ -565,6 +599,9 @@ export function computeDynamicResumeGaps(skills = [], branch = "", careerSummary
       id: "gap-advance-cert",
       title: "Add Verified Professional Industry Certification or Open-Source Contribution",
       category: "Industry Credentials",
+      actionType: "skills",
+      skillsToFill: ["Cloud Architecture", "Open Source Contribution"],
+      actionLabel: "Add Cloud & Open Source to Profile",
       whatIsWrong: "Your resume covers all foundational and intermediate technical competencies, but lacks a vendor-verified credential (e.g. AWS Cloud Practitioner, Microsoft Certified, or open-source PRs) to stand out in high-volume competitive screening.",
       whatCanDo: "Earn a foundational cloud credential (AWS Certified Cloud Practitioner or Oracle Cloud Infrastructure) or submit a pull request to a recognized open-source library and link it on your resume.",
     });
@@ -969,14 +1006,47 @@ async function parseResumePdfClientSide(file) {
   };
 }
 
+function getBestLocalProfile(userId) {
+  if (!userId) {
+    try {
+      const p = JSON.parse(localStorage.getItem("pmis_master_profile") || localStorage.getItem("pmis_user") || "{}");
+      if (p && typeof p === "object") return p;
+    } catch {}
+    return {};
+  }
+  const lower = userId.toLowerCase();
+  const upper = userId.toUpperCase();
+  const keysToTry = [
+    `pmis_profile_${userId}`,
+    `pmis_profile_${lower}`,
+    `pmis_profile_${upper}`,
+    "pmis_master_profile",
+    "pmis_user",
+  ];
+  let best = {};
+  for (const k of keysToTry) {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(k) || "{}");
+      if (parsed && typeof parsed === "object") {
+        if (Array.isArray(parsed.skills) && parsed.skills.length > (best.skills?.length || 0)) {
+          best = { ...best, ...parsed };
+        } else if (parsed.name && !["Candidate", "Student Candidate", "PMIS Candidate", "Exact Full Name from resume"].includes(parsed.name)) {
+          best = { ...parsed, ...best };
+        }
+      }
+    } catch {}
+  }
+  return best;
+}
+
 export default function StudentDashboard({ user, onOpenAuth, onNavigateToInternships }) {
   // Navigation tabs under profile to avoid endless scrolling
   const [dashboardTab, setDashboardTab] = useState("profile"); // "profile" | "resume_ats" | "gaps" | "matched_jobs" | "applications" | "resumes"
 
   // Real-time Profile state (Hydrated instantly from local storage & MongoDB)
   const [profile, setProfile] = useState(() => {
-    const targetId = user?.user_id;
-    const localSaved = targetId ? JSON.parse(localStorage.getItem(`pmis_profile_${targetId}`) || "{}") : {};
+    const targetId = user?.user_id || JSON.parse(localStorage.getItem("pmis_user") || "{}")?.user_id;
+    const localSaved = getBestLocalProfile(targetId);
     return {
       name: (localSaved.name && !["Candidate", "Student Candidate", "PMIS Candidate", "Exact Full Name from resume"].includes(localSaved.name))
         ? localSaved.name
@@ -998,6 +1068,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
         : (user?.skills?.length ? user.skills : ["Problem Solving", "Professional Communication"]),
       resume_name: localSaved.resume_name || user?.resume_name || "",
       cloudinary_url: localSaved.cloudinary_url || user?.cloudinary_url || "",
+      github_url: localSaved.github_url || "",
     };
   });
 
@@ -1005,15 +1076,30 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
   const [newSkill, setNewSkill] = useState("");
   const [saveStatus, setSaveStatus] = useState(null);
 
+  // Real-time synchronization of profile inputs to persistent local caches
+  useEffect(() => {
+    if (profile.user_id) {
+      try {
+        const existing = JSON.parse(localStorage.getItem("pmis_user") || "{}");
+        const next = { ...existing, ...profile };
+        localStorage.setItem("pmis_user", JSON.stringify(next));
+        localStorage.setItem(`pmis_profile_${profile.user_id}`, JSON.stringify(next));
+        localStorage.setItem(`pmis_profile_${profile.user_id.toLowerCase()}`, JSON.stringify(next));
+        localStorage.setItem(`pmis_profile_${profile.user_id.toUpperCase()}`, JSON.stringify(next));
+        localStorage.setItem("pmis_master_profile", JSON.stringify(next));
+      } catch {}
+    }
+  }, [profile]);
+
   // Hydrate profile if user prop changes
   useEffect(() => {
     if (user?.user_id) {
-      const localSaved = JSON.parse(localStorage.getItem(`pmis_profile_${user.user_id}`) || "{}");
+      const localSaved = getBestLocalProfile(user.user_id);
       setProfile((prev) => ({
         ...prev,
         ...user,
         ...localSaved,
-        name: (localSaved.name && !["Candidate", "Student Candidate", "PMIS Candidate"].includes(localSaved.name))
+        name: (localSaved.name && !["Candidate", "Student Candidate", "PMIS Candidate", "Exact Full Name from resume"].includes(localSaved.name))
           ? localSaved.name
           : (user.name || prev.name),
         college: (localSaved.college && !localSaved.college.includes("State Technological"))
@@ -1061,10 +1147,114 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
   const [cleaningDb, setCleaningDb] = useState(false);
   const [cleanMessage, setCleanMessage] = useState(null);
 
+  // Resume Checkpoints Resolution State
+  const [resolvedCheckpoints, setResolvedCheckpoints] = useState(() => {
+    try {
+      const targetId = user?.user_id || "guest";
+      const saved = JSON.parse(localStorage.getItem(`pmis_resolved_checkpoints_${targetId}`) || "[]");
+      return Array.isArray(saved) ? saved : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [inputCheckpointValues, setInputCheckpointValues] = useState({});
+
+  useEffect(() => {
+    try {
+      const targetId = profile.user_id || user?.user_id || "guest";
+      const saved = JSON.parse(localStorage.getItem(`pmis_resolved_checkpoints_${targetId}`) || "[]");
+      if (Array.isArray(saved)) {
+        setResolvedCheckpoints(saved);
+      }
+    } catch {}
+  }, [profile.user_id, user?.user_id]);
+
+  const handleResolveCheckpoint = (gapId, skillsToAdd = []) => {
+    const current = new Set(resolvedCheckpoints);
+    const willBeResolved = !current.has(gapId);
+    if (willBeResolved) {
+      current.add(gapId);
+    } else {
+      current.delete(gapId);
+    }
+    const nextArr = Array.from(current);
+    setResolvedCheckpoints(nextArr);
+    try {
+      const targetId = profile.user_id || user?.user_id || "guest";
+      localStorage.setItem(`pmis_resolved_checkpoints_${targetId}`, JSON.stringify(nextArr));
+    } catch {}
+
+    // Auto-fill skills into verified skills matrix if skillsToAdd provided
+    if (willBeResolved && Array.isArray(skillsToAdd) && skillsToAdd.length > 0) {
+      const existing = Array.isArray(profile.skills) ? [...profile.skills] : [];
+      const lowerExisting = new Set(existing.map((s) => s.toLowerCase()));
+      let addedAny = false;
+      skillsToAdd.forEach((sk) => {
+        if (!lowerExisting.has(sk.toLowerCase())) {
+          existing.push(sk);
+          lowerExisting.add(sk.toLowerCase());
+          addedAny = true;
+        }
+      });
+      if (addedAny) {
+        setProfile((prev) => {
+          const next = { ...prev, skills: existing };
+          try {
+            const userKey = `pmis_profile_${prev.user_id || "guest"}`;
+            localStorage.setItem(userKey, JSON.stringify(next));
+            localStorage.setItem("pmis_user", JSON.stringify(next));
+          } catch {}
+          return next;
+        });
+      }
+    }
+  };
+
+  const handleFillUrlCheckpoint = (gapId, url) => {
+    if (!url || !url.trim()) return;
+    const cleanUrl = url.trim();
+    const current = new Set(resolvedCheckpoints);
+    current.add(gapId);
+    const nextArr = Array.from(current);
+    setResolvedCheckpoints(nextArr);
+    try {
+      const targetId = profile.user_id || user?.user_id || "guest";
+      localStorage.setItem(`pmis_resolved_checkpoints_${targetId}`, JSON.stringify(nextArr));
+      setProfile((prev) => {
+        const next = { ...prev, github_url: cleanUrl };
+        localStorage.setItem(`pmis_profile_${prev.user_id || "guest"}`, JSON.stringify(next));
+        localStorage.setItem("pmis_user", JSON.stringify(next));
+        return next;
+      });
+    } catch {}
+  };
+
   // Reactive top job matches computed directly from student verified skills & academic branch & career goals
   const topJobMatches = useMemo(() => {
     return getTopDatabaseJobMatchesClient(profile.skills || [], profile.branch || "", 5, profile.career_goals || "");
   }, [profile.skills, profile.branch, profile.career_goals]);
+
+  // Derived Dynamic Checkpoints List
+  const gapsList = useMemo(() => {
+    return (aiAnalysis?.detailed_gaps?.length
+      ? aiAnalysis.detailed_gaps
+      : computeDynamicResumeGaps(profile.skills || [], profile.branch || "", profile.career_goals || "", aiAnalysis?.rawText || "", topJobMatches));
+  }, [aiAnalysis?.detailed_gaps, profile.skills, profile.branch, profile.career_goals, aiAnalysis?.rawText, topJobMatches]);
+
+  const totalCheckpoints = gapsList.length;
+  const completedCheckpointsCount = useMemo(() => {
+    return gapsList.filter((gap) => {
+      if (resolvedCheckpoints.includes(gap.id)) return true;
+      if (Array.isArray(gap.skillsToFill) && gap.skillsToFill.length > 0) {
+        const pSkills = Array.isArray(profile.skills) ? profile.skills.map((s) => s.toLowerCase()) : [];
+        return gap.skillsToFill.every((req) => pSkills.some((ps) => ps.includes(req.toLowerCase()) || req.toLowerCase().includes(ps)));
+      }
+      return false;
+    }).length;
+  }, [gapsList, resolvedCheckpoints, profile.skills]);
+
+  const checkpointProgressPercent = totalCheckpoints > 0 ? Math.round((completedCheckpointsCount / totalCheckpoints) * 100) : 100;
 
   // Synchronize dynamic AI review with profile whenever profile changes
   useEffect(() => {
@@ -1102,7 +1292,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
       if (res.ok) {
         const dbUser = await res.json();
         if (dbUser && dbUser.user_id) {
-          const localSaved = JSON.parse(localStorage.getItem(`pmis_profile_${userId}`) || "{}");
+          const localSaved = getBestLocalProfile(userId);
           
           // Smart merge: Never overwrite rich verified extracted details with empty or stale defaults!
           const realName = (localSaved.name && !["Candidate", "Student Candidate", "PMIS Candidate", "Exact Full Name from resume"].includes(localSaved.name))
@@ -1731,10 +1921,14 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                 : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
-            <AlertTriangle className="h-4 w-4 text-red-500" />
-            <span>Detailed Gaps & Action Plan</span>
-            <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-black bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300 border border-red-300 dark:border-red-800">
-              {aiAnalysis?.detailed_gaps?.length || 5} Gaps
+            <CheckSquare className="h-4 w-4 text-amber-500" />
+            <span>Checkpoints & Gap Resolution</span>
+            <span className={`ml-1 px-2 py-0.5 rounded-full text-[10px] font-black border transition ${
+              checkpointProgressPercent === 100
+                ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300"
+                : "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-300"
+            }`}>
+              {completedCheckpointsCount}/{totalCheckpoints} Done
             </span>
           </button>
 
@@ -2491,23 +2685,21 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
         )}
 
         {/* ================================================================ */}
-        {/* TAB 3: DETAILED GAPS & STEP-BY-STEP RESOLUTION PLAN                */}
-        {/* (Zero Strengths Clutter - 100% Focused on Gap Identification)      */}
+        {/* TAB 3: RESUME OPTIMIZATION CHECKPOINTS & GAP RESOLUTION            */}
         {/* ================================================================ */}
         {dashboardTab === "gaps" && (
           <div className="space-y-6 animate-in fade-in duration-200">
             {/* Header Banner */}
             <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <div className="inline-flex items-center gap-1.5 rounded-full bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300 px-3 py-0.5 text-xs font-black uppercase tracking-wider border border-red-300 dark:border-red-800 mb-2">
-                  <AlertTriangle className="h-3.5 w-3.5 text-red-600" /> Deep Recruiter Gap Analysis
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 px-3 py-0.5 text-xs font-black uppercase tracking-wider border border-amber-300 dark:border-amber-800 mb-2">
+                  <CheckSquare className="h-3.5 w-3.5 text-amber-600" /> Actionable Resume Checkpoints
                 </div>
                 <h2 className="font-display text-2xl font-black text-slate-900 dark:text-white">
-                  Identified Resume Skill Gaps & Actionable Improvements
+                  Resume Optimization Checkpoints
                 </h2>
                 <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 max-w-3xl leading-relaxed">
-                  Real-time analysis comparing your verified skills and resume content against top corporate PMIS openings.
-                  Address the specific skill and experience gaps below to qualify for top shortlist tiers.
+                  Recruiters screen against strict technical benchmarks. Fill each checkpoint below by injecting missing technical tools into your profile or verifying project outcomes before submitting applications.
                 </p>
               </div>
 
@@ -2519,58 +2711,235 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
               </button>
             </div>
 
-            {/* List of Dynamic Identified Resume Skill Gaps */}
-            <div className="space-y-4">
-              {(aiAnalysis?.detailed_gaps?.length
-                ? aiAnalysis.detailed_gaps
-                : computeDynamicResumeGaps(profile.skills || [], profile.branch || "", profile.career_goals || "", aiAnalysis?.rawText || "", topJobMatches)
-              ).map((gap, index) => (
-                <div
-                  key={gap.id || index}
-                  className="rounded-3xl p-6 sm:p-7 bg-white dark:bg-slate-900 border-2 border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4 hover:border-slate-300 dark:hover:border-slate-700 transition"
-                >
-                  {/* Card Title & Category */}
-                  <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 font-display font-black text-xs">
-                        #{index + 1}
-                      </span>
-                      <h3 className="font-display text-base font-black text-slate-900 dark:text-white">
-                        {gap.title}
-                      </h3>
-                    </div>
-
-                    <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
-                      {gap.category || "Skill Deficiency"}
+            {/* Checkpoint Progress Tracker Card */}
+            <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white shadow-md border border-slate-700/80 space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-black uppercase tracking-wider text-amber-400">
+                      Checkpoint Progress Tracker
+                    </span>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black ${
+                      checkpointProgressPercent === 100
+                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-400/40"
+                        : "bg-amber-500/20 text-amber-300 border border-amber-400/40"
+                    }`}>
+                      {checkpointProgressPercent === 100 ? "✓ 100% Shortlist Ready" : `${completedCheckpointsCount} of ${totalCheckpoints} Completed`}
                     </span>
                   </div>
+                  <p className="text-xs text-slate-300">
+                    {checkpointProgressPercent === 100
+                      ? "All recruiter screening checkpoints completed! Your profile is verified for top corporate interview shortlists."
+                      : "Complete the remaining checkpoints below to boost your ATS ranking to 90%+."}
+                  </p>
+                </div>
 
-                  {/* ONLY TWO FOCUSED SECTIONS: What is Wrong in Resume & What You Can Do */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
-                    {/* 1. What is Wrong in that Resume */}
-                    <div className="p-4 rounded-2xl bg-rose-50/50 dark:bg-rose-950/20 border border-rose-200/80 dark:border-rose-900/50 space-y-2">
-                      <div className="flex items-center gap-2 font-display text-xs font-black text-rose-800 dark:text-rose-300">
-                        <XCircle className="h-4 w-4 shrink-0 text-rose-600 dark:text-rose-400" />
-                        <span>What Is Wrong in Your Resume</span>
+                {checkpointProgressPercent === 100 ? (
+                  <button
+                    onClick={() => setDashboardTab("matched_jobs")}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs transition shadow-sm cursor-pointer"
+                  >
+                    <span>Proceed to 1-Click Apply</span>
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </button>
+                ) : (
+                  <div className="text-right">
+                    <span className="font-display text-2xl font-black text-emerald-400">
+                      {checkpointProgressPercent}%
+                    </span>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">ATS Readiness</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Progress Bar Track */}
+              <div className="w-full h-2.5 bg-slate-700/70 rounded-full overflow-hidden p-0.5">
+                <div
+                  className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-500 ease-out shadow-xs"
+                  style={{ width: `${checkpointProgressPercent}%` }}
+                />
+              </div>
+            </div>
+
+            {/* List of Dynamic Checkpoints */}
+            <div className="space-y-4">
+              {gapsList.map((gap, index) => {
+                const hasSkillFill = Array.isArray(gap.skillsToFill) && gap.skillsToFill.length > 0;
+                const pSkills = Array.isArray(profile.skills) ? profile.skills.map((s) => s.toLowerCase()) : [];
+                const skillsAlreadyInProfile = hasSkillFill && gap.skillsToFill.every((req) => pSkills.some((ps) => ps.includes(req.toLowerCase()) || req.toLowerCase().includes(ps)));
+                const isResolved = resolvedCheckpoints.includes(gap.id) || skillsAlreadyInProfile;
+
+                return (
+                  <div
+                    key={gap.id || index}
+                    className={`rounded-3xl p-6 sm:p-7 border-2 transition shadow-sm space-y-4 ${
+                      isResolved
+                        ? "bg-emerald-50/20 dark:bg-emerald-950/10 border-emerald-300 dark:border-emerald-800/80"
+                        : "bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
+                    }`}
+                  >
+                    {/* Checkpoint Header & Completion Toggle */}
+                    <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={`flex h-8 w-8 items-center justify-center rounded-xl font-display font-black text-xs transition ${
+                            isResolved
+                              ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-700"
+                              : "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200 border border-amber-300 dark:border-amber-700"
+                          }`}
+                        >
+                          {isResolved ? <Check className="h-4 w-4" /> : `#${index + 1}`}
+                        </span>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+                              Checkpoint {index + 1}
+                            </span>
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
+                                isResolved
+                                  ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300"
+                                  : "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-300"
+                              }`}
+                            >
+                              {isResolved ? "✓ Completed" : "Action Required"}
+                            </span>
+                          </div>
+                          <h3 className="font-display text-base font-black text-slate-900 dark:text-white">
+                            {gap.title}
+                          </h3>
+                        </div>
                       </div>
-                      <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
-                        {gap.whatIsWrong || gap.diagnosis}
-                      </p>
+
+                      <div className="flex items-center gap-2">
+                        <span className="hidden sm:inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                          {gap.category || "Skill Deficiency"}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleResolveCheckpoint(gap.id, gap.skillsToFill)}
+                          className={`px-3.5 py-1.5 rounded-xl font-black text-xs cursor-pointer transition flex items-center gap-1.5 ${
+                            isResolved
+                              ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
+                              : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700"
+                          }`}
+                        >
+                          <Check className={`h-3.5 w-3.5 ${isResolved ? "text-white" : "text-slate-400"}`} />
+                          <span>{isResolved ? "Filled ✓" : "Mark as Filled"}</span>
+                        </button>
+                      </div>
                     </div>
 
-                    {/* 2. What They Can Do */}
-                    <div className="p-4 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/80 dark:border-emerald-900/50 space-y-2">
-                      <div className="flex items-center gap-2 font-display text-xs font-black text-emerald-800 dark:text-emerald-300">
-                        <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                        <span>What You Can Do to Fix It</span>
+                    {/* ONLY TWO FOCUSED SECTIONS: What is Wrong in Resume & What You Can Do */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                      {/* 1. What is Wrong in that Resume */}
+                      <div className="p-4 rounded-2xl bg-rose-50/50 dark:bg-rose-950/20 border border-rose-200/80 dark:border-rose-900/50 space-y-2">
+                        <div className="flex items-center gap-2 font-display text-xs font-black text-rose-800 dark:text-rose-300">
+                          <XCircle className="h-4 w-4 shrink-0 text-rose-600 dark:text-rose-400" />
+                          <span>What Is Wrong in Your Resume</span>
+                        </div>
+                        <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+                          {gap.whatIsWrong || gap.diagnosis}
+                        </p>
                       </div>
-                      <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
-                        {gap.whatCanDo || (Array.isArray(gap.resolutionMethod) ? gap.resolutionMethod.join(" ") : gap.resolutionMethod)}
-                      </p>
+
+                      {/* 2. What They Can Do */}
+                      <div className="p-4 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/80 dark:border-emerald-900/50 space-y-2">
+                        <div className="flex items-center gap-2 font-display text-xs font-black text-emerald-800 dark:text-emerald-300">
+                          <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                          <span>What You Can Do to Fix It</span>
+                        </div>
+                        <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+                          {gap.whatCanDo || (Array.isArray(gap.resolutionMethod) ? gap.resolutionMethod.join(" ") : gap.resolutionMethod)}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* INTERACTIVE CHECKPOINT RESOLUTION / FILL ACTION */}
+                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80">
+                      {hasSkillFill ? (
+                        <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/80">
+                          <div className="space-y-1">
+                            <span className="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                              <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                              Quick-Fill Missing Skills into Verified Matrix:
+                            </span>
+                            <div className="flex flex-wrap gap-1.5">
+                              {gap.skillsToFill.map((sk) => {
+                                const inProfile = pSkills.some((ps) => ps.includes(sk.toLowerCase()) || sk.toLowerCase().includes(ps));
+                                return (
+                                  <span
+                                    key={sk}
+                                    className={`px-2.5 py-0.5 rounded-lg text-[10px] font-bold border transition ${
+                                      inProfile
+                                        ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300"
+                                        : "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-300 dark:border-slate-600"
+                                    }`}
+                                  >
+                                    {inProfile ? "✓" : "+"} {sk}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => handleResolveCheckpoint(gap.id, gap.skillsToFill)}
+                            className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl font-black text-xs transition cursor-pointer shadow-sm ${
+                              isResolved
+                                ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                                : "bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100"
+                            }`}
+                          >
+                            <Sparkles className="h-3.5 w-3.5" />
+                            <span>{isResolved ? "Skills Filled in Profile ✓" : `Fill Skills into Profile (+${gap.skillsToFill.length})`}</span>
+                          </button>
+                        </div>
+                      ) : gap.actionType === "url" ? (
+                        <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div className="flex-1 space-y-1">
+                            <span className="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                              Fill Live Project / GitHub Repository URL:
+                            </span>
+                            <input
+                              type="url"
+                              placeholder="https://github.com/your-username/project or live demo URL"
+                              value={inputCheckpointValues[gap.id] ?? (profile.github_url || "")}
+                              onChange={(e) => setInputCheckpointValues({ ...inputCheckpointValues, [gap.id]: e.target.value })}
+                              className="w-full text-xs font-semibold px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-emerald-500"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleFillUrlCheckpoint(gap.id, inputCheckpointValues[gap.id] || profile.github_url || "https://github.com/project")}
+                            className="sm:self-end px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-950 font-black text-xs transition cursor-pointer shrink-0"
+                          >
+                            {isResolved ? "URL Saved & Filled ✓" : "Save URL & Complete"}
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/80">
+                          <span className="text-xs text-slate-600 dark:text-slate-400 font-semibold">
+                            Checkpoint Action: Add quantifiable outcome metrics into your project bullets.
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleResolveCheckpoint(gap.id)}
+                            className={`px-4 py-2 rounded-xl font-black text-xs transition cursor-pointer shadow-sm ${
+                              isResolved
+                                ? "bg-emerald-600 text-white"
+                                : "bg-slate-900 text-white dark:bg-white dark:text-slate-950"
+                            }`}
+                          >
+                            {isResolved ? "Metrics Confirmed ✓" : "Confirm Metrics Included in Resume"}
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

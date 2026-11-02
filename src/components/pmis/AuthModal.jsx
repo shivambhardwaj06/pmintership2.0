@@ -17,6 +17,33 @@ import {
 import pmLogo from "@/assets/pm_internship_logo_eng.svg";
 import { BACKEND_URL } from "@/lib/apiConfig";
 
+function getBestLocalProfile(userId) {
+  if (!userId) return {};
+  const lower = userId.toLowerCase();
+  const upper = userId.toUpperCase();
+  const keysToTry = [
+    `pmis_profile_${userId}`,
+    `pmis_profile_${lower}`,
+    `pmis_profile_${upper}`,
+    "pmis_master_profile",
+    "pmis_user",
+  ];
+  let best = {};
+  for (const k of keysToTry) {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(k) || "{}");
+      if (parsed && typeof parsed === "object") {
+        if (Array.isArray(parsed.skills) && parsed.skills.length > (best.skills?.length || 0)) {
+          best = { ...best, ...parsed };
+        } else if (parsed.name && !["Candidate", "Student Candidate", "PMIS Candidate", "Exact Full Name from resume"].includes(parsed.name)) {
+          best = { ...parsed, ...best };
+        }
+      }
+    } catch {}
+  }
+  return best;
+}
+
 export default function AuthModal({ isOpen, onClose, initialMode = "login", onAuthSuccess }) {
   const [mode, setMode] = useState(initialMode); // "login" | "register" | "reset" | "google"
   const [ident, setIdent] = useState("");
@@ -105,16 +132,17 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
               const data = await res.json();
               if (res.ok && data.user) {
                 const user = data.user;
-                const localProfile = JSON.parse(localStorage.getItem(`pmis_profile_${user.user_id}`) || "{}");
+                const localProfile = getBestLocalProfile(user.user_id);
                 const mergedUser = {
                   ...user,
                   ...localProfile,
-                  name: (localProfile.name && !["Candidate", "Student Candidate", "PMIS Candidate"].includes(localProfile.name)) ? localProfile.name : (user.name || "Candidate"),
+                  name: (localProfile.name && !["Candidate", "Student Candidate", "PMIS Candidate", "Exact Full Name from resume"].includes(localProfile.name)) ? localProfile.name : (user.name || "Candidate"),
                   college: (localProfile.college && !localProfile.college.includes("State Technological University")) ? localProfile.college : (user.college || localProfile.college),
                   skills: (Array.isArray(localProfile.skills) && localProfile.skills.length > (user.skills?.length || 0)) ? localProfile.skills : (user.skills || localProfile.skills || []),
                   career_goals: localProfile.career_goals || user.career_goals,
                 };
                 localStorage.setItem("pmis_user", JSON.stringify(mergedUser));
+                localStorage.setItem("pmis_master_profile", JSON.stringify(mergedUser));
                 localStorage.setItem(`pmis_profile_${user.user_id}`, JSON.stringify(mergedUser));
                 if (data.access_token || data.token) {
                   localStorage.setItem("pmis_access_token", data.access_token || data.token);
@@ -178,16 +206,17 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
 
       if (res.ok) {
         const user = data.user;
-        const localProfile = JSON.parse(localStorage.getItem(`pmis_profile_${user.user_id}`) || "{}");
+        const localProfile = getBestLocalProfile(user.user_id);
         const mergedUser = {
           ...user,
           ...localProfile,
-          name: (localProfile.name && !["Candidate", "Student Candidate", "PMIS Candidate"].includes(localProfile.name)) ? localProfile.name : (user.name || "Candidate"),
+          name: (localProfile.name && !["Candidate", "Student Candidate", "PMIS Candidate", "Exact Full Name from resume"].includes(localProfile.name)) ? localProfile.name : (user.name || "Candidate"),
           college: (localProfile.college && !localProfile.college.includes("State Technological University")) ? localProfile.college : (user.college || localProfile.college),
           skills: (Array.isArray(localProfile.skills) && localProfile.skills.length > (user.skills?.length || 0)) ? localProfile.skills : (user.skills || localProfile.skills || []),
           career_goals: (localProfile.career_goals && !localProfile.career_goals.includes("Targeting top corporate internships under PM Scheme.")) ? localProfile.career_goals : (user.career_goals || localProfile.career_goals),
         };
         localStorage.setItem("pmis_user", JSON.stringify(mergedUser));
+        localStorage.setItem("pmis_master_profile", JSON.stringify(mergedUser));
         localStorage.setItem(`pmis_profile_${user.user_id}`, JSON.stringify(mergedUser));
         if (data.access_token || data.token) {
           localStorage.setItem("pmis_access_token", data.access_token || data.token);
@@ -221,16 +250,17 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
             setLoading(false);
             return;
           }
-          const localProfile = JSON.parse(localStorage.getItem(`pmis_profile_${found.user_id}`) || "{}");
+          const localProfile = getBestLocalProfile(found.user_id);
           const mergedFound = {
             ...found,
             ...localProfile,
-            name: (localProfile.name && !["Candidate", "Student Candidate", "PMIS Candidate"].includes(localProfile.name)) ? localProfile.name : (found.name || "Candidate"),
+            name: (localProfile.name && !["Candidate", "Student Candidate", "PMIS Candidate", "Exact Full Name from resume"].includes(localProfile.name)) ? localProfile.name : (found.name || "Candidate"),
             college: (localProfile.college && !localProfile.college.includes("State Technological University")) ? localProfile.college : (found.college || localProfile.college),
             skills: (Array.isArray(localProfile.skills) && localProfile.skills.length > (found.skills?.length || 0)) ? localProfile.skills : (found.skills || localProfile.skills || []),
             career_goals: localProfile.career_goals || found.career_goals,
           };
           localStorage.setItem("pmis_user", JSON.stringify(mergedFound));
+          localStorage.setItem("pmis_master_profile", JSON.stringify(mergedFound));
           localStorage.setItem(`pmis_profile_${found.user_id}`, JSON.stringify(mergedFound));
           window.dispatchEvent(new Event("pmis_user_updated"));
           setStatusMessage({ type: "success", text: `Login successful! Welcome back, ${mergedFound.name}.` });

@@ -113,6 +113,81 @@ const PREMIER_DEMO_RECRUITERS = [
   }
 ];
 
+// Helper to sanitize candidate feedback ensuring authentic domain evaluation
+function sanitizeCandidateFeedback(app, targetComp = "") {
+  if (!app) return app;
+  const feedback = app.rejection_feedback || "";
+  const role = app.role_title || app.role || app.title || "Internship Opening";
+  const comp = app.company || targetComp || "Corporate Partner";
+  const branch = app.branch || app.degree || "";
+  const combinedContext = `${role} ${app.sector || ""} ${branch}`.toLowerCase();
+  const isNonTech = /mech|auto|vehicle|motor|powertrain|civil|struct|infra|construct|finance|bank|account|commerce|wealth|pharma|bio|chem/i.test(combinedContext);
+
+  const hasSoftwareAnomaly = isNonTech && (
+    /web development|programming|leetcode|hackerrank|git\b|javascript|python course|coding challenge/i.test(feedback) ||
+    (Array.isArray(app.missing_skills) && app.missing_skills.some((s) => /programming|web development|git\b|problem solving/i.test(s)))
+  );
+
+  const hasGenericPartnerAnomaly = feedback.includes("Enterprise Partner");
+
+  if (hasSoftwareAnomaly || hasGenericPartnerAnomaly || (isNonTech && !feedback)) {
+    const isAutoOrMech = /auto|mech|vehicle|motor|powertrain/i.test(combinedContext);
+    const isCivil = /civil|struct|infra|construct/i.test(combinedContext);
+    const isFinance = /finance|bank|account|commerce|wealth/i.test(combinedContext);
+    const isPharma = /pharma|bio|chem|health/i.test(combinedContext);
+
+    const newMissing = isAutoOrMech
+      ? ["CAD Modeling (SolidWorks/AutoCAD)", "Finite Element Analysis (FEA)", "Lean Quality Basics", "EV Powertrain Dynamics"]
+      : isCivil
+      ? ["AutoCAD Civil 3D", "Bar Bending Schedule (BBS)", "Quantity Surveying", "MS Project"]
+      : isFinance
+      ? ["Financial Statement Analysis", "Advanced Excel (VLOOKUP/Pivot)", "Corporate Auditing Basics", "KYC Compliance"]
+      : isPharma
+      ? ["HPLC Operation", "GMP / GLP Compliance", "Quality Control (QC/QA)", "Lab Documentation"]
+      : ["Domain Technical Tools", "Hands-on Practical Execution", "Quality Standards"];
+
+    const newTips = isAutoOrMech
+      ? [
+          "Complete an introductory certification in SolidWorks, CATIA, or AutoCAD for 3D part modeling.",
+          "Document a vehicle component simulation project in ANSYS demonstrating FEA stress distribution analysis.",
+          "Familiarize yourself with automotive quality standards (Lean/Six Sigma) and EV battery packaging."
+        ]
+      : isCivil
+      ? [
+          "Practice preparing Bar Bending Schedules (BBS) and concrete quantity estimations for RCC structures.",
+          "Develop 3D BIM structural models using Autodesk Revit or AutoCAD Civil 3D.",
+          "Complete certifications in MS Project or Primavera P6 for construction scheduling."
+        ]
+      : isFinance
+      ? [
+          "Build an integrated 3-statement financial forecasting and DCF valuation model in Excel.",
+          "Earn a recognized credential in Corporate Finance Fundamentals or TallyPrime.",
+          "Strengthen your understanding of RBI compliance guidelines, KYC verification, and credit risk assessment."
+        ]
+      : isPharma
+      ? [
+          "Document academic laboratory experiments with strict adherence to GMP/GLP record-keeping protocols.",
+          "Familiarize yourself with analytical techniques like HPLC, UV-Vis spectrophotometry, and dissolution testing.",
+          "Review regulatory guidelines for pharmaceutical stability testing and quality audits."
+        ]
+      : [
+          `Build a documented portfolio project using industry-standard tools for ${role}.`,
+          "Quantify technical performance metrics and project outcomes on your resume.",
+          "Participate in recognized professional workshops or student engineering competitions."
+        ];
+
+    const displayComp = (comp && comp !== "Enterprise Partner") ? comp : (targetComp || "Corporate Partner");
+    return {
+      ...app,
+      company: displayComp,
+      rejection_feedback: `Thank you for your interest in the ${role} position at ${displayComp}. While your academic background in ${branch || "engineering"} is commendable, this opening requires core competencies in ${newMissing.slice(0, 3).join(", ")} that were not evident in your application.`,
+      missing_skills: newMissing,
+      improvement_tips: newTips,
+    };
+  }
+  return app;
+}
+
 export default function RecruiterPortal() {
   // Auth state
   const [recruiter, setRecruiter] = useState(() => {
@@ -299,58 +374,7 @@ export default function RecruiterPortal() {
       }
 
       // Sanitize applications to eliminate any legacy generic rejection feedback
-      mergedApps = mergedApps.map((app) => {
-        const feedback = app.rejection_feedback || "";
-        const role = app.title || "Internship Opening";
-        const comp = app.company || targetComp || "Corporate Partner";
-        const isNonTech = /mech|auto|civil|finance|bank|pharma/i.test(role + " " + (app.sector || "") + " " + (app.branch || ""));
-        
-        if (
-          feedback.includes("Enterprise Partner") ||
-          (isNonTech && /web development|programming|leetcode|hackerrank|git/i.test(feedback))
-        ) {
-          const isAutoOrMech = /auto|mech/i.test(role + " " + (app.branch || ""));
-          const isCivil = /civil/i.test(role + " " + (app.branch || ""));
-          const isFinance = /finance|bank|account|commerce/i.test(role + " " + (app.branch || ""));
-          const isPharma = /pharm|bio/i.test(role + " " + (app.branch || ""));
-
-          const newMissing = isAutoOrMech
-            ? ["CAD Modeling (SolidWorks/AutoCAD)", "Finite Element Analysis (FEA)", "Lean Quality Basics"]
-            : isCivil
-            ? ["AutoCAD Civil 3D", "Bar Bending Schedule (BBS)", "MS Project"]
-            : isFinance
-            ? ["Financial Statement Analysis", "Advanced Excel (VLOOKUP/Pivot)", "Corporate Tax Basics"]
-            : isPharma
-            ? ["HPLC & Chromatography", "GMP/GLP Compliance", "Quality Control"]
-            : ["Domain Technical Tools", "Hands-on Practical Execution"];
-
-          const newTips = isAutoOrMech
-            ? [
-                "Complete an introductory certification in SolidWorks or CATIA for 3D part modeling.",
-                "Document a vehicle component simulation project in ANSYS demonstrating FEA stress distribution analysis.",
-                "Familiarize yourself with automotive quality standards (Lean/Six Sigma) and EV battery packaging."
-              ]
-            : isCivil
-            ? [
-                "Practice preparing Bar Bending Schedules (BBS) and concrete quantity estimations for RCC structures.",
-                "Develop 3D BIM structural models using Autodesk Revit or AutoCAD Civil 3D.",
-                "Complete certifications in MS Project or Primavera P6 for construction scheduling."
-              ]
-            : [
-                `Build a documented portfolio project using industry-standard tools for ${role}.`,
-                "Quantify technical performance metrics and project outcomes on your resume.",
-                "Participate in recognized professional workshops or student engineering competitions."
-              ];
-
-          return {
-            ...app,
-            rejection_feedback: `Thank you for your interest in the ${role} position at ${comp}. While your academic background in ${app.branch || "engineering"} is commendable, this opening required hands-on demonstrated experience in ${newMissing.slice(0, 2).join(" and ")} that was not sufficiently evidenced in your application.`,
-            missing_skills: newMissing,
-            improvement_tips: newTips,
-          };
-        }
-        return app;
-      });
+      mergedApps = mergedApps.map((app) => sanitizeCandidateFeedback(app, targetComp));
 
       setApplications(mergedApps);
 
@@ -750,7 +774,13 @@ export default function RecruiterPortal() {
 
       if (res.ok) {
         const data = await res.json();
-        setScreeningResult(data);
+        const sanitizedData = {
+          ...data,
+          shortlisted: (data.shortlisted || []).map((c) => sanitizeCandidateFeedback(c, activeCompany)),
+          rejected: (data.rejected || []).map((c) => sanitizeCandidateFeedback(c, activeCompany)),
+          applications: (data.applications || []).map((c) => sanitizeCandidateFeedback(c, activeCompany)),
+        };
+        setScreeningResult(sanitizedData);
 
         // Re-fetch applications from backend to reflect updated statuses & AI feedback
         const encComp = encodeURIComponent(activeCompany);
@@ -759,9 +789,9 @@ export default function RecruiterPortal() {
           .catch(() => null);
 
         if (updatedAppsRes?.status === "success" && updatedAppsRes.applications) {
-          setApplications(updatedAppsRes.applications);
+          setApplications(updatedAppsRes.applications.map((c) => sanitizeCandidateFeedback(c, activeCompany)));
         } else if (data.applications) {
-          setApplications(data.applications);
+          setApplications(data.applications.map((c) => sanitizeCandidateFeedback(c, activeCompany)));
         }
 
         fetch(`${BACKEND_URL}/api/recruiter/stats?company=${encComp}`)
@@ -781,9 +811,15 @@ export default function RecruiterPortal() {
         Number(shortlistCount) || 1,
         Number(minScoreThreshold) || 70
       );
-      setScreeningResult(clientScreenResult);
-      if (clientScreenResult.applications?.length) {
-        setApplications(clientScreenResult.applications);
+      const sanitizedClientResult = {
+        ...clientScreenResult,
+        shortlisted: (clientScreenResult.shortlisted || []).map((c) => sanitizeCandidateFeedback(c, activeCompany)),
+        rejected: (clientScreenResult.rejected || []).map((c) => sanitizeCandidateFeedback(c, activeCompany)),
+        applications: (clientScreenResult.applications || []).map((c) => sanitizeCandidateFeedback(c, activeCompany)),
+      };
+      setScreeningResult(sanitizedClientResult);
+      if (sanitizedClientResult.applications?.length) {
+        setApplications(sanitizedClientResult.applications);
       }
     } finally {
       setScreeningRunning(false);
