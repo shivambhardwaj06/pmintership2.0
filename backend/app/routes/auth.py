@@ -471,6 +471,7 @@ def register_user(payload: RegisterRequest):
 
 
 @router.post("/auth/login")
+@router.post("/login")
 def login_user(payload: LoginRequest):
     """Authenticates against MongoDB credentials using bcrypt verification and issues access & refresh tokens."""
     ident = payload.username_or_mobile.strip()
@@ -775,6 +776,7 @@ def reset_password(payload: ResetPasswordRequest):
 # =========================================================================
 
 @router.get("/user/profile")
+@router.get("/profile")
 def get_profile(user_id: str):
     """Retrieves full candidate profile directly from database or creates default profile if not found."""
     clean_id = user_id.strip() if user_id else ""
@@ -828,6 +830,7 @@ def get_profile(user_id: str):
 
 
 @router.put("/user/profile")
+@router.put("/profile")
 def update_profile(user_id: str, payload: ProfileUpdateRequest):
     """Updates candidate profile fields in MongoDB and persistent store."""
     clean_id = user_id.strip() if user_id else ""
@@ -876,6 +879,7 @@ def clean_users_endpoint():
 
 
 @router.post("/user/upload-resume")
+@router.post("/upload-resume")
 async def upload_and_analyze_resume(
     user_id: str = Form(...),
     file: UploadFile = File(...)

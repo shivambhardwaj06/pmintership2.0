@@ -105,7 +105,17 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
               const data = await res.json();
               if (res.ok && data.user) {
                 const user = data.user;
-                localStorage.setItem("pmis_user", JSON.stringify(user));
+                const localProfile = JSON.parse(localStorage.getItem(`pmis_profile_${user.user_id}`) || "{}");
+                const mergedUser = {
+                  ...user,
+                  ...localProfile,
+                  name: (localProfile.name && !["Candidate", "Student Candidate", "PMIS Candidate"].includes(localProfile.name)) ? localProfile.name : (user.name || "Candidate"),
+                  college: (localProfile.college && !localProfile.college.includes("State Technological University")) ? localProfile.college : (user.college || localProfile.college),
+                  skills: (Array.isArray(localProfile.skills) && localProfile.skills.length > (user.skills?.length || 0)) ? localProfile.skills : (user.skills || localProfile.skills || []),
+                  career_goals: localProfile.career_goals || user.career_goals,
+                };
+                localStorage.setItem("pmis_user", JSON.stringify(mergedUser));
+                localStorage.setItem(`pmis_profile_${user.user_id}`, JSON.stringify(mergedUser));
                 if (data.access_token || data.token) {
                   localStorage.setItem("pmis_access_token", data.access_token || data.token);
                 }
@@ -115,10 +125,10 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
                 window.dispatchEvent(new Event("pmis_user_updated"));
                 setStatusMessage({
                   type: "success",
-                  text: `Google OAuth Verified: Welcome, ${user.name}!`,
+                  text: `Google OAuth Verified: Welcome, ${mergedUser.name}!`,
                 });
                 setTimeout(() => {
-                  onAuthSuccess?.(user);
+                  onAuthSuccess?.(mergedUser);
                   onClose();
                 }, 800);
               }
@@ -168,7 +178,17 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
 
       if (res.ok) {
         const user = data.user;
-        localStorage.setItem("pmis_user", JSON.stringify(user));
+        const localProfile = JSON.parse(localStorage.getItem(`pmis_profile_${user.user_id}`) || "{}");
+        const mergedUser = {
+          ...user,
+          ...localProfile,
+          name: (localProfile.name && !["Candidate", "Student Candidate", "PMIS Candidate"].includes(localProfile.name)) ? localProfile.name : (user.name || "Candidate"),
+          college: (localProfile.college && !localProfile.college.includes("State Technological University")) ? localProfile.college : (user.college || localProfile.college),
+          skills: (Array.isArray(localProfile.skills) && localProfile.skills.length > (user.skills?.length || 0)) ? localProfile.skills : (user.skills || localProfile.skills || []),
+          career_goals: (localProfile.career_goals && !localProfile.career_goals.includes("Targeting top corporate internships under PM Scheme.")) ? localProfile.career_goals : (user.career_goals || localProfile.career_goals),
+        };
+        localStorage.setItem("pmis_user", JSON.stringify(mergedUser));
+        localStorage.setItem(`pmis_profile_${user.user_id}`, JSON.stringify(mergedUser));
         if (data.access_token || data.token) {
           localStorage.setItem("pmis_access_token", data.access_token || data.token);
         }
@@ -176,9 +196,9 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
           localStorage.setItem("pmis_refresh_token", data.refresh_token);
         }
         window.dispatchEvent(new Event("pmis_user_updated"));
-        setStatusMessage({ type: "success", text: `Welcome back, ${user.name}!` });
+        setStatusMessage({ type: "success", text: `Welcome back, ${mergedUser.name}!` });
         setTimeout(() => {
-          onAuthSuccess?.(user);
+          onAuthSuccess?.(mergedUser);
           onClose();
         }, 700);
       } else {
@@ -201,11 +221,21 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onAu
             setLoading(false);
             return;
           }
-          localStorage.setItem("pmis_user", JSON.stringify(found));
+          const localProfile = JSON.parse(localStorage.getItem(`pmis_profile_${found.user_id}`) || "{}");
+          const mergedFound = {
+            ...found,
+            ...localProfile,
+            name: (localProfile.name && !["Candidate", "Student Candidate", "PMIS Candidate"].includes(localProfile.name)) ? localProfile.name : (found.name || "Candidate"),
+            college: (localProfile.college && !localProfile.college.includes("State Technological University")) ? localProfile.college : (found.college || localProfile.college),
+            skills: (Array.isArray(localProfile.skills) && localProfile.skills.length > (found.skills?.length || 0)) ? localProfile.skills : (found.skills || localProfile.skills || []),
+            career_goals: localProfile.career_goals || found.career_goals,
+          };
+          localStorage.setItem("pmis_user", JSON.stringify(mergedFound));
+          localStorage.setItem(`pmis_profile_${found.user_id}`, JSON.stringify(mergedFound));
           window.dispatchEvent(new Event("pmis_user_updated"));
-          setStatusMessage({ type: "success", text: `Login successful! Welcome back, ${found.name}.` });
+          setStatusMessage({ type: "success", text: `Login successful! Welcome back, ${mergedFound.name}.` });
           setTimeout(() => {
-            onAuthSuccess?.(found);
+            onAuthSuccess?.(mergedFound);
             onClose();
           }, 700);
           return;

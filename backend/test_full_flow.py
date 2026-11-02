@@ -16,8 +16,10 @@ def test_full_portal_flow():
         print("[PASS] Health check OK:", res.json())
 
         print("\n2. Testing Real-Time Registration & Login")
+        import random
+        test_mobile = f"98{random.randint(10000000, 99999999)}"
         reg_payload = {
-            "mobile": "9876543210",
+            "mobile": test_mobile,
             "is_unique_confirmed": True,
             "name": "Arjun Patel",
             "password": "SecurePassword123"
@@ -27,7 +29,7 @@ def test_full_portal_flow():
         user_id = res.json()["user_id"]
         print(f"[PASS] Registered candidate with User ID: {user_id}")
 
-        login_res = client.post("/api/auth/login", json={"username_or_mobile": "9876543210", "password": "SecurePassword123"})
+        login_res = client.post("/api/auth/login", json={"username_or_mobile": test_mobile, "password": "SecurePassword123"})
         assert login_res.status_code == 200
         print("[PASS] Login successful for registered mobile")
 

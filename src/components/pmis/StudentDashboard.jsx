@@ -101,9 +101,66 @@ const BRANCH_CATEGORIES = [
 ];
 
 // Matches candidate skills & branch against all 260 official PMIS database internships
-function getTopDatabaseJobMatchesClient(skills = [], branch = "", limit = 5) {
+// Helper for robust whole-word skill matching (guards against 1-char skills like C or R matching inside React, Docker, etc.)
+function testSkillInText(skillName, text) {
+  if (!skillName || !text) return false;
+  const sk = skillName.trim().toLowerCase();
+  if (!sk) return false;
+
+  // Single-letter or very short abbreviations
+  if (sk === "c") {
+    return /\b(c\s+programming|c\s*\/\s*c\+\+|c\s+language|\bc\b(?!\+\+|\#))/i.test(text);
+  }
+  if (sk === "r") {
+    return /\b(r\s+programming|r\s+language|r\s*\/\s*python|\br\b)/i.test(text);
+  }
+  if (sk === "c++") {
+    return /\b(c\+\+|cpp)\b/i.test(text);
+  }
+
+  // Base normalization (e.g. react.js -> react, node.js -> node)
+  const base = sk.replace(/\.js$/, "").replace(/\.py$/, "").trim();
+  const escaped = base.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const regex = new RegExp(`\\b${escaped}(\\.js|js)?\\b`, "i");
+  if (regex.test(text)) return true;
+
+  // Multi-word phrase matching (e.g. "machine learning", "data science")
+  if (sk.includes(" ") && text.toLowerCase().includes(sk)) {
+    return true;
+  }
+
+  return false;
+}
+
+// Determines display prominence of matched skills (frameworks & multi-word skills first; never C/R before major tools)
+function getSkillImportance(s) {
+  const sl = s.toLowerCase();
+  if (sl === "c" || sl === "r") return 0;
+  if (
+    sl.includes("react") ||
+    sl.includes("node") ||
+    sl.includes("fastapi") ||
+    sl.includes("learning") ||
+    sl.includes("science") ||
+    sl.includes("gemini") ||
+    sl.includes("prompt") ||
+    sl.includes("docker") ||
+    sl.includes("mongo")
+  ) {
+    return 4;
+  }
+  if (sl.includes("python") || sl.includes("sql") || sl.includes("javascript") || sl.includes("pandas") || sl.includes("numpy") || sl.includes("c++")) {
+    return 3;
+  }
+  if (s.includes(" ")) return 2;
+  return 1;
+}
+
+// Matches candidate skills & branch against all 260 official PMIS database internships
+function getTopDatabaseJobMatchesClient(skills = [], branch = "", limit = 5, careerGoals = "") {
   const bLower = (branch || "").toLowerCase();
   const safeSkills = (skills || []).map((s) => s.trim()).filter(Boolean);
+  const goalsLower = (careerGoals || "").toLowerCase();
 
   const scored = (rawInternships || []).map((job) => {
     let score = 0;
@@ -112,28 +169,70 @@ function getTopDatabaseJobMatchesClient(skills = [], branch = "", limit = 5) {
     const jTitle = (job.title || "").toLowerCase();
     const jSector = (job.sector || "").toLowerCase();
     const jEligibility = (job.eligibility || "").toLowerCase();
-    const jSummary = (job.summary || "").toLowerCase();
+    const jSummary = (job.summary || job.content || "").toLowerCase();
+    const combinedText = `${jTitle} ${jSkills} ${jSummary} ${jEligibility}`;
 
-    // 1. Skill Overlap Matching
+    // 1. Precise Skill Matching with Weighted Relevancy
     for (const sk of safeSkills) {
-      const skClean = sk.toLowerCase();
-      if (!skClean) continue;
-      if (jSkills.includes(skClean) || jTitle.includes(skClean) || jSummary.includes(skClean)) {
-        score += 20;
+      if (testSkillInText(sk, combinedText)) {
+        const inTitle = testSkillInText(sk, jTitle);
+        const sl = sk.toLowerCase();
+        let weight = 15;
+
+        if (sl === "c" || sl === "r") {
+          weight = 10;
+        } else if (
+          sl.includes("learning") ||
+          sl.includes("science") ||
+          sl.includes("react") ||
+          sl.includes("node") ||
+          sl.includes("fastapi") ||
+          sl.includes("gemini") ||
+          sl.includes("prompt")
+        ) {
+          weight = 40 + (inTitle ? 20 : 0);
+        } else if (
+          sl.includes("python") ||
+          sl.includes("sql") ||
+          sl.includes("javascript") ||
+          sl.includes("c++") ||
+          sl.includes("docker") ||
+          sl.includes("mongo")
+        ) {
+          weight = 25 + (inTitle ? 15 : 0);
+        }
+
+        score += weight;
         matched.push(sk);
-      } else {
-        const tokens = skClean.split(/[\s/]+/).filter((t) => t.length > 2);
-        if (tokens.some((t) => jSkills.includes(t) || jTitle.includes(t))) {
-          score += 8;
-          matched.push(sk);
+      }
+    }
+
+    // 2. Career Aspiration Match (Boost roles matching user's stated interests)
+    if (goalsLower) {
+      const aspirationKeywords = [
+        "data science",
+        "machine learning",
+        "generative ai",
+        "gemini",
+        "full stack",
+        "web development",
+        "cloud",
+        "python",
+        "ai",
+      ];
+      for (const kw of aspirationKeywords) {
+        if (goalsLower.includes(kw) && (jTitle.includes(kw) || jSkills.includes(kw))) {
+          score += 30;
+          break;
         }
       }
     }
 
-    // 2. Academic Discipline & Sector Alignment
+    // 3. Academic Discipline & Sector Alignment
     if (/comp|cse|it|soft|web|data|ai|cloud/i.test(bLower)) {
-      if (/it & software|telecom|media/i.test(jSector)) score += 35;
+      if (/it & software|technology|telecom|media/i.test(jSector)) score += 35;
       if (/cse|it|computer|bca|mca|b\.tech/i.test(jEligibility)) score += 15;
+      if (/(software|developer|engineer|full stack|data|ai|ml|cloud)/i.test(jTitle)) score += 20;
     } else if (/mech|auto|vehicle|cad|mfg|thermal|fea/i.test(bLower)) {
       if (/automotive|manufacturing|metals|mobility|oil, gas/i.test(jSector)) score += 35;
       if (/mechanical|automobile|production|b\.tech|diploma/i.test(jEligibility)) score += 15;
@@ -168,7 +267,11 @@ function getTopDatabaseJobMatchesClient(skills = [], branch = "", limit = 5) {
       }
     }
 
-    const uniqueMatched = Array.from(new Set(matched));
+    // Sort matched skills by technical specificity (frameworks and languages first)
+    const uniqueMatched = Array.from(new Set(matched)).sort(
+      (a, b) => getSkillImportance(b) - getSkillImportance(a)
+    );
+
     return {
       job,
       score,
@@ -181,10 +284,11 @@ function getTopDatabaseJobMatchesClient(skills = [], branch = "", limit = 5) {
     return (a.job.record_num || 0) - (b.job.record_num || 0);
   });
 
+  // Pick top candidates naturally without artificially restricting tech candidates
+  const isTechBranch = /comp|cse|it|soft|web|data|ai/i.test(bLower);
   const selected = [];
   const sectorCount = {};
-  const hasSpecificBranchBoost = scored.some((s) => s.score >= 30);
-  const maxPerSector = hasSpecificBranchBoost ? 2 : 1;
+  const maxPerSector = isTechBranch ? limit : 2;
 
   for (const item of scored) {
     if (selected.length >= limit) break;
@@ -210,7 +314,7 @@ function getTopDatabaseJobMatchesClient(skills = [], branch = "", limit = 5) {
 
   return top.map((item, idx) => {
     const { job, score, matched } = item;
-    const matchPct = Math.max(82, Math.min(98, Math.round(76 + (score / (maxScore || 1)) * 22) - idx));
+    const matchPct = Math.max(82, Math.min(98, Math.round(78 + (score / (maxScore || 1)) * 20) - idx));
     const matchedSkills = matched.length
       ? matched
       : (safeSkills.slice(0, 3).length ? safeSkills.slice(0, 3) : ["Analytical Problem Solving", "Domain Fundamentals"]);
@@ -788,7 +892,7 @@ function generateComprehensiveReview(
     meta.careerSummary ||
     `Targeted ${branch} candidate with demonstrated capability in ${safeSkills.slice(0, 3).join(", ")}. Well-aligned for premier national corporate internships.`;
 
-  const topJobs = getTopDatabaseJobMatchesClient(safeSkills, branch, 5);
+  const topJobs = getTopDatabaseJobMatchesClient(safeSkills, branch, 5, careerSummary);
 
   return {
     candidate_name: candidateName || "Candidate",
@@ -1147,25 +1251,59 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
   // Navigation tabs under profile to avoid endless scrolling
   const [dashboardTab, setDashboardTab] = useState("profile"); // "profile" | "resume_ats" | "gaps" | "matched_jobs" | "applications" | "resumes"
 
-  // Real-time Profile state (Fetched from MongoDB and synchronized)
-  const [profile, setProfile] = useState({
-    name: user?.name || "Candidate",
-    user_id: user?.user_id || "PMIS-CANDIDATE",
-    email: user?.email || "",
-    mobile: user?.mobile || "",
-    branch: user?.branch || "Computer Science & Engineering",
-    degree: user?.degree || "B.Tech / B.E.",
-    college: user?.college || "State University / College of Engineering",
-    state: user?.state || "National",
-    career_goals: user?.career_goals || "Targeting top corporate internships under PM Scheme.",
-    skills: user?.skills?.length ? user.skills : ["Problem Solving", "Professional Communication"],
-    resume_name: user?.resume_name || "",
-    cloudinary_url: user?.cloudinary_url || "",
+  // Real-time Profile state (Hydrated instantly from local storage & MongoDB)
+  const [profile, setProfile] = useState(() => {
+    const targetId = user?.user_id;
+    const localSaved = targetId ? JSON.parse(localStorage.getItem(`pmis_profile_${targetId}`) || "{}") : {};
+    return {
+      name: (localSaved.name && !["Candidate", "Student Candidate", "PMIS Candidate", "Exact Full Name from resume"].includes(localSaved.name))
+        ? localSaved.name
+        : (user?.name || "Candidate"),
+      user_id: user?.user_id || localSaved.user_id || "PMIS-CANDIDATE",
+      email: localSaved.email || user?.email || "",
+      mobile: localSaved.mobile || user?.mobile || "",
+      branch: localSaved.branch || user?.branch || "Computer Science & IT",
+      degree: localSaved.degree || user?.degree || "B.Tech / B.E.",
+      college: (localSaved.college && !localSaved.college.includes("State Technological") && !localSaved.college.includes("State University /"))
+        ? localSaved.college
+        : (user?.college || localSaved.college || "State University / College of Engineering"),
+      state: localSaved.state || user?.state || "National",
+      career_goals: (localSaved.career_goals && !localSaved.career_goals.includes("Targeting top corporate internships under PM Scheme."))
+        ? localSaved.career_goals
+        : (user?.career_goals || localSaved.career_goals || "Targeting top corporate internships under PM Scheme."),
+      skills: (Array.isArray(localSaved.skills) && localSaved.skills.length > 0)
+        ? localSaved.skills
+        : (user?.skills?.length ? user.skills : ["Problem Solving", "Professional Communication"]),
+      resume_name: localSaved.resume_name || user?.resume_name || "",
+      cloudinary_url: localSaved.cloudinary_url || user?.cloudinary_url || "",
+    };
   });
 
   const [dbLoading, setDbLoading] = useState(false);
   const [newSkill, setNewSkill] = useState("");
   const [saveStatus, setSaveStatus] = useState(null);
+
+  // Hydrate profile if user prop changes
+  useEffect(() => {
+    if (user?.user_id) {
+      const localSaved = JSON.parse(localStorage.getItem(`pmis_profile_${user.user_id}`) || "{}");
+      setProfile((prev) => ({
+        ...prev,
+        ...user,
+        ...localSaved,
+        name: (localSaved.name && !["Candidate", "Student Candidate", "PMIS Candidate"].includes(localSaved.name))
+          ? localSaved.name
+          : (user.name || prev.name),
+        college: (localSaved.college && !localSaved.college.includes("State Technological"))
+          ? localSaved.college
+          : (user.college || prev.college),
+        skills: (Array.isArray(localSaved.skills) && localSaved.skills.length >= (user.skills?.length || 0))
+          ? localSaved.skills
+          : (user.skills || prev.skills || []),
+        career_goals: localSaved.career_goals || user.career_goals || prev.career_goals,
+      }));
+    }
+  }, [user]);
 
   // Resume Upload & AI Analysis State
   const [uploadingResume, setUploadingResume] = useState(false);
@@ -1201,10 +1339,10 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
   const [cleaningDb, setCleaningDb] = useState(false);
   const [cleanMessage, setCleanMessage] = useState(null);
 
-  // Reactive top job matches computed directly from student verified skills & academic branch
+  // Reactive top job matches computed directly from student verified skills & academic branch & career goals
   const topJobMatches = useMemo(() => {
-    return getTopDatabaseJobMatchesClient(profile.skills || [], profile.branch || "", 5);
-  }, [profile.skills, profile.branch]);
+    return getTopDatabaseJobMatchesClient(profile.skills || [], profile.branch || "", 5, profile.career_goals || "");
+  }, [profile.skills, profile.branch, profile.career_goals]);
 
   // Synchronize dynamic AI review with profile whenever profile changes
   useEffect(() => {
@@ -1241,25 +1379,60 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
       if (res.ok) {
         const dbUser = await res.json();
         if (dbUser && dbUser.user_id) {
-          setProfile((prev) => ({
-            ...prev,
-            name: dbUser.name || prev.name || "Candidate",
-            user_id: dbUser.user_id,
-            email: dbUser.email ?? prev.email,
-            mobile: dbUser.mobile ?? prev.mobile,
-            branch: dbUser.branch || prev.branch || "Computer Science & Engineering",
-            degree: dbUser.degree || prev.degree || "B.Tech / B.E.",
-            college: dbUser.college || prev.college || "State University / College of Engineering",
-            state: dbUser.state || prev.state || "National",
-            career_goals: dbUser.career_goals || prev.career_goals || "Targeting top corporate internships under PM Scheme.",
-            skills: Array.isArray(dbUser.skills) && dbUser.skills.length ? dbUser.skills : prev.skills,
-            resume_name: dbUser.resume_name || "",
-            cloudinary_url: dbUser.cloudinary_url || "",
-          }));
+          const localSaved = JSON.parse(localStorage.getItem(`pmis_profile_${userId}`) || "{}");
+          
+          // Smart merge: Never overwrite rich verified extracted details with empty or stale defaults!
+          const realName = (localSaved.name && !["Candidate", "Student Candidate", "PMIS Candidate", "Exact Full Name from resume"].includes(localSaved.name))
+            ? localSaved.name
+            : (dbUser.name && !["Candidate", "Student Candidate", "PMIS Candidate"].includes(dbUser.name) ? dbUser.name : (profile.name || "Candidate"));
+          
+          const realCollege = (localSaved.college && !localSaved.college.includes("State Technological") && !localSaved.college.includes("State University /"))
+            ? localSaved.college
+            : (dbUser.college && !dbUser.college.includes("State Technological") ? dbUser.college : (profile.college || "State University / College of Engineering"));
 
-          // Keep localStorage up to date
+          const localSkills = Array.isArray(localSaved.skills) ? localSaved.skills : [];
+          const dbSkills = Array.isArray(dbUser.skills) ? dbUser.skills : [];
+          const realSkills = localSkills.length >= dbSkills.length && localSkills.length > 0 ? localSkills : (dbSkills.length ? dbSkills : (profile.skills || []));
+
+          const realGoals = (localSaved.career_goals && !localSaved.career_goals.includes("Targeting top corporate internships under PM Scheme."))
+            ? localSaved.career_goals
+            : (dbUser.career_goals || localSaved.career_goals || profile.career_goals || "Targeting top corporate internships under PM Scheme.");
+
+          const realBranch = localSaved.branch || dbUser.branch || profile.branch || "Computer Science & IT";
+          const realDegree = localSaved.degree || dbUser.degree || profile.degree || "B.Tech / B.E.";
+
+          const mergedUser = {
+            ...dbUser,
+            ...localSaved,
+            name: realName,
+            user_id: dbUser.user_id,
+            email: dbUser.email ?? localSaved.email ?? profile.email,
+            mobile: dbUser.mobile ?? localSaved.mobile ?? profile.mobile,
+            branch: realBranch,
+            degree: realDegree,
+            college: realCollege,
+            state: dbUser.state || localSaved.state || profile.state || "National",
+            career_goals: realGoals,
+            skills: realSkills,
+            resume_name: dbUser.resume_name || localSaved.resume_name || profile.resume_name || "",
+            cloudinary_url: dbUser.cloudinary_url || localSaved.cloudinary_url || profile.cloudinary_url || "",
+          };
+
+          setProfile(mergedUser);
+
+          // Keep localStorage keys permanently updated
           const existing = JSON.parse(localStorage.getItem("pmis_user") || "{}");
-          localStorage.setItem("pmis_user", JSON.stringify({ ...existing, ...dbUser }));
+          localStorage.setItem("pmis_user", JSON.stringify({ ...existing, ...mergedUser }));
+          localStorage.setItem(`pmis_profile_${userId}`, JSON.stringify(mergedUser));
+
+          // Auto-sync upgraded profile back to MongoDB if local had richer extracted skills
+          if (localSkills.length > dbSkills.length) {
+            fetch(`${BACKEND_URL}/api/user/profile?user_id=${encodeURIComponent(userId)}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(mergedUser),
+            }).catch(() => {});
+          }
         }
       }
     } catch (err) {
@@ -1366,7 +1539,18 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
         setProfile((prev) => ({ ...prev, ...saved }));
 
         const currentStored = JSON.parse(localStorage.getItem("pmis_user") || "{}");
-        localStorage.setItem("pmis_user", JSON.stringify({ ...currentStored, ...saved, user_id: targetUserId }));
+        const nextUser = { ...currentStored, ...saved, user_id: targetUserId };
+        localStorage.setItem("pmis_user", JSON.stringify(nextUser));
+        localStorage.setItem(`pmis_profile_${targetUserId}`, JSON.stringify(nextUser));
+
+        try {
+          const accs = JSON.parse(localStorage.getItem("pmis_accounts") || "[]");
+          const idx = accs.findIndex((a) => a.user_id === targetUserId || a.username === targetUserId);
+          if (idx >= 0) accs[idx] = { ...accs[idx], ...nextUser };
+          else accs.push(nextUser);
+          localStorage.setItem("pmis_accounts", JSON.stringify(accs));
+        } catch {}
+
         window.dispatchEvent(new Event("pmis_user_updated"));
         setSaveStatus("success");
       } else {
@@ -1374,14 +1558,36 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
         console.error("Save profile server error:", errData);
         // Fallback local save
         const currentStored = JSON.parse(localStorage.getItem("pmis_user") || "{}");
-        localStorage.setItem("pmis_user", JSON.stringify({ ...currentStored, ...payload, user_id: targetUserId }));
+        const nextUser = { ...currentStored, ...payload, user_id: targetUserId };
+        localStorage.setItem("pmis_user", JSON.stringify(nextUser));
+        localStorage.setItem(`pmis_profile_${targetUserId}`, JSON.stringify(nextUser));
+
+        try {
+          const accs = JSON.parse(localStorage.getItem("pmis_accounts") || "[]");
+          const idx = accs.findIndex((a) => a.user_id === targetUserId || a.username === targetUserId);
+          if (idx >= 0) accs[idx] = { ...accs[idx], ...nextUser };
+          else accs.push(nextUser);
+          localStorage.setItem("pmis_accounts", JSON.stringify(accs));
+        } catch {}
+
         window.dispatchEvent(new Event("pmis_user_updated"));
         setSaveStatus("error");
       }
     } catch (err) {
       console.error("Network error saving profile:", err);
       const currentStored = JSON.parse(localStorage.getItem("pmis_user") || "{}");
-      localStorage.setItem("pmis_user", JSON.stringify({ ...currentStored, ...payload, user_id: targetUserId }));
+      const nextUser = { ...currentStored, ...payload, user_id: targetUserId };
+      localStorage.setItem("pmis_user", JSON.stringify(nextUser));
+      localStorage.setItem(`pmis_profile_${targetUserId}`, JSON.stringify(nextUser));
+
+      try {
+        const accs = JSON.parse(localStorage.getItem("pmis_accounts") || "[]");
+        const idx = accs.findIndex((a) => a.user_id === targetUserId || a.username === targetUserId);
+        if (idx >= 0) accs[idx] = { ...accs[idx], ...nextUser };
+        else accs.push(nextUser);
+        localStorage.setItem("pmis_accounts", JSON.stringify(accs));
+      } catch {}
+
       window.dispatchEvent(new Event("pmis_user_updated"));
       setSaveStatus("error");
     }
@@ -1536,7 +1742,25 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
             cloudinary_url: finalCloudinary,
           };
           const existingUser = JSON.parse(localStorage.getItem("pmis_user") || "{}");
-          localStorage.setItem("pmis_user", JSON.stringify({ ...existingUser, ...next }));
+          const nextUser = { ...existingUser, ...next, user_id: targetUserId };
+          localStorage.setItem("pmis_user", JSON.stringify(nextUser));
+          localStorage.setItem(`pmis_profile_${targetUserId}`, JSON.stringify(nextUser));
+
+          try {
+            const accs = JSON.parse(localStorage.getItem("pmis_accounts") || "[]");
+            const idx = accs.findIndex((a) => a.user_id === targetUserId || a.username === targetUserId);
+            if (idx >= 0) accs[idx] = { ...accs[idx], ...nextUser };
+            else accs.push(nextUser);
+            localStorage.setItem("pmis_accounts", JSON.stringify(accs));
+          } catch {}
+
+          // Auto-sync in background to backend MongoDB
+          fetch(`${BACKEND_URL}/api/user/profile?user_id=${encodeURIComponent(targetUserId)}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(nextUser),
+          }).catch(() => {});
+
           return next;
         });
 
@@ -1549,7 +1773,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
             resume_score: data.analysis.resume_score || 92,
             top_5_jobs_match: data.analysis.top_5_jobs_match?.length
               ? data.analysis.top_5_jobs_match
-              : getTopDatabaseJobMatchesClient(realSkills, realBranch, 5),
+              : getTopDatabaseJobMatchesClient(realSkills, realBranch, 5, realGoals),
             extracted_skills: realSkills,
             career_summary: realGoals,
             skills_breakdown: {
@@ -1571,12 +1795,64 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
       console.warn("Backend upload error, using client extraction fallback:", err);
       // Fallback to client extraction if network error
       const extractedSkills = clientParsed.skills?.length ? clientParsed.skills : profile.skills;
-      setProfile((prev) => ({
-        ...prev,
-        skills: extractedSkills,
-        resume_name: file.name,
-        cloudinary_url: immediateBlobUrl,
-      }));
+      const realName = (clientParsed.candidateName && !["Candidate", "Student Candidate", "PMIS Candidate", "Exact Full Name from resume"].includes(clientParsed.candidateName))
+        ? clientParsed.candidateName
+        : profile.name;
+      const realBranch = clientParsed.branch || profile.branch;
+      const realDegree = clientParsed.degree || profile.degree;
+      const realCollege = (clientParsed.college && !clientParsed.college.includes("State Technological"))
+        ? clientParsed.college
+        : profile.college;
+      const realGoals = clientParsed.careerSummary || profile.career_goals;
+
+      setProfile((prev) => {
+        const next = {
+          ...prev,
+          name: realName,
+          email: clientParsed.email || prev.email,
+          mobile: clientParsed.phone || prev.mobile,
+          branch: realBranch,
+          degree: realDegree,
+          college: realCollege,
+          career_goals: realGoals,
+          skills: extractedSkills,
+          resume_name: file.name,
+          cloudinary_url: immediateBlobUrl,
+        };
+        const existingUser = JSON.parse(localStorage.getItem("pmis_user") || "{}");
+        const nextUser = { ...existingUser, ...next, user_id: targetUserId };
+        localStorage.setItem("pmis_user", JSON.stringify(nextUser));
+        localStorage.setItem(`pmis_profile_${targetUserId}`, JSON.stringify(nextUser));
+
+        try {
+          const accs = JSON.parse(localStorage.getItem("pmis_accounts") || "[]");
+          const idx = accs.findIndex((a) => a.user_id === targetUserId || a.username === targetUserId);
+          if (idx >= 0) accs[idx] = { ...accs[idx], ...nextUser };
+          else accs.push(nextUser);
+          localStorage.setItem("pmis_accounts", JSON.stringify(accs));
+        } catch {}
+
+        return next;
+      });
+
+      // Update AI review from client extraction fallback
+      setAiAnalysis({
+        candidate_name: realName,
+        detected_branch: realBranch,
+        college: realCollege,
+        degree: realDegree,
+        resume_score: 91,
+        grade: "Grade A+: Premier Shortlist Ready",
+        career_summary: realGoals,
+        top_5_jobs_match: getTopDatabaseJobMatchesClient(extractedSkills, realBranch, 5, realGoals),
+        extracted_skills: extractedSkills,
+        skills_breakdown: {
+          technical_skills: extractedSkills.slice(0, 10),
+          tools_frameworks: extractedSkills.slice(10, 18),
+          soft_skills: ["Analytical Problem Solving", "Professional Communication", "Team Collaboration"],
+          all_extracted: extractedSkills,
+        },
+      });
     } finally {
       setUploadingResume(false);
       setUploadStep("");

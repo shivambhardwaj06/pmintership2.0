@@ -107,10 +107,13 @@ export default function CompanyLogo({ name, company, className = "h-12 w-12" }) 
   }
 
   // Initials generator
-  const words = effectiveName.split(/\s+/).filter((w) => /^[A-Za-z0-9]/.test(w));
-  const initials = words.length >= 2
-    ? `${words[0][0]}${words[1][0]}`.toUpperCase()
-    : effectiveName.slice(0, 2).toUpperCase();
+  const words = effectiveName.split(/\s+/).filter((w) => Boolean(w) && /^[A-Za-z0-9]/.test(w));
+  let initials = "CO";
+  if (words.length >= 2 && words[0]?.[0] && words[1]?.[0]) {
+    initials = `${words[0][0]}${words[1][0]}`.toUpperCase();
+  } else if (typeof effectiveName === "string" && effectiveName.length > 0) {
+    initials = effectiveName.slice(0, 2).toUpperCase();
+  }
   const colorTheme = BRAND_COLORS[effectiveName] || "from-primary to-primary/80 text-primary-foreground";
 
   return (
