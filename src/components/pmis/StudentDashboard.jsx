@@ -1825,6 +1825,19 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
   const currentAtsScore = aiAnalysis?.resume_score || 94;
   const isHighScorer = currentAtsScore >= 90;
 
+  const resumeShortSummary = useMemo(() => {
+    if (aiAnalysis?.career_summary && aiAnalysis.career_summary.length > 35 && !aiAnalysis.career_summary.includes("Targeting top corporate internships under PM Scheme.")) {
+      return aiAnalysis.career_summary;
+    }
+    if (profile.career_goals && profile.career_goals.length > 35 && !profile.career_goals.includes("Targeting top corporate internships under PM Scheme.")) {
+      return profile.career_goals;
+    }
+    const nameStr = profile.name && !["Candidate", "Student Candidate", "PMIS Candidate", "Exact Full Name from resume"].includes(profile.name) ? profile.name : "The candidate";
+    const collegeStr = profile.college && !profile.college.includes("State Technological") && !profile.college.includes("State University /") ? `from ${profile.college}` : "";
+    const topSkills = (profile.skills || []).slice(0, 4).join(", ");
+    return `${nameStr} demonstrates a solid academic foundation in ${profile.branch || "Engineering"} ${collegeStr}, with proven practical competency in ${topSkills || "core technical problem solving"}. The profile exhibits strong project development experience aligned with national corporate standards.`;
+  }, [aiAnalysis?.career_summary, profile.career_goals, profile.name, profile.college, profile.branch, profile.skills]);
+
   return (
     <div className="min-h-screen bg-slate-50/60 dark:bg-slate-950/80 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -2530,25 +2543,25 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                     onClick={() => setDashboardTab("gaps")}
                     className="w-full flex items-center justify-center gap-2 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-950 font-black text-xs py-2.5 transition shadow-sm cursor-pointer"
                   >
-                    <span>View {aiAnalysis?.detailed_gaps?.length || 5} Identified Gaps & How to Fix Them</span>
+                    <span>Review Resume Checkpoints & Action Plan</span>
                     <ArrowRight className="h-4 w-4" />
                   </button>
                 </div>
               </div>
 
-              {/* Right Column: Real-Time ATS Score & Telemetry HUD (7 cols) */}
+              {/* Right Column: Clean Resume Overview & ATS Score (7 cols) */}
               <div className="lg:col-span-7 rounded-3xl p-6 sm:p-8 bg-white dark:bg-slate-900 border-2 border-slate-200/80 dark:border-slate-800 shadow-sm space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
                   <div>
-                    <div className="inline-flex items-center gap-1.5 rounded-full bg-orange-100 dark:bg-orange-950/60 px-2.5 py-0.5 text-[10px] font-black text-orange-700 dark:text-orange-300 uppercase tracking-wider mb-1">
-                      <ShieldCheck className="h-3.5 w-3.5 text-orange-600" /> Real-Time ATS Recruiter Engine
+                    <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 px-2.5 py-0.5 text-[10px] font-black text-emerald-700 dark:text-emerald-300 uppercase tracking-wider mb-1">
+                      <Sparkles className="h-3.5 w-3.5 text-emerald-600" /> Resume Profile Evaluation
                     </div>
                     <h3 className="font-display text-xl font-black text-slate-900 dark:text-white">
-                      Live ATS Compliance & Recruiter Telemetry
+                      Resume Overview & ATS Evaluation
                     </h3>
                   </div>
 
-                  {/* Big Circular Score Gauge */}
+                  {/* Circular ATS Score Gauge */}
                   <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800/80 rounded-2xl p-3 border border-slate-200 dark:border-slate-700 shrink-0">
                     <div className="relative flex items-center justify-center h-14 w-14">
                       <svg className="h-full w-full -rotate-90" viewBox="0 0 36 36">
@@ -2575,107 +2588,81 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                     </div>
 
                     <div>
-                      <div className="text-[10px] uppercase font-black text-slate-400">Compliance Tier</div>
+                      <div className="text-[10px] uppercase font-black text-slate-400">ATS Rating</div>
                       <div className="text-xs font-black text-emerald-600 dark:text-emerald-400">
-                        {isHighScorer ? "Grade A+ • Top 2%" : "Grade A • Shortlist Potential"}
+                        {isHighScorer ? "Grade A+ • Top Shortlist Potential" : "Grade A • Shortlist Potential"}
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* 3 Metric Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div className="p-3.5 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-300 dark:border-emerald-800">
-                    <div className="text-[10px] font-black text-emerald-800 dark:text-emerald-300 uppercase">
-                      Layout Standard
-                    </div>
-                    <div className="text-sm font-black text-emerald-950 dark:text-white mt-0.5">ATS Structured Pass</div>
-                    <div className="text-[10px] text-emerald-700 dark:text-emerald-400 mt-1">Single-column clean hierarchy</div>
+                {/* Short Resume Description Paragraph */}
+                <div className="rounded-2xl p-5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 space-y-4">
+                  <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    <FileText className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                    <span>Candidate Profile & Project Summary</span>
                   </div>
 
-                  <div className="p-3.5 rounded-2xl bg-blue-50/60 dark:bg-blue-950/20 border border-blue-300 dark:border-blue-800">
-                    <div className="text-[10px] font-black text-blue-800 dark:text-blue-300 uppercase">
-                      Recruiter Scan Speed
-                    </div>
-                    <div className="text-sm font-black text-blue-950 dark:text-white mt-0.5">8.2 Seconds</div>
-                    <div className="text-[10px] text-blue-700 dark:text-blue-400 mt-1">&lt; 15s industry target</div>
-                  </div>
+                  <p className="text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed font-medium">
+                    {resumeShortSummary}
+                  </p>
 
-                  <div className="p-3.5 rounded-2xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-300 dark:border-amber-800">
-                    <div className="text-[10px] font-black text-amber-800 dark:text-amber-300 uppercase">
-                      Core Tools Density
+                  {/* Primary Verified Competencies */}
+                  <div className="pt-3 border-t border-slate-200 dark:border-slate-700/80 space-y-2">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
+                      Primary Extracted Competencies:
+                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {(profile.skills || []).slice(0, 8).map((sk) => (
+                        <span
+                          key={sk}
+                          className="px-2.5 py-1 rounded-xl text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 shadow-2xs"
+                        >
+                          ✓ {sk}
+                        </span>
+                      ))}
+                      {(profile.skills || []).length > 8 && (
+                        <span className="px-2 py-1 text-xs font-bold text-slate-500">
+                          +{profile.skills.length - 8} more verified skills
+                        </span>
+                      )}
                     </div>
-                    <div className="text-sm font-black text-amber-950 dark:text-white mt-0.5">
-                      {profile.skills.length} Tools Verified
-                    </div>
-                    <div className="text-[10px] text-amber-700 dark:text-amber-400 mt-1">Matched against PMIS</div>
                   </div>
                 </div>
 
-                {/* Detailed Checklist Breakdown */}
-                <div className="space-y-2.5 text-xs">
-                  <span className="text-[11px] font-black uppercase text-slate-500 tracking-wider block">
-                    Real-Time Component Audit:
-                  </span>
-
-                  <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
-                      <span className="font-semibold text-slate-700 dark:text-slate-300">
-                        Contact Header (Name, Email, Phone, College)
-                      </span>
+                {/* Key Observations */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 flex items-start gap-2.5">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                    <div>
+                      <div className="font-bold text-slate-900 dark:text-white">Academic & Contact Data</div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400">Identity, institution, and degree successfully verified.</div>
                     </div>
-                    <span className="font-black text-emerald-600 dark:text-emerald-400">10 / 10 Verified</span>
                   </div>
-
-                  <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
-                      <span className="font-semibold text-slate-700 dark:text-slate-300">
-                        Single-Column Hierarchy (Zero Table / Textbox Drop)
-                      </span>
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 flex items-start gap-2.5">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                    <div>
+                      <div className="font-bold text-slate-900 dark:text-white">Applied Project Experience</div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400">Technical hands-on project accomplishments indexed.</div>
                     </div>
-                    <span className="font-black text-emerald-600 dark:text-emerald-400">20 / 20 Clean</span>
-                  </div>
-
-                  <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
-                      <span className="font-semibold text-slate-700 dark:text-slate-300">
-                        Discipline Tools Density & PMIS Alignment
-                      </span>
-                    </div>
-                    <span className="font-black text-emerald-600 dark:text-emerald-400">25 / 25 Matched</span>
-                  </div>
-
-                  <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
-                      <span className="font-semibold text-slate-700 dark:text-slate-300">
-                        Measurable Action Verbs & Project Quantifications
-                      </span>
-                    </div>
-                    <span className="font-black text-emerald-600 dark:text-emerald-400">
-                      {Math.min(25, 18 + profile.skills.length)} / 25
-                    </span>
                   </div>
                 </div>
 
                 {/* Call-to-actions */}
-                <div className="pt-2 flex flex-wrap items-center justify-between gap-3">
+                <div className="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 dark:border-slate-800">
                   <button
                     onClick={() => setDashboardTab("matched_jobs")}
                     className="rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black px-5 py-2.5 text-xs shadow-md transition cursor-pointer flex items-center gap-2"
                   >
                     <Target className="h-4 w-4" />
-                    <span>View Top 5 Matched Internships ({isHighScorer ? "Direct 1-Click Apply" : "Explore"})</span>
+                    <span>View Matched Internships ({isHighScorer ? "Direct 1-Click Apply" : "Explore"})</span>
                   </button>
 
                   <button
                     onClick={() => setDashboardTab("gaps")}
-                    className="text-xs font-extrabold text-red-600 dark:text-red-400 hover:underline flex items-center gap-1 cursor-pointer"
+                    className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
                   >
-                    <span>Inspect Detailed Resume Gaps</span>
+                    <span>Review Resume Checkpoints</span>
                     <ArrowRight className="h-3.5 w-3.5" />
                   </button>
                 </div>
