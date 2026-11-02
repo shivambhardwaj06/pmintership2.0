@@ -93,7 +93,13 @@ app.add_middleware(
 # Unconditional CORS header reinforcement middleware on all requests & OPTIONS preflights
 @app.middleware("http")
 async def cors_handler_middleware(request: Request, call_next):
-    origin = request.headers.get("origin") or "*"
+    raw_origin = request.headers.get("origin")
+    # Strictly avoid '*' with credentials=true which violates browser CORS specifications
+    if raw_origin and raw_origin.strip() and raw_origin != "*":
+        origin = raw_origin.strip()
+    else:
+        origin = "https://pmintership.vercel.app"
+
     if request.method == "OPTIONS":
         return JSONResponse(
             status_code=200,
@@ -103,19 +109,23 @@ async def cors_handler_middleware(request: Request, call_next):
                 "Access-Control-Allow-Credentials": "true",
                 "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD",
                 "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, Accept, Origin",
+                "Vary": "Origin",
             }
         )
+
     response = await call_next(request)
     response.headers["Access-Control-Allow-Origin"] = origin
     response.headers["Access-Control-Allow-Credentials"] = "true"
     response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD"
     response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With, Accept, Origin"
+    response.headers["Vary"] = "Origin"
     return response
 
 # Custom Exception Handlers ensuring CORS headers on all errors
 @app.exception_handler(StarletteHTTPException)
 async def custom_http_exception_handler(request: Request, exc: StarletteHTTPException):
-    origin = request.headers.get("origin") or "https://pmintership.vercel.app"
+    raw_origin = request.headers.get("origin")
+    origin = raw_origin.strip() if raw_origin and raw_origin != "*" else "https://pmintership.vercel.app"
     return JSONResponse(
         status_code=exc.status_code,
         content={"detail": exc.detail},
@@ -124,13 +134,15 @@ async def custom_http_exception_handler(request: Request, exc: StarletteHTTPExce
             "Access-Control-Allow-Credentials": "true",
             "Access-Control-Allow-Methods": "*",
             "Access-Control-Allow-Headers": "*",
+            "Vary": "Origin",
         }
     )
 
 @app.exception_handler(Exception)
 async def custom_global_exception_handler(request: Request, exc: Exception):
     logger.error(f"Global unhandled exception on {request.method} {request.url.path}: {exc}", exc_info=True)
-    origin = request.headers.get("origin") or "https://pmintership.vercel.app"
+    raw_origin = request.headers.get("origin")
+    origin = raw_origin.strip() if raw_origin and raw_origin != "*" else "https://pmintership.vercel.app"
     return JSONResponse(
         status_code=500,
         content={"detail": "An internal server error occurred.", "error": str(exc)},
@@ -139,6 +151,7 @@ async def custom_global_exception_handler(request: Request, exc: Exception):
             "Access-Control-Allow-Credentials": "true",
             "Access-Control-Allow-Methods": "*",
             "Access-Control-Allow-Headers": "*",
+            "Vary": "Origin",
         }
     )
 

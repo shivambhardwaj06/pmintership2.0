@@ -132,18 +132,36 @@ function testSkillInText(skillName, text) {
   return false;
 }
 
+// Enhanced concept map for technical domains
+const TECH_CONCEPT_MAP = {
+  ai_ml: {
+    userTokens: ["machine learning", "deep learning", "data science", "pandas", "numpy", "scikit-learn", "xgboost", "gemini", "gemini api", "ai", "artificial intelligence", "pytorch", "tensorflow"],
+    jobTokens: ["ai/ml", "ai", "machine learning", "generative ai", "llm", "rag", "pytorch", "hugging face", "langchain", "deep learning", "data science", "vector dbs"]
+  },
+  data_eng: {
+    userTokens: ["data science", "pandas", "numpy", "sql", "spark", "hadoop", "airflow", "database", "mongodb"],
+    jobTokens: ["data engineering", "spark", "airflow", "data modeling", "sql", "data pipelines", "big data", "etl"]
+  },
+  full_stack: {
+    userTokens: ["react", "react.js", "node", "node.js", "javascript", "typescript", "full stack", "frontend", "backend", "fastapi", "express", "mongodb"],
+    jobTokens: ["react", "node", "full stack", "frontend", "backend", "web development", "javascript", "express", "html", "css"]
+  }
+};
+
 // Determines display prominence of matched skills (frameworks & multi-word skills first; never C/R before major tools)
 function getSkillImportance(s) {
   const sl = s.toLowerCase();
   if (sl === "c" || sl === "r") return 0;
   if (
-    sl.includes("react") ||
-    sl.includes("node") ||
-    sl.includes("fastapi") ||
     sl.includes("learning") ||
     sl.includes("science") ||
     sl.includes("gemini") ||
-    sl.includes("prompt") ||
+    sl.includes("xgboost") ||
+    sl.includes("pytorch") ||
+    sl.includes("tensorflow") ||
+    sl.includes("fastapi") ||
+    sl.includes("react") ||
+    sl.includes("node") ||
     sl.includes("docker") ||
     sl.includes("mongo")
   ) {
@@ -172,30 +190,34 @@ function getTopDatabaseJobMatchesClient(skills = [], branch = "", limit = 5, car
     const jSummary = (job.summary || job.content || "").toLowerCase();
     const combinedText = `${jTitle} ${jSkills} ${jSummary} ${jEligibility}`;
 
-    // 1. Precise Skill Matching with Weighted Relevancy
+    // 1. Precise Skill Matching with Deduplication of Base Terms
+    const countedBases = new Set();
     for (const sk of safeSkills) {
+      const sl = sk.toLowerCase();
+      const base = sl.replace(/\.js$/, "").replace(/\.py$/, "").trim();
+      if (countedBases.has(base)) continue;
+
       if (testSkillInText(sk, combinedText)) {
+        countedBases.add(base);
         const inTitle = testSkillInText(sk, jTitle);
-        const sl = sk.toLowerCase();
-        let weight = 15;
+        let weight = 20;
 
         if (sl === "c" || sl === "r") {
-          weight = 10;
+          weight = 8;
         } else if (
           sl.includes("learning") ||
           sl.includes("science") ||
-          sl.includes("react") ||
-          sl.includes("node") ||
-          sl.includes("fastapi") ||
           sl.includes("gemini") ||
-          sl.includes("prompt")
+          sl.includes("xgboost") ||
+          sl.includes("deep learning") ||
+          sl.includes("prompt") ||
+          sl.includes("fastapi") ||
+          sl.includes("react")
         ) {
-          weight = 40 + (inTitle ? 20 : 0);
+          weight = 40 + (inTitle ? 25 : 0);
         } else if (
           sl.includes("python") ||
           sl.includes("sql") ||
-          sl.includes("javascript") ||
-          sl.includes("c++") ||
           sl.includes("docker") ||
           sl.includes("mongo")
         ) {
@@ -207,32 +229,56 @@ function getTopDatabaseJobMatchesClient(skills = [], branch = "", limit = 5, car
       }
     }
 
-    // 2. Career Aspiration Match (Boost roles matching user's stated interests)
+    // 2. High-Order Concept Synergy (AI/ML concepts, Data Engineering concepts, Full Stack)
+    for (const [key, concept] of Object.entries(TECH_CONCEPT_MAP)) {
+      const userHasConcept = concept.userTokens.some((t) => safeSkills.some((s) => s.toLowerCase().includes(t)));
+      const jobHasConcept = concept.jobTokens.some((t) => combinedText.includes(t));
+      if (userHasConcept && jobHasConcept) {
+        const inTitle = concept.jobTokens.some((t) => jTitle.includes(t));
+        score += 45 + (inTitle ? 40 : 0);
+      }
+    }
+
+    // 3. Stated Career Aspirations & Project Domains (High Priority Multiplier)
     if (goalsLower) {
-      const aspirationKeywords = [
-        "data science",
-        "machine learning",
-        "generative ai",
-        "gemini",
-        "full stack",
-        "web development",
-        "cloud",
-        "python",
-        "ai",
+      const domainAspirations = [
+        {
+          keys: ["data science", "machine learning", "generative ai", "ai", "gemini", "deep learning"],
+          titleBoost: ["generative ai", "ai", "llm", "data", "machine learning", "ml"]
+        },
+        {
+          keys: ["full stack", "web development", "react", "node"],
+          titleBoost: ["full stack", "react", "web", "frontend", "backend"]
+        },
+        {
+          keys: ["cloud", "devops", "aws", "docker"],
+          titleBoost: ["cloud", "devops", "platform", "infrastructure"]
+        },
+        {
+          keys: ["mobile", "android", "flutter", "ios"],
+          titleBoost: ["mobile", "app", "flutter", "react native"]
+        }
       ];
-      for (const kw of aspirationKeywords) {
-        if (goalsLower.includes(kw) && (jTitle.includes(kw) || jSkills.includes(kw))) {
-          score += 30;
-          break;
+
+      for (const group of domainAspirations) {
+        const userWantsGroup = group.keys.some((k) => goalsLower.includes(k));
+        if (userWantsGroup) {
+          const titleMatch = group.titleBoost.some((tb) => jTitle.includes(tb));
+          const skillMatch = group.titleBoost.some((tb) => jSkills.includes(tb));
+          if (titleMatch) {
+            score += 85;
+          } else if (skillMatch) {
+            score += 40;
+          }
         }
       }
     }
 
-    // 3. Academic Discipline & Sector Alignment
+    // 4. Academic Discipline & Sector Alignment
     if (/comp|cse|it|soft|web|data|ai|cloud/i.test(bLower)) {
-      if (/it & software|technology|telecom|media/i.test(jSector)) score += 35;
+      if (/it & software|technology/i.test(jSector)) score += 30;
+      if (/(data|ai|ml|generative|software|developer|engineer|cloud|full stack)/i.test(jTitle)) score += 20;
       if (/cse|it|computer|bca|mca|b\.tech/i.test(jEligibility)) score += 15;
-      if (/(software|developer|engineer|full stack|data|ai|ml|cloud)/i.test(jTitle)) score += 20;
     } else if (/mech|auto|vehicle|cad|mfg|thermal|fea/i.test(bLower)) {
       if (/automotive|manufacturing|metals|mobility|oil, gas/i.test(jSector)) score += 35;
       if (/mechanical|automobile|production|b\.tech|diploma/i.test(jEligibility)) score += 15;
@@ -340,507 +386,193 @@ function getTopDatabaseJobMatchesClient(skills = [], branch = "", limit = 5, car
   });
 }
 
-// In-Depth Domain Gap Blueprints (Zero Key Strengths - 100% Focused on Gap Identification & Exact Methods to Fix)
-const DOMAIN_GAP_BLUEPRINTS = {
-  computer_science: [
-    {
-      id: "cs-gap-1",
-      title: "Missing Clickable Live Deployment URLs & Active GitHub Repositories",
-      severity: "CRITICAL ATS PENALTY",
-      penaltyScore: 8,
-      category: "Verification Hyperlinks",
-      diagnosis:
-        "Top corporate recruiters at TCS, Infosys, and Wipro reject over 65% of applicant resumes because project claims cannot be verified. Unverified code repositories or missing deployment links trigger automated deduction in recruiter ranking systems.",
-      resolutionMethod: [
-        "Deploy your web frontend on Vercel or Netlify (free tier) and backend APIs on Render or Railway.",
-        "Include clean, clickable hyperlinks in project headers (e.g. 'Live Demo: pmis-demo.vercel.app | GitHub: github.com/username/project').",
-        "Ensure your GitHub README includes a 3-bullet architecture overview, setup steps, and screenshot preview.",
-      ],
-      exampleBefore: "❌ Built an e-commerce full-stack web application using React and Node.js with database integration.",
-      exampleAfter:
-        "✓ Developed scalable Full-Stack Storefront (React 19, FastAPI, PostgreSQL) deployed live on Vercel [link] with JWT auth, reducing checkout latency by 320ms across 1,200 simulated user sessions.",
-    },
-    {
-      id: "cs-gap-2",
-      title: "Vague Bullet Points Lacking Quantifiable Benchmarks (Latency, Traffic, or Query Speed)",
-      severity: "CRITICAL ATS PENALTY",
-      penaltyScore: 7,
-      category: "Measurable Impact (XYZ Formula)",
-      diagnosis:
-        "Corporate ATS screeners filter out passive descriptions like 'Worked on database' or 'Responsible for UI design'. High-ranking resumes require measurable outcomes using Google's XYZ formula: Accomplished [X] as measured by [Y] by doing [Z].",
-      resolutionMethod: [
-        "Audit every bullet point under 'Projects' and 'Experience' to ensure it contains at least one numeric metric (%, ms, users, test coverage).",
-        "Quantify performance wins: mention API response time reductions (e.g. 45% faster), database query indexing gains, or lines of test code.",
-        "Eliminate passive phrases like 'Helped with' or 'Assisted in'; start bullets with high-impact action verbs: Engineered, Optimized, Architected, Refactored.",
-      ],
-      exampleBefore: "❌ Responsible for optimizing SQL database queries and fixing slow API endpoints for the student portal.",
-      exampleAfter:
-        "✓ Engineered composite B-tree indexes and query caching in PostgreSQL, cutting average API response times from 480ms to 95ms (80% speedup) during peak loads.",
-    },
-    {
-      id: "cs-gap-3",
-      title: "Absence of Cloud Infrastructure, Docker Containerization, & CI/CD Tooling",
-      severity: "HIGH RECRUITER FRICTION",
-      penaltyScore: 6,
-      category: "DevOps & Cloud Stack",
-      diagnosis:
-        "Modern corporate internship screeners look for production-ready developers. Resumes that list only basic programming languages without Docker, Cloud (AWS/Azure/GCP), or CI/CD pipelines get flagged as academic-only.",
-      resolutionMethod: [
-        "Containerize at least one project using a clean multi-stage Dockerfile and docker-compose.yml.",
-        "Add a basic GitHub Actions workflow (.github/workflows/ci.yml) that automatically runs automated linting and tests on every pull request.",
-        "Highlight practical familiarity with cloud object storage (S3/Cloudinary) and environment configuration in your technical tools section.",
-      ],
-      exampleBefore: "❌ Languages: Python, JavaScript. Tools: VS Code, Git.",
-      exampleAfter:
-        "✓ Technical Toolkit: Python (FastAPI), React.js, PostgreSQL, Docker, AWS S3, GitHub Actions CI/CD, Redis Caching, Linux.",
-    },
-    {
-      id: "cs-gap-4",
-      title: "Missing State Management or Scalable API Architecture Specifications",
-      severity: "HIGH RECRUITER FRICTION",
-      penaltyScore: 5,
-      category: "Architecture Standards",
-      diagnosis:
-        "Enterprise projects require clean state separation and structured error handling. Resumes mentioning simple script projects fail intermediate recruiter technical benchmarks.",
-      resolutionMethod: [
-        "Specify state management libraries (Redux Toolkit, React Query / TanStack, Zustand) in your frontend projects.",
-        "Mention structured REST API conventions: HTTP status codes, Pydantic validation, CORS middleware, and pagination.",
-        "Add automated test metrics (e.g., 'Maintained 88% unit test code coverage using Vitest/Pytest').",
-      ],
-      exampleBefore: "❌ Made a React website for internship tracking with login.",
-      exampleAfter:
-        "✓ Architected enterprise state management using TanStack Query & React Context with optimistic UI updates and zero layout shift, handling 260+ live internship records.",
-    },
-    {
-      id: "cs-gap-5",
-      title: "Lack of Industry Developer Credentials or Verified Problem Solving Benchmarks",
-      severity: "RECOMMENDED ENHANCEMENT",
-      penaltyScore: 4,
-      category: "Certifications & Profiles",
-      diagnosis:
-        "Screeners at top technology MNCs receive thousands of identical resumes. A verified credential or active problem-solving profile gives an immediate ranking boost.",
-      resolutionMethod: [
-        "Include a hyperlink to your LeetCode, Codeforces, or HackerRank profile (e.g. 'Solved 250+ DSA problems in Python/Java').",
-        "Earn foundational certifications: AWS Certified Cloud Practitioner, Microsoft Azure Fundamentals (AZ-900), or free Oracle Cloud certifications.",
-      ],
-      exampleBefore: "❌ Good knowledge of Data Structures and Algorithms.",
-      exampleAfter:
-        "✓ Solved 280+ algorithmic challenges on LeetCode (Top 15% Contest Rating); completed AWS Cloud Quest for Solutions Architecture.",
-    },
-  ],
-  mechanical: [
-    {
-      id: "mech-gap-1",
-      title: "Absence of Clickable Digital 3D CAD Portfolio or GrabCAD Repository Link",
-      severity: "CRITICAL ATS PENALTY",
-      penaltyScore: 8,
-      category: "Portfolio Verification",
-      diagnosis:
-        "Automotive design hiring managers at Tata Motors and Maruti Suzuki reject mechanical resumes that do not provide 3D CAD modeling proof. Text claims of SolidWorks or AutoCAD proficiency are discounted without visual assembly links.",
-      resolutionMethod: [
-        "Create a free GrabCAD community profile or clean Google Drive folder with high-resolution 3D renders, exploded views, and PDF drafting sheets.",
-        "Include direct clickable hyperlinks in the resume header and under design project titles.",
-        "Demonstrate sheet metal, surfacing, or parametric modeling samples alongside assembly motion studies.",
-      ],
-      exampleBefore: "❌ Designed chassis and suspension parts in SolidWorks software for college competition.",
-      exampleAfter:
-        "✓ Modeled custom FSAE tubular spaceframe chassis in SolidWorks [GrabCAD Portfolio link], managing 48 parametric weldment joints and BOM component hierarchy.",
-    },
-    {
-      id: "mech-gap-2",
-      title: "Omission of GD&T Standards (ASME Y14.5) & Design for Manufacturing (DFM)",
-      severity: "CRITICAL ATS PENALTY",
-      penaltyScore: 7,
-      category: "Industrial Standards",
-      diagnosis:
-        "OEM automotive screeners require manufacturing drawings with strict Geometric Dimensioning and Tolerancing. Resumes missing GD&T, datum references, and fit tolerance callouts fail engineering screenings.",
-      resolutionMethod: [
-        "Specify GD&T callouts applied: true position, runout, concentricity, parallelism, and surface flatness.",
-        "Mention Design for Manufacturing & Assembly (DFMA) considerations: tooling clearance, draft angles, and standard fastener selections.",
-        "Add standard tolerance classes (e.g. ISO 2768-m or H7/g6 clearance fits) in project bullets.",
-      ],
-      exampleBefore: "❌ Created 2D drafting sheets for mechanical lathe parts.",
-      exampleAfter:
-        "✓ Generated ASME Y14.5M compliant 2D production drawings with bilateral tolerance stack-up analysis and H7/p6 press-fit callouts for CNC lathe machining.",
-    },
-    {
-      id: "mech-gap-3",
-      title: "Unquantified Simulation Results (Missing % Mass Reduction or Factor of Safety)",
-      severity: "HIGH RECRUITER FRICTION",
-      penaltyScore: 6,
-      category: "Quantitative Simulation Metrics",
-      diagnosis:
-        "Listing ANSYS or FEA without engineering numbers looks fabricated to senior recruiters. Resumes must show stress values, safety margins, and topology optimization results.",
-      resolutionMethod: [
-        "State maximum von Mises stress vs material yield strength with clear Factor of Safety (FoS).",
-        "Quantify topology optimization outcomes: weight reduction percentage achieved without exceeding permissible deflection limits.",
-        "Mention mesh convergence criteria (e.g. 5% stress variation threshold with parabolic tetrahedral elements).",
-      ],
-      exampleBefore: "❌ Performed FEA stress simulation in ANSYS Workbench to check component strength.",
-      exampleAfter:
-        "✓ Conducted non-linear static structural FEA in ANSYS Workbench; optimized upright bracket topology to achieve 18.4% mass reduction while maintaining 1.65 minimum Factor of Safety.",
-    },
-    {
-      id: "mech-gap-4",
-      title: "Lack of Hands-on Machining, CNC, or Fabrication Workshop Experience",
-      severity: "HIGH RECRUITER FRICTION",
-      penaltyScore: 5,
-      category: "Hands-on Manufacturing",
-      diagnosis:
-        "Plant recruiters at heavy industrial and automotive plants prioritize candidates with physical shopfloor familiarity over pure textbook software users.",
-      resolutionMethod: [
-        "Detail hands-on operations: CNC G-code programming, manual lathe turning, TIG/MIG welding, or composite layups.",
-        "Highlight precision measurement instruments used: Vernier calipers, micrometers, dial gauges, or CMM (Coordinate Measuring Machines).",
-      ],
-      exampleBefore: "❌ Fabricated vehicle components in the mechanical college workshop.",
-      exampleAfter:
-        "✓ Operated 3-axis CNC vertical milling machine using MasterCAM G-code toolpaths to fabricate 6061-T6 aluminum wheel hubs within ±0.025mm dimensional tolerance.",
-    },
-    {
-      id: "mech-gap-5",
-      title: "Missing Six Sigma, Lean Manufacturing, or IATF 16949 Quality Credentials",
-      severity: "RECOMMENDED ENHANCEMENT",
-      penaltyScore: 4,
-      category: "Industry Certifications",
-      diagnosis:
-        "Automotive supply chains operate on strict zero-defect quality systems. Showing awareness of Lean Six Sigma or automotive quality frameworks provides an immediate shortlist advantage.",
-      resolutionMethod: [
-        "Complete introductory Six Sigma Yellow/White Belt or 5S / Kaizen workshop training.",
-        "Mention Root Cause Analysis tools (5-Why, Ishikawa Fishbone diagrams, FMEA failure mode analysis).",
-      ],
-      exampleBefore: "❌ Knowledge of industrial manufacturing processes and quality checks.",
-      exampleAfter:
-        "✓ Certified Six Sigma Yellow Belt; drafted Process FMEA (Failure Mode and Effects Analysis) identifying 14 critical failure modes for plant assembly operations.",
-    },
-  ],
-  civil: [
-    {
-      id: "civil-gap-1",
-      title: "Missing Clickable Portfolio Link to Structural Drawings, Plans, & BIM Models",
-      severity: "CRITICAL ATS PENALTY",
-      penaltyScore: 8,
-      category: "Portfolio Proof",
-      diagnosis:
-        "Premier infrastructure recruiters at Larsen & Toubro (L&T) and Afcons Infrastructure discard candidate resumes that do not link to AutoCAD drawings, Revit BIM models, or structural analysis reports.",
-      resolutionMethod: [
-        "Compile a PDF portfolio with 3-5 sample drawings: floor plans, reinforcement detailing, and 3D Revit models.",
-        "Upload to Google Drive or portfolio website and include clickable hyperlinks in the resume header and projects section.",
-      ],
-      exampleBefore: "❌ Prepared architectural and structural drawings using AutoCAD software.",
-      exampleAfter:
-        "✓ Drafted G+4 residential building structural layout in AutoCAD [Portfolio Link], including coordinate grids, beam-column framing schedules, and plumbing elevation drawings.",
-    },
-    {
-      id: "civil-gap-2",
-      title: "Omission of IS National Building Code Standards (IS 456, IS 800, IS 1893)",
-      severity: "CRITICAL ATS PENALTY",
-      penaltyScore: 7,
-      category: "Regulatory Standards",
-      diagnosis:
-        "Structural engineering recruiters require adherence to Indian Standard codes. Failing to cite code compliance indicates purely theoretical academic modeling.",
-      resolutionMethod: [
-        "Reference relevant national codes in structural design descriptions: IS 456:2000 (Plain and Reinforced Concrete), IS 800:2007 (Steel Structures), and IS 1893:2016 (Earthquake Resistant Design).",
-        "Explain load combinations applied: Dead Load (IS 875 Part 1), Live Load (Part 2), and Wind Load (Part 3).",
-      ],
-      exampleBefore: "❌ Analyzed a multistory building frame in STAAD.Pro software.",
-      exampleAfter:
-        "✓ Modeled seismic-resistant G+5 commercial frame in STAAD.Pro compliant with IS 1893:2016 (Zone IV) and IS 456 limit state criteria, evaluating 18 wind and gravity load combinations.",
-    },
-    {
-      id: "civil-gap-3",
-      title: "Lack of Concrete Quantity Surveying, Estimation, & Bar Bending Schedules (BBS)",
-      severity: "HIGH RECRUITER FRICTION",
-      penaltyScore: 6,
-      category: "Cost & Quantity Estimation",
-      diagnosis:
-        "Site engineers must compute exact material quantities to avoid budget overruns. Resumes omitting quantity takeoffs, BBS calculations, and cost estimates receive lower screening marks.",
-      resolutionMethod: [
-        "Include Bar Bending Schedule (BBS) calculations: cutting lengths, hook allowances, and rebar tonnage.",
-        "Add quantity surveying metrics: total concrete volume (cum), formwork area (sqm), and cement bag estimations.",
-      ],
-      exampleBefore: "❌ Calculated material requirements and cost estimation for civil project.",
-      exampleAfter:
-        "✓ Computed comprehensive Bar Bending Schedule (BBS) and Bill of Quantities (BOQ) for 450 cum M30 concrete footing, optimizing steel rebar cutting waste by 8.5%.",
-    },
-    {
-      id: "civil-gap-4",
-      title: "Absence of Field Geotechnical Testing, Total Station Surveying, or Site QC",
-      severity: "HIGH RECRUITER FRICTION",
-      penaltyScore: 5,
-      category: "Site Testing Protocols",
-      diagnosis:
-        "Infrastructure projects demand practical field knowledge. Screeners favor candidates familiar with surveying equipment and concrete quality tests.",
-      resolutionMethod: [
-        "Highlight surveying instrument operations: Total Station, Auto-level, and GPS topographic mapping.",
-        "Mention laboratory and field testing: Slump test for workability, compressive strength cube testing (7 & 28 days), and soil Standard Penetration Test (SPT).",
-      ],
-      exampleBefore: "❌ Carried out site surveying and testing in the civil lab.",
-      exampleAfter:
-        "✓ Conducted Total Station topographic boundary surveying for 2.4-acre plot; performed 28-day concrete cube compressive strength tests ensuring >30 N/mm² quality compliance.",
-    },
-    {
-      id: "civil-gap-5",
-      title: "Missing Construction Scheduling Tools (MS Project / Primavera P6)",
-      severity: "RECOMMENDED ENHANCEMENT",
-      penaltyScore: 4,
-      category: "Project Scheduling Tools",
-      diagnosis:
-        "Large-scale PMIS infrastructure projects require Critical Path Method (CPM) tracking to prevent project delays.",
-      resolutionMethod: [
-        "Include MS Project or Primavera P6 coursework in your tools list.",
-        "Demonstrate Gantt chart milestone tracking, resource leveling, and schedule variance awareness.",
-      ],
-      exampleBefore: "❌ Basic knowledge of construction management and timelines.",
-      exampleAfter:
-        "✓ Developed 120-day construction schedule in MS Project with Critical Path Method (CPM) tracking and weekly resource allocation schedules for milestone delivery.",
-    },
-  ],
-  commerce: [
-    {
-      id: "fin-gap-1",
-      title: "Missing Clickable Hyperlink to Interactive 3-Statement Financial Model or Power BI Report",
-      severity: "CRITICAL ATS PENALTY",
-      penaltyScore: 8,
-      category: "Model Verification",
-      diagnosis:
-        "Corporate banking screeners at HDFC Bank, ICICI Bank, and SBI reject candidate resumes that claim financial analysis proficiency without linking to a live Excel financial model or dashboard.",
-      resolutionMethod: [
-        "Build a sample 3-statement integrated financial model (Income Statement, Balance Sheet, Cash Flow) on Google Sheets.",
-        "Link an interactive Power BI or Tableau financial KPI dashboard in your resume header or project bullets.",
-        "Ensure dynamic formulas (INDEX/MATCH, XLOOKUP, dynamic debt schedules) are utilized rather than hardcoded numbers.",
-      ],
-      exampleBefore: "❌ Built financial statement models and analyzed balance sheets in MS Excel.",
-      exampleAfter:
-        "✓ Built integrated 3-statement forecast financial model in Google Sheets [Live Model Link] with dynamic DCF valuation, scenario manager, and debt amortization schedules for FMCG firm.",
-    },
-    {
-      id: "fin-gap-2",
-      title: "Lack of Quantifiable Financial Variance, Margin Improvement, or Cost Audit Numbers",
-      severity: "CRITICAL ATS PENALTY",
-      penaltyScore: 7,
-      category: "Quantified Financial Metrics",
-      diagnosis:
-        "Finance recruiters evaluate candidates by their quantitative clarity. Vague bullet points like 'Handled accounting' fail ATS ranking benchmarks.",
-      resolutionMethod: [
-        "Include financial percentages: EBITDA margin variation, operating leverage, return on equity (ROE), or debt-to-equity ratios.",
-        "Quantify audit findings: audit variance reconciliation percentage, cost savings discovered, or invoice turnaround speedup.",
-      ],
-      exampleBefore: "❌ Analyzed financial ratios and checked company profit and loss statements.",
-      exampleAfter:
-        "✓ Analyzed 5-year financial statements of 8 listed automotive companies; modeled liquidity and solvency ratios, highlighting a 4.2% operating margin variance across peers.",
-    },
-    {
-      id: "fin-gap-3",
-      title: "Absence of Recognized Banking & Finance Certifications (NISM / NCFM / Tally Prime)",
-      severity: "HIGH RECRUITER FRICTION",
-      penaltyScore: 6,
-      category: "Professional Credentials",
-      diagnosis:
-        "National banking partners enforce strict regulatory compliance. Resumes featuring NISM (National Institute of Securities Markets) credentials gain automatic priority shortlisting.",
-      resolutionMethod: [
-        "Enroll in and complete NISM Series V-A (Mutual Funds) or Series VIII (Equity Derivatives) certification.",
-        "Include recognized accounting software credentials: Tally Prime Pro certification or Advanced Financial Modeling with Excel.",
-      ],
-      exampleBefore: "❌ Good knowledge of banking operations, mutual funds, and stock markets.",
-      exampleAfter:
-        "✓ Certified in NISM Series VIII (Equity Derivatives) & Tally Prime Professional; complete understanding of statutory TDS and corporate audit schedules.",
-    },
-    {
-      id: "fin-gap-4",
-      title: "Omission of Statutory Regulatory Compliance (GST, TDS, Corporate Audits, Ind-AS)",
-      severity: "HIGH RECRUITER FRICTION",
-      penaltyScore: 5,
-      category: "Statutory Compliance",
-      diagnosis:
-        "Corporate finance departments require working familiarity with GST filing structures, TDS deduction rules, and Indian Accounting Standards (Ind-AS).",
-      resolutionMethod: [
-        "State practical exposure to GST returns: GSTR-1, GSTR-2B reconciliation, and GSTR-3B tax calculations.",
-        "Mention TDS provisions (Section 194C, 194J) and bank reconciliation statement (BRS) preparation.",
-      ],
-      exampleBefore: "❌ Knowledge of tax compliance and basic GST rules.",
-      exampleAfter:
-        "✓ Conducted 2B-vs-Purchase Ledger GST reconciliation for 350+ monthly vendor invoices; identified ₹1.4L input tax credit (ITC) mismatches to maintain statutory compliance.",
-    },
-    {
-      id: "fin-gap-5",
-      title: "Single-Software Accounting Dependency (Only Tally without ERP/Power BI Exposure)",
-      severity: "RECOMMENDED ENHANCEMENT",
-      penaltyScore: 4,
-      category: "ERP & Analytics Tools",
-      diagnosis:
-        "Top corporate employers operate on SAP S/4HANA or Oracle ERP and utilize business intelligence dashboards for executive decision making.",
-      resolutionMethod: [
-        "Learn basic ERP workflows (SAP FI/CO module concepts) and Power BI DAX formulas.",
-        "Showcase how you connect raw financial data to interactive visualization charts.",
-      ],
-      exampleBefore: "❌ Tools: MS Word, Tally 9.",
-      exampleAfter:
-        "✓ Financial Software Suite: Advanced Excel (VBA, Power Query, What-If Analysis), Tally Prime, Power BI DAX Dashboards, SAP ERP Basic Overview.",
-    },
-  ],
-  pharma: [
-    {
-      id: "pharma-gap-1",
-      title: "Missing Details on Analytical Laboratory Instruments Operated (HPLC / UV-Vis)",
-      severity: "CRITICAL ATS PENALTY",
-      penaltyScore: 8,
-      category: "Instrument Verification",
-      diagnosis:
-        "Quality control screeners at Sun Pharma and Dr. Reddy's look for practical chromatography instrumentation exposure. Generic 'lab testing' descriptions get screened out.",
-      resolutionMethod: [
-        "Explicitly list analytical instruments operated: High-Performance Liquid Chromatography (HPLC), UV-Vis Spectrophotometer, Dissolution Apparatus, pH Meter, Karl Fischer Titrator.",
-        "Mention chromatography parameters: mobile phase preparation, column chemistry (C18), retention times, and peak area integration.",
-      ],
-      exampleBefore: "❌ Performed drug testing and quality control experiments in the college pharmaceutical laboratory.",
-      exampleAfter:
-        "✓ Operated Shimadzu HPLC (RP-C18 column) and UV-Vis spectrophotometer for quantitative assay estimation of active pharmaceutical ingredients (API) with 99.2% recovery accuracy.",
-    },
-    {
-      id: "pharma-gap-2",
-      title: "Omission of cGMP, GLP, and Regulatory Documentation Frameworks (ALCOA+)",
-      severity: "CRITICAL ATS PENALTY",
-      penaltyScore: 7,
-      category: "Quality Standards",
-      diagnosis:
-        "Pharmaceutical manufacturing is heavily regulated by CDSCO and US FDA guidelines. Resumes lacking reference to current Good Manufacturing Practices (cGMP) fail corporate filters.",
-      resolutionMethod: [
-        "State understanding of cGMP regulations (21 CFR Part 210/211) and Good Laboratory Practice (GLP).",
-        "Reference ALCOA+ data integrity guidelines (Attributable, Legible, Contemporaneous, Original, Accurate).",
-      ],
-      exampleBefore: "❌ Followed laboratory safety and hygiene guidelines during experiments.",
-      exampleAfter:
-        "✓ Documented batch analytical records in strict compliance with cGMP and ALCOA+ data integrity protocols; drafted Standard Operating Procedures (SOPs) for instrument calibrations.",
-    },
-    {
-      id: "pharma-gap-3",
-      title: "Lack of Quantified Batch Formulation Yield, Purity %, or Dissolution Profiles",
-      severity: "HIGH RECRUITER FRICTION",
-      penaltyScore: 6,
-      category: "Formulation Metrics",
-      diagnosis:
-        "R&D recruiters evaluate candidates by their quantitative reproducibility and formulation accuracy. Numerical results must be reported in project descriptions.",
-      resolutionMethod: [
-        "Report quantitative data: batch percentage yield, dissolution rate percentage at specified time points, disintegration time (minutes), and tablet hardness (kp).",
-      ],
-      exampleBefore: "❌ Formulated and evaluated paracetamol tablets in the laboratory.",
-      exampleAfter:
-        "✓ Formulated direct-compression fast-dissolving tablets achieving 98.4% drug entrapment efficiency and >85% in-vitro drug release within 15 minutes in USP dissolution apparatus.",
-    },
-    {
-      id: "pharma-gap-4",
-      title: "Absence of Out-of-Specification (OOS) Protocol or Stability Testing Knowledge",
-      severity: "HIGH RECRUITER FRICTION",
-      penaltyScore: 5,
-      category: "Laboratory Investigation",
-      diagnosis:
-        "Quality assurance departments require working understanding of deviation handling, Out-of-Specification (OOS) investigations, and ICH stability guidelines.",
-      resolutionMethod: [
-        "Reference ICH Q1A guidelines for stability testing of new drug substances and products.",
-        "Mention exposure to Out-of-Specification (OOS) and Out-of-Trend (OOT) investigation workflows.",
-      ],
-      exampleBefore: "❌ Tested drug samples for stability and degradation.",
-      exampleAfter:
-        "✓ Evaluated accelerated stability study samples per ICH Q1A guidelines (40°C/75% RH) over 3-month intervals, monitoring physical degradation and assay recovery.",
-    },
-    {
-      id: "pharma-gap-5",
-      title: "No Laboratory Information Management System (LIMS) or Digital Documentation",
-      severity: "RECOMMENDED ENHANCEMENT",
-      penaltyScore: 4,
-      category: "Digital QC Tools",
-      diagnosis:
-        "Modern pharmaceutical plants utilize electronic batch records and LIMS software for paperless compliance.",
-      resolutionMethod: [
-        "Include LIMS overview, ChemDraw molecule sketching, and statistical software (GraphPad Prism / Excel for biostatistics).",
-      ],
-      exampleBefore: "❌ Microsoft Office, Internet browsing.",
-      exampleAfter:
-        "✓ Pharmaceutical Tools: ChemDraw, GraphPad Prism (Biostatistics), LIMS Architecture Basics, UVProbe Spectroscopy Software, MS Excel Data Analysis.",
-    },
-  ],
-  multi_disciplinary: [
-    {
-      id: "multi-gap-1",
-      title: "Generic Responsibility Statements Lacking Quantifiable Operational KPIs",
-      severity: "CRITICAL ATS PENALTY",
-      penaltyScore: 8,
-      category: "Quantified Business Outcomes",
-      diagnosis:
-        "Corporate operations screeners discard resumes with generic statements like 'Managed daily tasks' or 'Handled team communication'. Resumes need clear percentage efficiencies or numerical outcomes.",
-      resolutionMethod: [
-        "Apply the XYZ formula: 'Accomplished [X] as measured by [Y] by doing [Z]'.",
-        "Add measurable metrics: % reduction in process turnaround time, budget tracked, error reduction rate, or customer response times.",
-      ],
-      exampleBefore: "❌ Responsible for organizing events and coordinating with team members.",
-      exampleAfter:
-        "✓ Directed cross-functional 8-member committee for national symposium, managing ₹2.8L budget and boosting corporate partner onboarding by 45% year-over-year.",
-    },
-    {
-      id: "multi-gap-2",
-      title: "Missing Targeted PMIS Industry Sector Declaration (Resume Appears Too Broad)",
-      severity: "CRITICAL ATS PENALTY",
-      penaltyScore: 7,
-      category: "Sector Targeting",
-      diagnosis:
-        "PM Scheme corporate recruiters represent 24 specific industry sectors. Unfocused resumes that do not declare a target sector fail algorithmic recruiter keyword matchmaking.",
-      resolutionMethod: [
-        "Declare a targeted corporate sector in your professional career summary (e.g. Banking & Financial Services, Automotive, or Infrastructure).",
-        "Tailor technical keywords and software to match that chosen corporate domain.",
-      ],
-      exampleBefore: "❌ Seeking any good corporate internship opportunity in a reputed company.",
-      exampleAfter:
-        "✓ Target: Corporate Operations & Financial Services Intern | Demonstrating advanced spreadsheet modeling, process streamlining, and audit compliance capabilities.",
-    },
-    {
-      id: "multi-gap-3",
-      title: "Absence of Modern Corporate Productivity & Analytics Software (Power BI / Advanced Excel)",
-      severity: "HIGH RECRUITER FRICTION",
-      penaltyScore: 6,
-      category: "Business Analytics Tools",
-      diagnosis:
-        "Enterprise operations require data visualization and automated workflow tools. Resumes listing only basic MS Word receive lower screening priority.",
-      resolutionMethod: [
-        "Highlight Advanced Excel: Pivot Tables, VLOOKUP/XLOOKUP, Power Query, and automated macros.",
-        "Add business intelligence tools: Microsoft Power BI dashboards or Google Looker Studio reports.",
-      ],
-      exampleBefore: "❌ Computer Skills: Basic MS Office, Internet.",
-      exampleAfter:
-        "✓ Business & Analytics Suite: Advanced Excel (XLOOKUP, Nested IF, Pivot Modeling), Microsoft Power BI, ERP Fundamentals, Google Workspace Automation.",
-    },
-    {
-      id: "multi-gap-4",
-      title: "No Documented Project Governance, Vendor Coordination, or Quality Audit Metrics",
-      severity: "HIGH RECRUITER FRICTION",
-      penaltyScore: 5,
-      category: "Project Management",
-      diagnosis:
-        "Operations internships require structured planning and vendor coordination rigor. Showing structured methodology prevents candidate disqualification.",
-      resolutionMethod: [
-        "Mention project management methodologies (Agile / Scrum principles or Gantt milestone scheduling).",
-        "Include vendor management, RFP quotation reviews, or quality compliance checklists in past project summaries.",
-      ],
-      exampleBefore: "❌ Coordinated with external vendors and handled supplies.",
-      exampleAfter:
-        "✓ Streamlined procurement workflow across 12 institutional suppliers, conducting competitive price benchmarking that achieved 14% cost savings on material orders.",
-    },
-    {
-      id: "multi-gap-5",
-      title: "Lack of Clickable Deliverable Links, Presentations, or Executive Work Samples",
-      severity: "RECOMMENDED ENHANCEMENT",
-      penaltyScore: 4,
-      category: "Portfolio Evidence",
-      diagnosis:
-        "Recruiters prioritize candidates who showcase tangible proof of work: case study decks, process maps, or data analysis reports.",
-      resolutionMethod: [
-        "Host sample business presentations, process flow diagrams, or financial analysis spreadsheets in a clean Google Drive portfolio.",
-        "Include direct clickable links in your resume header.",
-      ],
-      exampleBefore: "❌ Prepared reports and presentations for class seminars.",
-      exampleAfter:
-        "✓ Authored 24-page market feasibility study on Indian EV Charging Infrastructure [Drive Portfolio Link] including SWOT analysis and 5-year demand forecasting.",
-    },
-  ],
-};
+// Dynamic Resume Gap & Skill Deficiency Engine
+// Analyzes candidate's actual extracted skills, resume text, and target domain roles to find real gaps
+export function computeDynamicResumeGaps(skills = [], branch = "", careerSummary = "", rawText = "", topJobs = []) {
+  const safeSkills = Array.isArray(skills) ? skills : [];
+  const sSet = new Set(safeSkills.map((s) => s.toLowerCase().trim()));
+  const textLower = (rawText || "").toLowerCase();
+  const goalsLower = (careerSummary || "").toLowerCase();
+  const bLower = (branch || "").toLowerCase();
+  const combinedContext = `${bLower} ${goalsLower} ${safeSkills.join(" ").toLowerCase()}`;
+
+  const gaps = [];
+
+  // 1. Check for Verification Links (GitHub / Live Demo)
+  const hasLinks = /github\.com|gitlab\.com|bitbucket\.org|vercel\.app|onrender\.com|herokuapp\.com|netlify\.app|drive\.google\.com|grabcad\.com|behance\.net|linkedin\.com|https?:\/\//i.test(rawText);
+  if (!hasLinks) {
+    gaps.push({
+      id: "gap-verify-links",
+      title: "Missing Clickable Code Repositories & Live Project URLs",
+      category: "Code Verification & Portfolio",
+      whatIsWrong: "Your resume describes technical projects but lacks clickable GitHub repository links or live deployed application URLs. Corporate recruiters at top tech MNCs (TCS, Wipro, Infosys) cannot verify if your code actually runs or examine your engineering commit history.",
+      whatCanDo: "Deploy your web applications on Vercel or Render, push your clean source code to GitHub with a well-structured README (architecture summary, setup instructions), and include direct clickable hyperlinks next to each project title.",
+    });
+  }
+
+  // 2. Check for Quantified Engineering Metrics in Project Descriptions
+  const hasMetrics = /\b\d+(\.\d+)?%|\b\d+\s*(?:ms|seconds|users|queries|records|rps|mb|gb|fps)\b|\b(?:reduced|improved|increased|cut|boosted|optimized)\s+(?:by\s+)?\d+/i.test(rawText);
+  if (!hasMetrics) {
+    gaps.push({
+      id: "gap-metrics",
+      title: "Project Bullet Points Lack Quantified Engineering Impact Metrics",
+      category: "Impact Measurement",
+      whatIsWrong: "Your project descriptions use descriptive statements (e.g. 'created an application', 'implemented machine learning model') without measurable performance benchmarks. Recruiter ATS systems prioritize resumes that quantify impact using numbers, percentages, or latency figures.",
+      whatCanDo: "Quantify the outcomes of your projects: specify model accuracy (e.g. 'Achieved 94.2% test accuracy'), response time reductions (e.g. 'Reduced query latency by 45%'), or scale (e.g. 'Trained on 10,000+ patient records across 14 clinical features').",
+    });
+  }
+
+  // 3. Computer Science / AI / Machine Learning / Data Science Skill Gaps
+  const isAIOrData = /data|machine learning|deep learning|ai|gemini|nlp|vision|scikit|pandas|pytorch|tensorflow/i.test(combinedContext);
+  if (isAIOrData) {
+    // Check MLOps & Model Serving
+    const hasMLOps = sSet.has("mlops") || sSet.has("mlflow") || sSet.has("onnx") || sSet.has("model serving") || /mlflow|torchserve|triton|onnx/i.test(textLower);
+    if (!hasMLOps) {
+      gaps.push({
+        id: "gap-mlops",
+        title: "Absence of Production MLOps & Model Serving Pipelines (MLflow / ONNX / Docker)",
+        category: "Machine Learning & Production AI",
+        whatIsWrong: "While your resume demonstrates machine learning modeling (e.g. Scikit-learn, XGBoost, Deep Learning), it lacks production MLOps tools. Modern AI corporate recruiters at Persistent, Wipro, and LTIMindtree screen for candidates who know how to package, monitor, and serve models at scale rather than just running Jupyter notebooks.",
+        whatCanDo: "Containerize your Cardiac Heart Disease Predictor with a FastAPI endpoint using Docker, integrate MLflow or Weights & Biases for experiment tracking, and document API inference latency (<80ms) on your GitHub repository.",
+      });
+    }
+
+    // Check Vector DB & RAG Pipeline
+    const hasGenAI = /gemini|prompt|llm|generative/i.test(combinedContext);
+    const hasVectorDB = /vector|qdrant|chroma|pinecone|rag|langchain|llamaindex/i.test(textLower) || sSet.has("qdrant") || sSet.has("chromadb") || sSet.has("pinecone");
+    if (hasGenAI && !hasVectorDB) {
+      gaps.push({
+        id: "gap-vectordb-rag",
+        title: "Missing Vector Database & Enterprise RAG Retrieval Stack (Qdrant / ChromaDB)",
+        category: "Generative AI Systems",
+        whatIsWrong: "You highlight the Gemini API and Prompt Engineering, but do not showcase hands-on experience with Vector Databases or Retrieval-Augmented Generation (RAG) chunking and embedding pipelines required by PMIS Generative AI & LLM Systems intern roles.",
+        whatCanDo: "Build and link a Retrieval-Augmented Generation (RAG) mini-project using your Gemini API with ChromaDB or Qdrant to search over PDF documents, and add 'Vector DBs (Qdrant / ChromaDB)' to your verified technical skills.",
+      });
+    }
+
+    // Check Big Data & Distributed Data Pipelines
+    const hasBigData = /spark|pyspark|kafka|hadoop|dbt|airflow/i.test(textLower) || sSet.has("spark") || sSet.has("pyspark") || sSet.has("kafka");
+    if (!hasBigData) {
+      gaps.push({
+        id: "gap-bigdata",
+        title: "Data Processing Architecture Limited to In-Memory Pandas Dataframes",
+        category: "Data Engineering & Scalability",
+        whatIsWrong: "Your data processing relies strictly on in-memory Pandas and NumPy operations. Enterprise HealthTech and Analytics openings at Persistent and TCS look for familiarity with distributed processing or scalable SQL databases capable of processing gigabyte-scale datasets.",
+        whatCanDo: "Add a PySpark or DuckDB data ingestion script, or demonstrate advanced PostgreSQL window functions and indexing on large datasets to prove your pipeline can handle data beyond memory limits.",
+      });
+    }
+  }
+
+  // 4. Web & Full-Stack Development Skill Gaps
+  const isWebDev = /react|node|javascript|fastapi|full stack|web|frontend|backend/i.test(combinedContext);
+  if (isWebDev) {
+    // Check TypeScript
+    const hasTypeScript = sSet.has("typescript") || /typescript|\.tsx\b/i.test(textLower);
+    if (!hasTypeScript && (sSet.has("javascript") || sSet.has("react") || sSet.has("node.js"))) {
+      gaps.push({
+        id: "gap-typescript",
+        title: "Missing TypeScript Proficiency in Full-Stack Web Projects",
+        category: "Modern Frontend Stack",
+        whatIsWrong: "Your profile lists JavaScript and React but omits TypeScript. Over 80% of corporate frontend and full-stack internships at LTIMindtree, Infosys, and Coforge mandate TypeScript to enforce static type-checking in team codebases.",
+        whatCanDo: "Convert at least one of your React or Node.js projects to TypeScript (.tsx/.ts), define strict interfaces for your API data models, and list 'TypeScript' among your core programming languages.",
+      });
+    }
+
+    // Check Automated Testing
+    const hasTesting = /pytest|jest|vitest|cypress|playwright|unit test|integration test/i.test(textLower) || sSet.has("pytest") || sSet.has("jest") || sSet.has("vitest");
+    if (!hasTesting) {
+      gaps.push({
+        id: "gap-automated-testing",
+        title: "Absence of Automated Unit & Integration Testing (Pytest / Vitest / Jest)",
+        category: "Software Quality & Testing",
+        whatIsWrong: "None of your technical projects mention automated testing suites. Top engineering teams filter for candidates who write unit and integration tests to ensure reliable production code.",
+        whatCanDo: "Write unit tests for your FastAPI backend endpoints using Pytest (or Jest/Vitest for React components), achieve 80%+ test coverage on your GitHub repository, and list 'Unit Testing (Pytest/Jest)' in your skills.",
+      });
+    }
+
+    // Check Redis / Caching
+    const hasRedis = sSet.has("redis") || /redis|caching|memcached/i.test(textLower);
+    if (!hasRedis && (sSet.has("mongodb") || sSet.has("sql") || sSet.has("fastapi") || sSet.has("node.js"))) {
+      gaps.push({
+        id: "gap-caching-redis",
+        title: "Missing In-Memory Caching & Session Storage Layer (Redis)",
+        category: "Backend Performance & Caching",
+        whatIsWrong: "Your backend projects connect directly to MongoDB/SQL databases without an in-memory caching layer, causing latency bottlenecks under high concurrent user traffic.",
+        whatCanDo: "Integrate Redis caching for frequently accessed database queries or session tokens in your FastAPI/Node app, and highlight the resulting API response speedup on your resume.",
+      });
+    }
+  }
+
+  // 5. Mechanical & Automotive Skill Gaps
+  const isMech = /mech|solidworks|cad|cam|ansys|autocad|thermo|cnc|automobile|automotive|catia|fea|vehicle/i.test(combinedContext);
+  if (isMech) {
+    const hasFEA = /fea|ansys|abaqus|simulation|finite element/i.test(textLower) || sSet.has("fea") || sSet.has("ansys");
+    if (!hasFEA) {
+      gaps.push({
+        id: "gap-mech-fea",
+        title: "Absence of FEA Structural or Thermal Simulation Proof (ANSYS / SolidWorks FEA)",
+        category: "Mechanical CAE & Simulation",
+        whatIsWrong: "Your mechanical profile lists 3D CAD modeling but lacks Finite Element Analysis (FEA) or thermal stress simulations required by automotive OEMs (Tata Motors, Hero MotoCorp) to validate component structural integrity.",
+        whatCanDo: "Perform a structural or thermal stress simulation in ANSYS or SolidWorks Simulation on your chassis/part, document the minimum Factor of Safety (FOS) and displacement, and list 'FEA Simulation (ANSYS)' on your resume.",
+      });
+    }
+
+    const hasGDT = /gd&t|toleranc|asme y14|geometric dimensioning/i.test(textLower) || sSet.has("gd&t");
+    if (!hasGDT) {
+      gaps.push({
+        id: "gap-mech-gdt",
+        title: "Missing Geometric Dimensioning & Tolerancing (GD&T ASME Y14.5 Standards)",
+        category: "Manufacturing & Quality Standards",
+        whatIsWrong: "Automotive engineering teams screen for production-ready design skills. Claiming CAD proficiency without ASME GD&T symbols and tolerance stack-up analysis limits your shortlist ranking for manufacturing roles.",
+        whatCanDo: "Add GD&T datum feature references and tolerance callouts to your component engineering drawings, and document tolerance stack-up analysis in your project descriptions.",
+      });
+    }
+  }
+
+  // 6. Civil & Infrastructure Skill Gaps
+  const isCivil = /civil|structural|construct|revit|survey|concrete|staad|infrastruct|geotech/i.test(combinedContext);
+  if (isCivil) {
+    const hasBIM = /bim|revit|building information/i.test(textLower) || sSet.has("revit") || sSet.has("bim");
+    if (!hasBIM) {
+      gaps.push({
+        id: "gap-civil-bim",
+        title: "Missing Building Information Modeling (BIM / Revit 3D Coordination)",
+        category: "Modern Infrastructure Stack",
+        whatIsWrong: "Major infrastructure partners like Larsen & Toubro (L&T) and Tata Projects mandate BIM / Revit proficiency for mega project internships. Resumes with only 2D AutoCAD drafting receive lower screening priority.",
+        whatCanDo: "Learn Revit BIM for 3D structural coordination and clash detection, and link a sample BIM model portfolio or project sheet on your resume.",
+      });
+    }
+  }
+
+  // 7. Commerce, Banking & Finance Skill Gaps
+  const isFinance = /commerc|financ|account|b\.com|mba|tally|gst|audit|tax|banking|equity/i.test(combinedContext);
+  if (isFinance) {
+    const hasModeling = /dcf|financial model|valuation|3-statement|sensitivity/i.test(textLower) || sSet.has("financial modeling");
+    if (!hasModeling) {
+      gaps.push({
+        id: "gap-finance-modeling",
+        title: "Absence of 3-Statement Financial Modeling & Valuation Frameworks (DCF)",
+        category: "Corporate Finance & Valuation",
+        whatIsWrong: "Corporate banking and equity research recruiters at HDFC Bank and ICICI screen for candidates who can build dynamic 3-statement models and DCF valuations, beyond basic textbook accounting.",
+        whatCanDo: "Build an integrated 3-statement financial model (Income Statement, Balance Sheet, Cash Flow) with sensitivity tables in Excel for a listed Indian enterprise, and link your workbook on Google Drive.",
+      });
+    }
+  }
+
+  // Fallback if candidate has an exceptionally complete profile
+  if (gaps.length === 0) {
+    gaps.push({
+      id: "gap-advance-cert",
+      title: "Add Verified Professional Industry Certification or Open-Source Contribution",
+      category: "Industry Credentials",
+      whatIsWrong: "Your resume covers all foundational and intermediate technical competencies, but lacks a vendor-verified credential (e.g. AWS Cloud Practitioner, Microsoft Certified, or open-source PRs) to stand out in high-volume competitive screening.",
+      whatCanDo: "Earn a foundational cloud credential (AWS Certified Cloud Practitioner or Oracle Cloud Infrastructure) or submit a pull request to a recognized open-source library and link it on your resume.",
+    });
+  }
+
+  // Return the top 3-4 most critical actionable gaps
+  return gaps.slice(0, 4);
+}
 
 // Generates dynamic analysis with rich domain gaps and genuine real-time ATS scoring
 function generateComprehensiveReview(
@@ -852,24 +584,19 @@ function generateComprehensiveReview(
   const safeSkills = skills.length
     ? skills
     : ["Analytical Problem Solving", "Data Analysis", "Project Management", "Professional Communication"];
-  const combinedStr = `${branch} ${safeSkills.join(" ")}`.toLowerCase();
 
-  let domain = "multi_disciplinary";
-  if (/mech|solidworks|cad|cam|ansys|autocad|thermo|cnc|automobile|automotive|catia|fea|vehicle/i.test(combinedStr)) {
-    domain = "mechanical";
-  } else if (/civil|structural|construct|revit|survey|concrete|staad|infrastruct|geotech/i.test(combinedStr)) {
-    domain = "civil";
-  } else if (/commerc|financ|account|b\.com|mba|tally|gst|audit|tax|banking|equity|balance sheet/i.test(combinedStr)) {
-    domain = "commerce";
-  } else if (/pharma|pharmac|formulat|clinic|biochem|drug|hplc|chemist|biotech|health/i.test(combinedStr)) {
-    domain = "pharma";
-  } else if (/electr|vlsi|embedded|iot|circuit|verilog|power systems|microcontroller|arduino/i.test(combinedStr)) {
-    domain = "electrical";
-  } else if (/comp|cse|software|coding|developer|react|fastapi|python|java|web dev|full stack/i.test(combinedStr)) {
-    domain = "computer_science";
-  }
+  const careerSummary =
+    meta.careerSummary ||
+    `Targeted ${branch} candidate with demonstrated capability in ${safeSkills.slice(0, 3).join(", ")}. Well-aligned for premier national corporate internships.`;
 
-  const detailedGaps = DOMAIN_GAP_BLUEPRINTS[domain] || DOMAIN_GAP_BLUEPRINTS.multi_disciplinary;
+  const topJobs = getTopDatabaseJobMatchesClient(safeSkills, branch, 5, careerSummary);
+  const detailedGaps = computeDynamicResumeGaps(
+    safeSkills,
+    branch,
+    careerSummary,
+    meta.rawText || "",
+    topJobs
+  );
 
   // Genuine Real-Time ATS Score Calculation
   let baseScore = 80;
@@ -887,12 +614,6 @@ function generateComprehensiveReview(
     ["Communication", "Problem Solving", "Leadership", "Teamwork", "Team Collaboration"].includes(s)
   );
   if (!soft.length) soft.push("Analytical Problem Solving", "Professional Communication");
-
-  const careerSummary =
-    meta.careerSummary ||
-    `Targeted ${branch} candidate with demonstrated capability in ${safeSkills.slice(0, 3).join(", ")}. Well-aligned for premier national corporate internships.`;
-
-  const topJobs = getTopDatabaseJobMatchesClient(safeSkills, branch, 5, careerSummary);
 
   return {
     candidate_name: candidateName || "Candidate",
@@ -925,6 +646,7 @@ function generateComprehensiveReview(
     target_roles: topJobs,
     top_5_jobs_match: topJobs,
     detailed_gaps: detailedGaps,
+    rawText: meta.rawText || "",
     gaps_and_missing: detailedGaps.map((g) => g.title),
     actionable_roadmap: [
       `Step 1: Address ${detailedGaps[0]?.title || "top identified deficiency"} using the actionable blueprint.`,
@@ -1356,6 +1078,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
         careerSummary: profile.career_goals,
         atsScore: prev?.resume_score,
         formattingFeedback: prev?.layout_review?.formatting_feedback,
+        rawText: prev?.rawText || "",
       });
     });
   }, [
@@ -1776,6 +1499,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
               : getTopDatabaseJobMatchesClient(realSkills, realBranch, 5, realGoals),
             extracted_skills: realSkills,
             career_summary: realGoals,
+            detailed_gaps: computeDynamicResumeGaps(realSkills, realBranch, realGoals, clientParsed.rawText || "", data.analysis.top_5_jobs_match || []),
             skills_breakdown: {
               technical_skills: realSkills.slice(0, 10),
               tools_frameworks: realSkills.slice(10, 18),
@@ -1846,6 +1570,7 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
         career_summary: realGoals,
         top_5_jobs_match: getTopDatabaseJobMatchesClient(extractedSkills, realBranch, 5, realGoals),
         extracted_skills: extractedSkills,
+        detailed_gaps: computeDynamicResumeGaps(extractedSkills, realBranch, realGoals, clientParsed.rawText || "", []),
         skills_breakdown: {
           technical_skills: extractedSkills.slice(0, 10),
           tools_frameworks: extractedSkills.slice(10, 18),
@@ -2778,12 +2503,11 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                   <AlertTriangle className="h-3.5 w-3.5 text-red-600" /> Deep Recruiter Gap Analysis
                 </div>
                 <h2 className="font-display text-2xl font-black text-slate-900 dark:text-white">
-                  Identified Resume Deficiencies & Actionable Resolution Methods
+                  Identified Resume Skill Gaps & Actionable Improvements
                 </h2>
                 <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 max-w-3xl leading-relaxed">
-                  Corporate screeners at top MNCs reject 60%+ of applicant resumes due to unverified claims, missing
-                  portfolio hyperlinks, or omitted engineering metrics. Follow the detailed blueprints below to eliminate
-                  each deficiency and boost your ATS score to 90%+.
+                  Real-time analysis comparing your verified skills and resume content against top corporate PMIS openings.
+                  Address the specific skill and experience gaps below to qualify for top shortlist tiers.
                 </p>
               </div>
 
@@ -2795,17 +2519,20 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
               </button>
             </div>
 
-            {/* List of 5 Detailed Gap Cards */}
+            {/* List of Dynamic Identified Resume Skill Gaps */}
             <div className="space-y-4">
-              {(aiAnalysis?.detailed_gaps || DOMAIN_GAP_BLUEPRINTS.multi_disciplinary).map((gap, index) => (
+              {(aiAnalysis?.detailed_gaps?.length
+                ? aiAnalysis.detailed_gaps
+                : computeDynamicResumeGaps(profile.skills || [], profile.branch || "", profile.career_goals || "", aiAnalysis?.rawText || "", topJobMatches)
+              ).map((gap, index) => (
                 <div
                   key={gap.id || index}
-                  className="rounded-3xl p-6 sm:p-7 bg-white dark:bg-slate-900 border-2 border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4 hover:border-red-300 dark:hover:border-red-900/60 transition"
+                  className="rounded-3xl p-6 sm:p-7 bg-white dark:bg-slate-900 border-2 border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4 hover:border-slate-300 dark:hover:border-slate-700 transition"
                 >
-                  {/* Card Title & Badges */}
+                  {/* Card Title & Category */}
                   <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
                     <div className="flex items-center gap-3">
-                      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300 font-display font-black text-xs">
+                      <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 font-display font-black text-xs">
                         #{index + 1}
                       </span>
                       <h3 className="font-display text-base font-black text-slate-900 dark:text-white">
@@ -2813,60 +2540,32 @@ export default function StudentDashboard({ user, onOpenAuth, onNavigateToInterns
                       </h3>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-50 text-red-700 dark:bg-red-950/70 dark:text-red-300 border border-red-300 dark:border-red-800">
-                        {gap.severity}
-                      </span>
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                        {gap.category}
-                      </span>
-                    </div>
+                    <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+                      {gap.category || "Skill Deficiency"}
+                    </span>
                   </div>
 
-                  {/* Section 1: Screening Diagnosis */}
-                  <div className="rounded-2xl p-4 bg-red-50/50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 space-y-1">
-                    <div className="flex items-center gap-1.5 text-xs font-black text-red-800 dark:text-red-300">
-                      <AlertCircle className="h-4 w-4 text-red-600" />
-                      <span>Recruiter Screening Diagnosis (Why It Causes Rejection)</span>
-                    </div>
-                    <p className="text-xs text-red-900/80 dark:text-red-200/80 leading-relaxed font-medium">
-                      {gap.diagnosis}
-                    </p>
-                  </div>
-
-                  {/* Section 2: Step-by-Step Action Plan */}
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-1.5 text-xs font-black text-slate-900 dark:text-white">
-                      <Wrench className="h-4 w-4 text-primary" />
-                      <span>Step-by-Step Method to Resolve This Gap:</span>
-                    </div>
-                    <ul className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
-                      {gap.resolutionMethod.map((step, sIdx) => (
-                        <li key={sIdx} className="flex items-start gap-2">
-                          <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0 mt-1.5" />
-                          <span>{step}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* Section 3: Concrete Before vs After Template */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 text-xs">
-                    <div className="p-3.5 rounded-2xl bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-1">
-                      <span className="text-[10px] font-black uppercase text-red-600 dark:text-red-400">
-                        Weak (ATS Penalty):
-                      </span>
-                      <p className="text-slate-600 dark:text-slate-400 italic font-mono text-[11px] leading-relaxed">
-                        {gap.exampleBefore}
+                  {/* ONLY TWO FOCUSED SECTIONS: What is Wrong in Resume & What You Can Do */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                    {/* 1. What is Wrong in that Resume */}
+                    <div className="p-4 rounded-2xl bg-rose-50/50 dark:bg-rose-950/20 border border-rose-200/80 dark:border-rose-900/50 space-y-2">
+                      <div className="flex items-center gap-2 font-display text-xs font-black text-rose-800 dark:text-rose-300">
+                        <XCircle className="h-4 w-4 shrink-0 text-rose-600 dark:text-rose-400" />
+                        <span>What Is Wrong in Your Resume</span>
+                      </div>
+                      <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+                        {gap.whatIsWrong || gap.diagnosis}
                       </p>
                     </div>
 
-                    <div className="p-3.5 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-800 space-y-1">
-                      <span className="text-[10px] font-black uppercase text-emerald-700 dark:text-emerald-400">
-                        Optimized (Shortlist Winning Format):
-                      </span>
-                      <p className="text-emerald-950 dark:text-emerald-200 font-mono text-[11px] leading-relaxed font-semibold">
-                        {gap.exampleAfter}
+                    {/* 2. What They Can Do */}
+                    <div className="p-4 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/80 dark:border-emerald-900/50 space-y-2">
+                      <div className="flex items-center gap-2 font-display text-xs font-black text-emerald-800 dark:text-emerald-300">
+                        <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                        <span>What You Can Do to Fix It</span>
+                      </div>
+                      <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+                        {gap.whatCanDo || (Array.isArray(gap.resolutionMethod) ? gap.resolutionMethod.join(" ") : gap.resolutionMethod)}
                       </p>
                     </div>
                   </div>

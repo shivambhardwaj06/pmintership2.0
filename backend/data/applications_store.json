@@ -269,9 +269,13 @@
     "resume_name": "multi_page_resume.pdf",
     "applied_date": "2026-11-01",
     "applied_at": "2026-11-01 13:18:28",
-    "status": "Application Submitted",
-    "recruiter_notes": "",
+    "status": "Shortlisted for Interview",
+    "recruiter_notes": "Impressive Python & full-stack projects. Technical interview scheduled.",
     "notes": "Applied via PM Internship Portal",
-    "user_id": "PMIS-543210"
+    "user_id": "PMIS-543210",
+    "status_updated_at": "2026-11-02 09:03:05",
+    "updated_at": "2026-11-02 09:03:05",
+    "interview_date": "2026-11-04 11:30 AM",
+    "meeting_link": "https://meet.google.com/pmis-interview-tcs"
   }
 ]

@@ -772,6 +772,10 @@ Job Required Skills: {job_skills_str}
 Missing Skills: {', '.join(missing_skills)}
 Score: {final_score}
 
+CRITICAL RULES:
+1. Tailor rejection_reason, improvement_tips, and missing skills STRICTLY to the specific industry domain of {role_title} and {effective_company}.
+2. For non-software roles (e.g. Mechanical, Automotive, Civil, Chemical, Electrical, Banking, Finance, or Pharma), NEVER mention programming, web development, coding, LeetCode, or Git. Recommend authentic tools for that domain (e.g., SolidWorks/FEA/GD&T for Automotive/Mechanical, Revit/BIM for Civil, HPLC/GMP for Pharma, Financial Modeling/Excel for Finance).
+
 Return JSON with keys:
 - rejection_reason: 2-sentence crisp, polite and constructive explanation of why this application was not selected for {effective_company}.
 - improvement_tips: list of 3 actionable, domain-specific tips for student improvement.
